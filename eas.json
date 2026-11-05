@@ -26,6 +26,27 @@
       "ios": {
         "simulator": true
       }
+    },
+    "quest-development": {
+      "environment": "development",
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "APP_VARIANT": "quest"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "quest-standalone": {
+      "environment": "preview",
+      "distribution": "internal",
+      "env": {
+        "APP_VARIANT": "quest"
+      },
+      "android": {
+        "buildType": "apk"
+      }
     }
   }
 }

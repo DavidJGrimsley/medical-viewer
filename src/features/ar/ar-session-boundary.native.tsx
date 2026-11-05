@@ -16,6 +16,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@/theme/provider';
 
 import { nativeARRuntime } from './ar-runtime.native';
+import { isQuestDevice } from './quest-device';
+import { questARRuntime } from './quest-runtime';
 import { shouldActivateAR } from './ar-activation';
 import { ARSessionController } from './ar-session-controller';
 import type { ARSceneContext, ARSessionBoundaryProps } from './ar-session-types';
@@ -72,7 +74,9 @@ export default function ARSessionBoundary({
   const focused = useIsFocused();
   const appState = useSyncExternalStore(subscribeAppState, () => AppState.currentState);
   const enabled = shouldActivateAR(featureEnabled, focused, appState, keepSessionOnInactive);
-  const [controller] = useState(() => new ARSessionController(nativeARRuntime));
+  const isQuest = isQuestDevice();
+  const runtime = isQuest ? questARRuntime : nativeARRuntime;
+  const [controller] = useState(() => new ARSessionController(runtime));
   const snapshot = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const [settingsError, setSettingsError] = useState(false);
 
@@ -102,8 +106,19 @@ export default function ARSessionBoundary({
   };
   const mounting = enabled && ['starting', 'running'].includes(snapshot.status);
   const loading = ['checking', 'requesting', 'waiting', 'starting'].includes(snapshot.status);
-  const title =
-    snapshot.status === 'running'
+  const title = isQuest
+    ? snapshot.status === 'running'
+      ? 'Room space active'
+      : snapshot.status === 'denied' || snapshot.status === 'permission'
+        ? 'Spatial access'
+        : snapshot.status === 'error'
+          ? 'Mixed Reality needs another try'
+          : snapshot.status === 'unsupported' || snapshot.status === 'missing-native'
+            ? 'OpenXR unavailable'
+            : snapshot.status === 'inactive'
+              ? 'Mixed Reality paused'
+              : 'Preparing Mixed Reality'
+    : snapshot.status === 'running'
       ? 'Surface test'
       : snapshot.status === 'denied' || snapshot.status === 'permission'
         ? 'Camera access'
@@ -114,14 +129,22 @@ export default function ARSessionBoundary({
             : snapshot.status === 'inactive'
               ? 'AR paused'
               : 'Preparing AR';
+
+  const defaultInstruction = isQuest
+    ? 'Planes come from saved Space Setup in Quest Settings.'
+    : 'AR starts when this screen is active.';
+
   const actions = [];
   if (['permission', 'denied'].includes(snapshot.status)) {
-    actions.push({ label: 'Enable camera', onPress: () => void controller.requestCamera() });
+    actions.push({
+      label: isQuest ? 'Grant spatial permission' : 'Enable camera',
+      onPress: () => void controller.requestCamera(),
+    });
     actions.push({ label: 'Open Settings', onPress: openSettings });
   }
   if (['error', 'unsupported', 'missing-native', 'running'].includes(snapshot.status)) {
     actions.push({
-      label: snapshot.status === 'running' ? 'Restart AR' : 'Retry',
+      label: snapshot.status === 'running' ? (isQuest ? 'Restart Session' : 'Restart AR') : 'Retry',
       onPress: controller.retry,
     });
   }
@@ -131,8 +154,10 @@ export default function ARSessionBoundary({
     title,
     message:
       settingsError && ['permission', 'denied'].includes(snapshot.status)
-        ? 'Settings could not open. Allow camera access in device Settings.'
-        : snapshot.instruction || 'AR starts when this screen is active.',
+        ? isQuest
+          ? 'Settings could not open. Allow spatial permissions in Quest device Settings.'
+          : 'Settings could not open. Allow camera access in device Settings.'
+        : snapshot.instruction || defaultInstruction,
     loading,
     actions,
   };
@@ -142,7 +167,7 @@ export default function ARSessionBoundary({
     <ARStatusPanel {...panelProps} />
   );
 
-  const hasActiveOverlay = mounting && renderActiveOverlay;
+  const hasActiveOverlay = mounting && renderActiveOverlay && !isQuest;
   const activeOverlay = hasActiveOverlay
     ? renderActiveOverlay({
         sessionId: snapshot.sessionId,

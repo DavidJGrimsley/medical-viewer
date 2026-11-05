@@ -33,7 +33,11 @@ import {
   MedicalSliceControls,
 } from './medical-slice-controls.native';
 
+import { router } from 'expo-router';
+import { isQuestDevice } from '@/features/ar/quest-device';
+
 const MedicalNavigator = lazy(() => import('./medical-navigator.native'));
+const QuestMedicalNavigator = lazy(() => import('./quest-medical-navigator.native'));
 
 function MedicalStatus({ state }: { state: MedicalSnapshot }) {
   const colors = useMedicalColors();
@@ -290,8 +294,12 @@ export function MedicalControls({
 }
 
 export default function MedicalViewerScreen() {
+  const isQuest = isQuestDevice();
   const [controller] = useState(
-    () => new MedicalController(undefined, MEDICAL_SLICE_DATASET, MEDICAL_VOLUME_DATASET)
+    () =>
+      new MedicalController(undefined, MEDICAL_SLICE_DATASET, MEDICAL_VOLUME_DATASET, {
+        defaultVolumeRenderer: isQuest ? 'shader' : 'stack',
+      })
   );
   const [infoOpen, setInfoOpen] = useState(false);
   return (
@@ -316,12 +324,28 @@ export default function MedicalViewerScreen() {
       <ARSessionBoundary
         renderNavigator={(context) => (
           <Suspense fallback={null}>
-            <MedicalNavigator context={context} controller={controller} />
+            {isQuest ? (
+              <QuestMedicalNavigator
+                context={context}
+                controller={controller}
+                onExit={() => router.dismissTo('/')}
+              />
+            ) : (
+              <MedicalNavigator context={context} controller={controller} />
+            )}
           </Suspense>
         )}
-        renderActiveOverlay={(context) => (
-          <MedicalControls key={context.sessionId} context={context} controller={controller} />
-        )}
+        renderActiveOverlay={
+          isQuest
+            ? undefined
+            : (context) => (
+                <MedicalControls
+                  key={context.sessionId}
+                  context={context}
+                  controller={controller}
+                />
+              )
+        }
       />
       <MedicalInfoModal isPresented={infoOpen} onDismiss={() => setInfoOpen(false)} />
     </>

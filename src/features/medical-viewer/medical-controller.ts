@@ -276,14 +276,21 @@ export class MedicalController {
   readonly volumeDataset: MedicalVolumeDataset;
 
   constructor(
-    isAssetAvailable: (assetId: MedicalAssetId) => boolean = (assetId) =>
-      MEDICAL_ASSETS[assetId].transform !== null,
+    isAssetAvailable?:
+      ((assetId: MedicalAssetId) => boolean) | { defaultVolumeRenderer?: VolumeRenderer },
     sliceDataset: MedicalSliceDataset = EMPTY_SLICE_DATASET,
-    volumeDataset: MedicalVolumeDataset = EMPTY_VOLUME_DATASET
+    volumeDataset: MedicalVolumeDataset = EMPTY_VOLUME_DATASET,
+    options: { defaultVolumeRenderer?: VolumeRenderer } = {}
   ) {
-    this.isAssetAvailable = isAssetAvailable;
+    const opts =
+      isAssetAvailable && typeof isAssetAvailable === 'object' ? isAssetAvailable : options;
+    const assetCheck = typeof isAssetAvailable === 'function' ? isAssetAvailable : undefined;
+    this.isAssetAvailable = assetCheck ?? ((assetId) => MEDICAL_ASSETS[assetId].transform !== null);
     this.sliceDataset = sliceDataset;
     this.volumeDataset = volumeDataset;
+    if (opts.defaultVolumeRenderer) {
+      this.snapshot.volume.renderer = opts.defaultVolumeRenderer;
+    }
     this.snapshot.volume.crop = initialVolumeCrop(volumeDataset.boundsRasMm);
     const series =
       this.getSliceSeries() ?? sliceDataset.series.find((item) => item.orientation === 'axial');
@@ -293,12 +300,12 @@ export class MedicalController {
         modality: series.modality,
         index: middleSliceIndex(series.imageCount),
       };
-    if (!isMedicalModelAvailable(DEFAULT_MEDICAL_MODEL_ID, isAssetAvailable)) {
+    if (!isMedicalModelAvailable(DEFAULT_MEDICAL_MODEL_ID, this.isAssetAvailable)) {
       this.snapshot = {
         ...this.snapshot,
         modelId:
-          MEDICAL_MODELS.find((model) => isMedicalModelAvailable(model.id, isAssetAvailable))?.id ??
-          DEFAULT_MEDICAL_MODEL_ID,
+          MEDICAL_MODELS.find((model) => isMedicalModelAvailable(model.id, this.isAssetAvailable))
+            ?.id ?? DEFAULT_MEDICAL_MODEL_ID,
       };
     }
   }
@@ -331,7 +338,7 @@ export class MedicalController {
       scope.loadAttempt === this.snapshot.loadAttempt
     );
   }
-  private clearGestures() {
+  clearGestures() {
     this.pinchStart = this.rotationStart = null;
     this.slicePinchStart = this.sliceRotationStart = null;
     this.volumePinchStart = this.volumeRotationStart = null;
