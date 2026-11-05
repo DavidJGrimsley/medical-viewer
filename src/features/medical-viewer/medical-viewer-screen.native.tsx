@@ -299,6 +299,7 @@ export default function MedicalViewerScreen() {
     () =>
       new MedicalController(undefined, MEDICAL_SLICE_DATASET, MEDICAL_VOLUME_DATASET, {
         defaultVolumeRenderer: isQuest ? 'shader' : 'stack',
+        isQuest,
       })
   );
   const [infoOpen, setInfoOpen] = useState(false);

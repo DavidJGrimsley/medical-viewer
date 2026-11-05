@@ -53,6 +53,12 @@ export {
   normalizeYaw,
 } from '../ar/ar-transform.ts';
 
+export interface MedicalControllerOptions {
+  defaultVolumeRenderer?: VolumeRenderer;
+  defaultVolumeDebugMode?: VolumeDebugMode;
+  isQuest?: boolean;
+}
+
 export interface MedicalScope {
   sessionId: number;
   modelId: MedicalModelId;
@@ -274,13 +280,13 @@ export class MedicalController {
   private readonly isAssetAvailable: (assetId: MedicalAssetId) => boolean;
   readonly sliceDataset: MedicalSliceDataset;
   readonly volumeDataset: MedicalVolumeDataset;
+  readonly isQuest: boolean;
 
   constructor(
-    isAssetAvailable?:
-      ((assetId: MedicalAssetId) => boolean) | { defaultVolumeRenderer?: VolumeRenderer },
+    isAssetAvailable?: ((assetId: MedicalAssetId) => boolean) | MedicalControllerOptions,
     sliceDataset: MedicalSliceDataset = EMPTY_SLICE_DATASET,
     volumeDataset: MedicalVolumeDataset = EMPTY_VOLUME_DATASET,
-    options: { defaultVolumeRenderer?: VolumeRenderer } = {}
+    options: MedicalControllerOptions = {}
   ) {
     const opts =
       isAssetAvailable && typeof isAssetAvailable === 'object' ? isAssetAvailable : options;
@@ -288,8 +294,18 @@ export class MedicalController {
     this.isAssetAvailable = assetCheck ?? ((assetId) => MEDICAL_ASSETS[assetId].transform !== null);
     this.sliceDataset = sliceDataset;
     this.volumeDataset = volumeDataset;
-    if (opts.defaultVolumeRenderer) {
-      this.snapshot.volume.renderer = opts.defaultVolumeRenderer;
+    this.isQuest = Boolean(opts.isQuest ?? opts.defaultVolumeRenderer === 'shader');
+    if (this.isQuest) {
+      this.snapshot.volume.renderer = opts.defaultVolumeRenderer ?? 'shader';
+      this.snapshot.volume.debugMode = opts.defaultVolumeDebugMode ?? 'raymarch';
+      this.snapshot.volume.magentaConfirmed = true;
+    } else {
+      if (opts.defaultVolumeRenderer) {
+        this.snapshot.volume.renderer = opts.defaultVolumeRenderer;
+      }
+      if (opts.defaultVolumeDebugMode) {
+        this.snapshot.volume.debugMode = opts.defaultVolumeDebugMode;
+      }
     }
     this.snapshot.volume.crop = initialVolumeCrop(volumeDataset.boundsRasMm);
     const series =
@@ -574,9 +590,13 @@ export class MedicalController {
             : 'idle',
       atlasLoads: {},
       stackLoads: {},
-      magentaConfirmed: false,
+      magentaConfirmed: this.isQuest ? true : false,
       debugMode:
-        this.snapshot.volume.renderer === 'shader' ? 'magenta' : this.snapshot.volume.debugMode,
+        this.snapshot.volume.renderer === 'shader'
+          ? this.isQuest
+            ? 'raymarch'
+            : 'magenta'
+          : this.snapshot.volume.debugMode,
       diagnostics: [],
       controlsOpen: false,
       pinching: false,
@@ -592,20 +612,21 @@ export class MedicalController {
     );
   }
   setVolumeRenderer(sessionId: number, renderer: VolumeRenderer) {
-    if (
-      !this.live(sessionId) ||
-      this.snapshot.mode !== 'volume' ||
-      !['stack', 'shader'].includes(renderer)
-    )
-      return;
+    if (!this.live(sessionId) || !['stack', 'shader'].includes(renderer)) return;
     this.clearGestures();
+    const isQuest = this.isQuest;
     this.publish({
       volume: {
         ...this.volumeLoad(),
         renderer,
-        debugMode: 'magenta',
-        magentaConfirmed: false,
-        controlsOpen: true,
+        debugMode:
+          renderer === 'shader'
+            ? isQuest
+              ? 'raymarch'
+              : 'magenta'
+            : this.snapshot.volume.debugMode,
+        magentaConfirmed: isQuest,
+        controlsOpen: !isQuest && this.snapshot.mode === 'volume',
       },
     });
   }
@@ -642,7 +663,7 @@ export class MedicalController {
         ...this.volumeLoad(),
         debugMode,
         magentaConfirmed: this.snapshot.volume.magentaConfirmed,
-        controlsOpen: true,
+        controlsOpen: !this.isQuest,
       },
     });
   }

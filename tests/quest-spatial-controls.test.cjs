@@ -137,10 +137,15 @@ test('Quest volume controls adjust quality, preset, opacity, and renderer', () =
     defaultVolumeRenderer: 'shader',
   });
   controller.selectViewerMode(sessionId, 'volume');
+  assert.equal(controller.getSnapshot().volume.renderer, 'shader');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+  assert.equal(controller.getSnapshot().volume.magentaConfirmed, true);
+
+  for (const atlas of ['high', 'low', 'validity']) {
+    controller.finishVolumeAtlas(getVolumeScope(), atlas, true);
+  }
   controller.finishVolumeBinding(getVolumeScope(), 'ready');
   assert.equal(canManipulateVolume(controller.getSnapshot()), true);
-
-  assert.equal(controller.getSnapshot().volume.renderer, 'shader');
 
   // Configure quality
   controller.configureVolume(getVolumeScope(), { quality: 'fast' });
@@ -149,9 +154,15 @@ test('Quest volume controls adjust quality, preset, opacity, and renderer', () =
   controller.configureVolume(getVolumeScope(), { quality: 'balanced' });
   assert.equal(controller.getSnapshot().volume.quality, 'balanced');
 
-  // Switch to CT modality
+  // Switch to CT modality - preserves raymarch mode
   controller.selectVolumeModality(sessionId, 'ct');
   assert.equal(controller.getSnapshot().volume.modality, 'ct');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+  assert.equal(controller.getSnapshot().volume.magentaConfirmed, true);
+
+  for (const atlas of ['high', 'low', 'validity']) {
+    controller.finishVolumeAtlas(getVolumeScope(), atlas, true);
+  }
   controller.finishVolumeBinding(getVolumeScope(), 'ready');
 
   // Configure CT preset
@@ -174,6 +185,8 @@ test('Quest volume controls adjust quality, preset, opacity, and renderer', () =
 
   controller.setVolumeRenderer(sessionId, 'shader');
   assert.equal(controller.getSnapshot().volume.renderer, 'shader');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+  assert.equal(controller.getSnapshot().volume.magentaConfirmed, true);
 });
 
 // ---------------------------------------------------------------------------
@@ -243,4 +256,254 @@ test('stale callbacks with outdated revision or requestId are safely ignored', (
   const sliceBefore = controller.getSnapshot().slices.index;
   controller.selectSlice(staleSliceScope, 25);
   assert.equal(controller.getSnapshot().slices.index, sliceBefore);
+});
+
+// ---------------------------------------------------------------------------
+// 7. Quest Raymarch Mode Defaults and Diagnostic Safeguards
+// ---------------------------------------------------------------------------
+test('Quest 3D Scan defaults to raymarch and maintains raymarch mode across modality changes and placement', () => {
+  const { controller, sessionId } = createTestHarness({ defaultVolumeRenderer: 'shader' });
+  controller.selectViewerMode(sessionId, 'volume');
+
+  // Quest defaults
+  assert.equal(controller.getSnapshot().volume.renderer, 'shader');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+  assert.equal(controller.getSnapshot().volume.magentaConfirmed, true);
+
+  // Placement retains raymarch
+  controller.selectPlane(sessionId, controller.getSnapshot().placementRevision, 'quest-floor-2');
+  assert.equal(controller.getSnapshot().volume.renderer, 'shader');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+  assert.equal(controller.getSnapshot().volume.magentaConfirmed, true);
+
+  // Modality changes retain raymarch
+  controller.selectVolumeModality(sessionId, 'ct');
+  assert.equal(controller.getSnapshot().volume.renderer, 'shader');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+  assert.equal(controller.getSnapshot().volume.magentaConfirmed, true);
+
+  controller.selectVolumeModality(sessionId, 'mri');
+  assert.equal(controller.getSnapshot().volume.renderer, 'shader');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+  assert.equal(controller.getSnapshot().volume.magentaConfirmed, true);
+
+  // Reposition retains raymarch
+  controller.reposition(sessionId);
+  assert.equal(controller.getSnapshot().volume.renderer, 'shader');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+  assert.equal(controller.getSnapshot().volume.magentaConfirmed, true);
+
+  // Viewer mode toggles retain raymarch
+  controller.selectViewerMode(sessionId, 'anatomy');
+  controller.selectViewerMode(sessionId, 'volume');
+  assert.equal(controller.getSnapshot().volume.renderer, 'shader');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+  assert.equal(controller.getSnapshot().volume.magentaConfirmed, true);
+
+  // Phone / iOS controller retains stack defaults and shader diagnostic safeguards
+  const phoneCtrl = new MedicalController(undefined, sliceDataset, volumeDataset);
+  phoneCtrl.attach(202);
+  phoneCtrl.setTracking(202, true);
+  assert.equal(phoneCtrl.getSnapshot().volume.renderer, 'stack');
+  assert.equal(phoneCtrl.getSnapshot().volume.debugMode, 'magenta');
+  assert.equal(phoneCtrl.getSnapshot().volume.magentaConfirmed, false);
+
+  phoneCtrl.selectViewerMode(202, 'volume');
+  phoneCtrl.selectPlane(202, phoneCtrl.getSnapshot().placementRevision, 'phone-table');
+  phoneCtrl.setVolumeRenderer(202, 'shader');
+
+  // Phone shader defaults to unconfirmed magenta diagnostic
+  assert.equal(phoneCtrl.getSnapshot().volume.renderer, 'shader');
+  assert.equal(phoneCtrl.getSnapshot().volume.debugMode, 'magenta');
+  assert.equal(phoneCtrl.getSnapshot().volume.magentaConfirmed, false);
+
+  const phoneScope = {
+    sessionId: 202,
+    placementRevision: phoneCtrl.getSnapshot().placementRevision,
+    requestId: phoneCtrl.getSnapshot().volume.requestId,
+  };
+
+  // Cannot select raymarch on phone before human magenta confirmation
+  phoneCtrl.setVolumeDebugMode(phoneScope, 'raymarch');
+  assert.equal(phoneCtrl.getSnapshot().volume.debugMode, 'magenta');
+
+  phoneCtrl.finishVolumeBinding(phoneScope, 'ready');
+  phoneCtrl.confirmVolumeMagenta(phoneScope);
+  assert.equal(phoneCtrl.getSnapshot().volume.magentaConfirmed, true);
+
+  phoneCtrl.setVolumeDebugMode(phoneScope, 'raymarch');
+  assert.equal(phoneCtrl.getSnapshot().volume.debugMode, 'raymarch');
+
+  // Modality change on phone resets shader to magenta unconfirmed safeguard
+  phoneCtrl.selectVolumeModality(202, 'ct');
+  assert.equal(phoneCtrl.getSnapshot().volume.debugMode, 'magenta');
+  assert.equal(phoneCtrl.getSnapshot().volume.magentaConfirmed, false);
+});
+
+test('Quest spatial controls renderer button toggles stack and raymarch and selects actual raymarch', () => {
+  const { controller, sessionId, getVolumeScope } = createTestHarness({ defaultVolumeRenderer: 'shader' });
+  controller.selectViewerMode(sessionId, 'volume');
+
+  // Simulate QuestSpatialButton toggle handler:
+  const triggerToggle = () => {
+    const s = controller.getSnapshot();
+    if (s.volume.renderer === 'shader' && s.volume.debugMode === 'raymarch') {
+      controller.setVolumeRenderer(sessionId, 'stack');
+    } else {
+      controller.setVolumeRenderer(sessionId, 'shader');
+      if (controller.getSnapshot().volume.debugMode !== 'raymarch') {
+        controller.setVolumeDebugMode(getVolumeScope(), 'raymarch');
+      }
+    }
+  };
+
+  // Initial state is raymarch
+  assert.equal(controller.getSnapshot().volume.renderer, 'shader');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+
+  // Toggling while in raymarch switches to stack
+  triggerToggle();
+  assert.equal(controller.getSnapshot().volume.renderer, 'stack');
+
+  // Toggling while in stack switches to raymarch
+  triggerToggle();
+  assert.equal(controller.getSnapshot().volume.renderer, 'shader');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+
+  // If in shader diagnostic mode (e.g. magenta), toggling selects actual raymarch
+  controller.setVolumeDebugMode(getVolumeScope(), 'magenta');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'magenta');
+
+  triggerToggle();
+  assert.equal(controller.getSnapshot().volume.renderer, 'shader');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+});
+
+// ---------------------------------------------------------------------------
+// 8. Quest Scene Root ViroARScene Anchor Wiring and Selector Reset
+// ---------------------------------------------------------------------------
+test('QuestMedicalScene wires ViroARScene anchor callbacks to ViroARPlaneSelector and preserves selector reset and stale-session handling', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const ts = require('typescript');
+  const vm = require('node:vm');
+
+  const file = path.join(__dirname, '../src/features/medical-viewer/quest-medical-scene.native.tsx');
+  const source = ts.transpileModule(fs.readFileSync(file, 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+  }).outputText;
+
+  const element = (type, props, key) => (typeof type === 'function' ? type(props) : { type, props, key });
+  const moduleObj = { exports: {} };
+
+  const { controller, sessionId } = createTestHarness({ defaultVolumeRenderer: 'shader' });
+  const session = {
+    sessionId,
+    context: { sessionId, onReady() {}, onError() {} },
+    controller,
+  };
+
+  let registeredSelectorRef = null;
+  vm.runInNewContext(source, {
+    module: moduleObj,
+    exports: moduleObj.exports,
+    require(name) {
+      if (name === 'react/jsx-runtime') return { jsx: element, jsxs: element };
+      if (name === 'react')
+        return {
+          useCallback: (cb) => cb,
+          useState: (init) => [typeof init === 'function' ? init() : init, () => {}],
+          useEffect: () => {},
+          useRef: () => ({ current: null }),
+          useSyncExternalStore: (_sub, snap) => snap(),
+        };
+      if (name === '@reactvision/react-viro')
+        return {
+          ViroARPlaneSelector: 'ViroARPlaneSelector',
+          ViroARScene: 'ViroARScene',
+          ViroController: 'ViroController',
+          ViroTrackingStateConstants: { TRACKING_NORMAL: 3 },
+        };
+      if (name.includes('VRQuestNavigatorBridge'))
+        return {
+          VRQuestNavigatorBridge: { onQuestError: () => () => {} },
+        };
+      if (name === '@/features/ar/quest-session-bridge')
+        return {
+          useQuestSession: () => session,
+        };
+      if (name === '@/features/ar/quest-spatial-math')
+        return {
+          computeHeadLockedTransform: () => ({ position: [0, 0, 0], rotation: [0, 0, 0] }),
+        };
+      if (name === './medical-scene-content.native')
+        return {
+          MedicalSceneContent: (props) => {
+            registeredSelectorRef = props.selectorRef;
+            return {
+              type: 'MedicalSceneContent',
+              props,
+            };
+          },
+        };
+      if (name === './quest-spatial-controls.native')
+        return {
+          QuestSpatialControls: (props) => ({ type: 'QuestSpatialControls', props }),
+        };
+      return {};
+    },
+  });
+
+  const sceneTree = moduleObj.exports.default();
+  assert.equal(sceneTree.type, 'ViroARScene');
+  assert.equal(typeof sceneTree.props.onAnchorFound, 'function');
+  assert.equal(typeof sceneTree.props.onAnchorUpdated, 'function');
+  assert.equal(typeof sceneTree.props.onAnchorRemoved, 'function');
+  assert.ok(registeredSelectorRef, 'MedicalSceneContent must receive selectorRef');
+
+  const foundAnchors = [];
+  const updatedAnchors = [];
+  const removedAnchors = [];
+  let resets = 0;
+  registeredSelectorRef.current = {
+    handleAnchorFound: (a) => foundAnchors.push(a),
+    handleAnchorUpdated: (a) => updatedAnchors.push(a),
+    handleAnchorRemoved: (a) => {
+      removedAnchors.push(a);
+      controller.losePlane(sessionId, controller.getSnapshot().placementRevision, a.anchorId);
+    },
+    reset: () => {
+      resets++;
+    },
+  };
+
+  // 1. Anchor found forwards to selector
+  sceneTree.props.onAnchorFound({ type: 'plane', anchorId: 'quest-plane-1' });
+  assert.equal(foundAnchors.length, 1);
+  assert.equal(foundAnchors[0].anchorId, 'quest-plane-1');
+
+  // 2. Anchor updated forwards to selector
+  sceneTree.props.onAnchorUpdated({ type: 'plane', anchorId: 'quest-plane-1' });
+  assert.equal(updatedAnchors.length, 1);
+  assert.equal(updatedAnchors[0].anchorId, 'quest-plane-1');
+
+  // 3. Null anchor on remove is safely handled
+  sceneTree.props.onAnchorRemoved(null);
+  assert.equal(removedAnchors.length, 0);
+
+  // 4. Removal of unrelated anchor does not clear placed anchor
+  sceneTree.props.onAnchorRemoved({ type: 'plane', anchorId: 'other-plane' });
+  assert.equal(removedAnchors.length, 1);
+  assert.equal(controller.getSnapshot().anchorId, 'quest-floor-anchor');
+
+  // 5. Removal of placed plane clears anchorId and increments placement revision
+  const revBefore = controller.getSnapshot().placementRevision;
+  sceneTree.props.onAnchorRemoved({ type: 'plane', anchorId: 'quest-floor-anchor' });
+  assert.equal(removedAnchors.length, 2);
+  assert.equal(controller.getSnapshot().anchorId, null);
+  assert.equal(controller.getSnapshot().placementRevision, revBefore + 1);
+
+  // 6. Stale removal is ignored
+  controller.losePlane(999, controller.getSnapshot().placementRevision, 'quest-floor-anchor');
+  assert.equal(controller.getSnapshot().placementRevision, revBefore + 1);
 });

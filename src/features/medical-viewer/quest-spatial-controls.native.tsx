@@ -804,17 +804,21 @@ export function QuestSpatialControls({
             {/* Renderer Switcher */}
             <QuestSpatialButton
               label={state.volume.renderer === 'shader' ? 'Raymarch' : 'Stack'}
-              selected={state.volume.renderer === 'shader'}
+              selected={state.volume.renderer === 'shader' && state.volume.debugMode === 'raymarch'}
               position={[0.26, 0, 0.002]}
               width={0.22}
               height={0.042}
               fontSize={12}
-              onPress={() =>
-                controller.setVolumeRenderer(
-                  sessionId,
-                  state.volume.renderer === 'shader' ? 'stack' : 'shader'
-                )
-              }
+              onPress={() => {
+                if (state.volume.renderer === 'shader' && state.volume.debugMode === 'raymarch') {
+                  controller.setVolumeRenderer(sessionId, 'stack');
+                } else {
+                  controller.setVolumeRenderer(sessionId, 'shader');
+                  if (controller.getSnapshot().volume.debugMode !== 'raymarch') {
+                    controller.setVolumeDebugMode(volumeScope, 'raymarch');
+                  }
+                }
+              }}
             />
           </ViroNode>
 

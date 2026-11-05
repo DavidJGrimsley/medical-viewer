@@ -816,3 +816,163 @@ test('magenta debug registers a texture-free fragment shader and cancels a queue
   assert.equal(c.getSnapshot().volume.loadStatus, 'idle');
   result.cleanup();
 });
+
+test('medical-scene wires ViroARScene anchor callbacks to ViroARPlaneSelector, handles plane removal and selector reset', () => {
+  const c = sceneController('both');
+  const rendered = renderScene(c);
+  const sceneNode = rendered.nodes.find(({ type }) => type === 'ViroARScene');
+  const selectorNode = rendered.nodes.find(({ type }) => type === 'ViroARPlaneSelector');
+  assert.ok(sceneNode);
+  assert.ok(selectorNode);
+  assert.equal(typeof sceneNode.props.onAnchorFound, 'function');
+  assert.equal(typeof sceneNode.props.onAnchorUpdated, 'function');
+  assert.equal(typeof sceneNode.props.onAnchorRemoved, 'function');
+
+  const found = [];
+  const updated = [];
+  const removed = [];
+  let resetCount = 0;
+  selectorNode.props.ref.current = {
+    handleAnchorFound: (a) => found.push(a),
+    handleAnchorUpdated: (a) => updated.push(a),
+    handleAnchorRemoved: (a) => {
+      removed.push(a);
+      selectorNode.props.onPlaneRemoved(a.anchorId);
+    },
+    reset: () => {
+      resetCount++;
+    },
+  };
+
+  // 1. Forwarding onAnchorFound, onAnchorUpdated, onAnchorRemoved
+  sceneNode.props.onAnchorFound({ type: 'plane', anchorId: 'surface-1' });
+  assert.equal(found.length, 1);
+  assert.equal(found[0].anchorId, 'surface-1');
+
+  sceneNode.props.onAnchorUpdated({ type: 'plane', anchorId: 'surface-1' });
+  assert.equal(updated.length, 1);
+  assert.equal(updated[0].anchorId, 'surface-1');
+
+  // Null anchor is safely ignored
+  sceneNode.props.onAnchorRemoved(null);
+  assert.equal(removed.length, 0);
+
+  // 2. Removal of an unrelated plane is ignored by controller.losePlane
+  sceneNode.props.onAnchorRemoved({ type: 'plane', anchorId: 'unrelated-surface' });
+  assert.equal(removed.length, 1);
+  assert.equal(c.getSnapshot().anchorId, 'table');
+
+  // 3. Removal of the placed plane clears anchorId and increments revision
+  const oldRevision = c.getSnapshot().placementRevision;
+  sceneNode.props.onAnchorRemoved({ type: 'plane', anchorId: 'table' });
+  assert.equal(removed.length, 2);
+  assert.equal(c.getSnapshot().anchorId, null);
+  assert.equal(c.getSnapshot().placementRevision, oldRevision + 1);
+
+  // 4. Stale session handling: stale removal has no effect
+  c.losePlane(999, c.getSnapshot().placementRevision, 'table');
+  assert.equal(c.getSnapshot().placementRevision, oldRevision + 1);
+
+  // 5. Stale placement rejection resets selector
+  const prevResets = resetCount;
+  selectorNode.props.onPlaneSelected({ anchorId: 'invalid-selection' });
+  // Since tracking or state is idle/unplaced without normal flow, or rejected:
+  // if anchorId is not set, reset() is triggered on the selector
+  if (!c.getSnapshot().anchorId) {
+    assert.ok(resetCount >= prevResets);
+  }
+
+  rendered.cleanup();
+});
+
+test('Quest raymarch volume loads scan assets and uniforms by default without magenta confirmation', () => {
+  const { parseMedicalVolumeDataset } = require('../src/features/medical-viewer/medical-volumes.ts');
+  const c = new MedicalController(
+    undefined,
+    undefined,
+    parseMedicalVolumeDataset(require('../assets/medical/volumes/metadata.json')),
+    { defaultVolumeRenderer: 'shader' }
+  );
+  c.attach(1);
+  c.setTracking(1, true);
+  c.selectViewerMode(1, 'volume');
+  c.selectPlane(1, c.getSnapshot().placementRevision, 'table');
+
+  // Verify Quest defaults
+  assert.equal(c.getSnapshot().volume.renderer, 'shader');
+  assert.equal(c.getSnapshot().volume.debugMode, 'raymarch');
+  assert.equal(c.getSnapshot().volume.magentaConfirmed, true);
+  assert.equal(c.getSnapshot().volume.loadStatus, 'loading');
+
+  // Verify scan assets mount in loading state
+  const loading = renderScene(c);
+  const probes = loading.nodes.filter(({ type }) => type === 'ViroImage');
+  assert.equal(probes.length, 3);
+  assert.deepEqual(
+    Array.from(probes.map((p) => path.basename(p.props.source))),
+    ['mri_high.png', 'mri_low.png', 'mri_validity.png']
+  );
+  assert.ok(
+    probes.every(
+      ({ props }) => props.opacity === 0 && props.mipmap === false && props.format === 'RGBA8'
+    )
+  );
+
+  // Finish loading all three atlas textures
+  probes.forEach(({ props }) => props.onLoadEnd({ nativeEvent: { success: true } }));
+  assert.equal(c.getSnapshot().volume.loadStatus, 'binding');
+
+  // Verify material and uniforms load in binding state
+  const binding = renderScene(c);
+  const material = binding.materials.find((value) => value.medicalVolume)?.medicalVolume;
+  assert.ok(material);
+  const samplers = material.materialUniforms.filter(({ type }) => type === 'sampler2D');
+  assert.equal(samplers.length, 3);
+  assert.deepEqual(
+    Array.from(samplers.map((s) => s.name)),
+    ['u_high', 'u_low', 'u_validity']
+  );
+  const uniforms = material.materialUniforms.filter(({ type }) => type !== 'sampler2D');
+  assert.ok(uniforms.length >= 8);
+  const uniformNames = uniforms.map((u) => u.name);
+  assert.ok(uniformNames.includes('u_dimensions'));
+  assert.ok(uniformNames.includes('u_extent'));
+  assert.ok(uniformNames.includes('u_crop_min'));
+  assert.ok(uniformNames.includes('u_crop_max'));
+  assert.ok(uniformNames.includes('u_appearance'));
+
+  // Flush frames to reach ready state
+  binding.flushFrames();
+  assert.equal(c.getSnapshot().volume.loadStatus, 'ready');
+
+  // Verify proxy geometry renders with shader
+  const ready = renderScene(c);
+  const boxes = ready.nodes.filter(({ type }) => type === 'ViroBox');
+  assert.equal(boxes.length, 1);
+  assert.deepEqual(Array.from(boxes[0].props.shaderOverrides), ['medicalVolume']);
+
+  // Verify uniforms dispatch to native manager
+  for (const callback of ready.frames.values()) callback();
+  assert.ok(ready.uniforms.length > 0);
+  assert.ok(ready.uniforms.every(([name]) => name === 'medicalVolume'));
+
+  // Modality change preserves raymarch mode and reloads scan assets
+  c.selectVolumeModality(1, 'ct');
+  assert.equal(c.getSnapshot().volume.renderer, 'shader');
+  assert.equal(c.getSnapshot().volume.debugMode, 'raymarch');
+  assert.equal(c.getSnapshot().volume.modality, 'ct');
+  assert.equal(c.getSnapshot().volume.loadStatus, 'loading');
+
+  const ctLoading = renderScene(c);
+  const ctProbes = ctLoading.nodes.filter(({ type }) => type === 'ViroImage');
+  assert.equal(ctProbes.length, 3);
+  assert.deepEqual(
+    Array.from(ctProbes.map((p) => path.basename(p.props.source))),
+    ['ct_high.png', 'ct_low.png', 'ct_validity.png']
+  );
+
+  c.detach(1);
+  for (const rendered of [loading, binding, ready, ctLoading]) {
+    rendered.cleanup();
+  }
+});

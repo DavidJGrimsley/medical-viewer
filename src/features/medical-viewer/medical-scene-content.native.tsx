@@ -35,6 +35,7 @@ export interface MedicalSceneContentProps {
   context: ARSceneContext;
   controller: MedicalController;
   isQuest?: boolean;
+  selectorRef?: React.RefObject<ViroARPlaneSelector | null>;
 }
 
 function MedicalModels({ context, controller }: MedicalSceneContentProps) {
@@ -224,13 +225,15 @@ export function MedicalSceneContent({
   context,
   controller,
   isQuest = false,
+  selectorRef: externalSelectorRef,
 }: MedicalSceneContentProps) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
-  const selector = useRef<ViroARPlaneSelector>(null);
+  const internalSelectorRef = useRef<ViroARPlaneSelector>(null);
+  const selector = externalSelectorRef ?? internalSelectorRef;
 
   useEffect(() => {
     selector.current?.reset();
-  }, [state.placementRevision]);
+  }, [selector, state.placementRevision, context.sessionId]);
 
   return (
     <>

@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ViroARScene, ViroController, ViroTrackingStateConstants } from '@reactvision/react-viro';
+import {
+  ViroARPlaneSelector,
+  ViroARScene,
+  ViroController,
+  ViroTrackingStateConstants,
+} from '@reactvision/react-viro';
 import { VRQuestNavigatorBridge } from '@reactvision/react-viro/dist/components/Utilities/VRQuestNavigatorBridge';
 import { useQuestSession } from '@/features/ar/quest-session-bridge';
 import {
@@ -17,6 +22,7 @@ export default function QuestMedicalScene() {
     null
   );
   const latestCameraRef = useRef<CameraPose | null>(null);
+  const selectorRef = useRef<ViroARPlaneSelector>(null);
 
   const sessionId = session?.sessionId;
   const controller = session?.controller;
@@ -79,6 +85,11 @@ export default function QuestMedicalScene() {
       anchorDetectionTypes={['PlanesHorizontal']}
       toneMappingEnabled={false}
       onCameraTransformUpdate={handleCameraUpdate}
+      onAnchorFound={(anchor) => selectorRef.current?.handleAnchorFound(anchor)}
+      onAnchorUpdated={(anchor) => selectorRef.current?.handleAnchorUpdated(anchor)}
+      onAnchorRemoved={(anchor) => {
+        if (anchor) selectorRef.current?.handleAnchorRemoved(anchor);
+      }}
       onError={context.onError}
       onTrackingUpdated={(tracking) => {
         const normal = tracking === ViroTrackingStateConstants.TRACKING_NORMAL;
@@ -89,7 +100,12 @@ export default function QuestMedicalScene() {
         if (normal) context.onReady();
       }}>
       {/* 3D Scene Content: Anatomy, Slices, Volume with Plane Selection */}
-      <MedicalSceneContent context={context} controller={controller} isQuest={true} />
+      <MedicalSceneContent
+        context={context}
+        controller={controller}
+        isQuest={true}
+        selectorRef={selectorRef}
+      />
 
       {/* In-Scene Stationary Spatial Controls */}
       <QuestSpatialControls
