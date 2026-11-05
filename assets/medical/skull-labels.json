@@ -1,0 +1,25 @@
+{
+  "calibration": "Surface ray intersections on the prepared skull; landmark locations visually reviewed. Anatomical owner confirmation and iPhone readability remain pending.",
+  "labels": [
+    {
+      "name": "Frontal bone",
+      "anchor": [0.0, 0.17000000178813934, 0.08001008629798889],
+      "position": [-0.17, 0.178, 0.105]
+    },
+    {
+      "name": "Parietal bone",
+      "anchor": [0.06991717219352722, 0.17000000178813934, -0.02500000037252903],
+      "position": [0.17, 0.2, -0.045]
+    },
+    {
+      "name": "Zygomatic bone",
+      "anchor": [0.05299999937415123, 0.09200000017881393, 0.06298577785491943],
+      "position": [0.17, 0.09, 0.11]
+    },
+    {
+      "name": "Mandible",
+      "anchor": [0.0, 0.02199999988079071, 0.08582642674446106],
+      "position": [-0.17, 0.02, 0.105]
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "model": "brain",
+  "sourceFilename": "MRI_Elastix mask.obj",
+  "sourceBytes": 103451293,
+  "sourceSha256": "db80fa4dcdc3471463ca84a6816e9c948c65bc421eb84eaec872d4dfc5885b4f",
+  "sourceHeader": "3D Slicer output. SPACE=LPS",
+  "collection": "NLM Visible Human Project — Additional Head Images",
+  "collectionReadme": "https://data.lhncbc.nlm.nih.gov/public/Visible-Human/Additional-Head-Images/README",
+  "termsUrl": "https://www.nlm.nih.gov/research/visible/visible_human.html",
+  "attribution": "Courtesy of the U.S. National Library of Medicine. Additional Head Images: Brigham and Women's Hospital / Harvard Medical School, Peter Ratiu and colleagues.",
+  "sourceUrl": "https://data.lhncbc.nlm.nih.gov/public/Visible-Human/Additional-Head-Images/MR_CT_DICOM/MRI/",
+  "derivation": "Owner-supplied 3D Slicer surface export; MRI brain mask",
+  "provenanceConfirmation": "Owner confirmed the same NLM Additional Head Images dataset and registration in Slicer on 2026-10-09.",
+  "sourceSpace": "LPS millimetres",
+  "outputSpace": "Y-up metres, anterior +Z, anatomical left +X",
+  "originLpsMm": [-8.314079284667969, 78.85992622375488, -212.7226389219286],
+  "lpsToModelMatrix": [
+    [0.001, 0, 0, 0.008314079284667968],
+    [0, 0, 0.001, 0.2127226389219286],
+    [0, -0.001, 0, 0.07885992622375489],
+    [0, 0, 0, 1]
+  ],
+  "alignment": "Same recorded skull LPS-to-model matrix, baked into every mesh; no independent centering, grounding, scaling or registration adjustment.",
+  "displayTransform": {
+    "position": [0, 0, 0],
+    "rotation": [0, 0, 0],
+    "scale": [1, 1, 1]
+  },
+  "boundsModelMetres": {
+    "min": [-0.07082697004079819, 0.0658721774816513, -0.09834986180067062],
+    "max": [0.07473232597112656, 0.20456093549728394, 0.08045096695423126]
+  },
+  "blenderVersion": "5.0.1",
+  "fragmentThresholdMm": 0.1,
+  "degenerateCrossProductSquaredThresholdMm4": 1e-16,
+  "decimationRatio": 0.06849834760909153,
+  "postDecimationDegenerateFacesRemoved": 0,
+  "triangleBudget": 65000,
+  "triangles": 65000,
+  "bytes": 1171144,
+  "sha256": "faf9e97dcc5bfe546d388749292ac101ea697e6858fab505e6fba61758c0ec03",
+  "presentation": "Opaque matte bone ivory / brain rose; display colours are not clinical tissue classification.",
+  "cleaning": {
+    "sourceSha256": "db80fa4dcdc3471463ca84a6816e9c948c65bc421eb84eaec872d4dfc5885b4f",
+    "sourceVertices": 474466,
+    "sourceTriangles": 948928,
+    "sourceComponents": 1,
+    "retainedComponents": 1,
+    "retainedVertices": 474466,
+    "retainedTriangles": 948928,
+    "degenerateFacesRemoved": 0,
+    "boundsLpsMm": [
+      -79.11727905273438, -1.5722242593765259, -146.85133361816406, 66.40240478515625,
+      177.19021606445312, -8.173251152038574
+    ]
+  },
+  "clinicalValidation": "Not clinically validated; educational visualization only.",
+  "license": "NLM describes the Visible Human Project image data as public-domain; attribution retained."
+}

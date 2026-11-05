@@ -1,0 +1,90 @@
+{
+  "expo": {
+    "name": "Medical Viewer",
+    "slug": "medical-viewer",
+    "version": "1.0.0",
+    "scheme": "medical-viewer",
+    "platforms": ["ios", "android"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#ffffff",
+          "image": "./assets/splash.png",
+          "dark": {
+            "image": "./assets/images/splash-icon-dark.png",
+            "backgroundColor": "#000000"
+          },
+          "imageWidth": 200
+        }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "style": "dark",
+          "enforceContrast": false
+        }
+      ],
+      "expo-system-ui",
+      [
+        "@reactvision/react-viro",
+        {
+          "android": {
+            "xRMode": ["AR"]
+          },
+          "ios": {
+            "cameraUsagePermission": "Medical Viewer uses the camera to place its AR experience in your surroundings."
+          },
+          "provider": "none"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true,
+      "tsconfigPaths": true
+    },
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "requireFullScreen": true,
+      "bundleIdentifier": "com.djleg.medicalviewer",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
+        "NSPhotoLibraryAddUsageDescription": "Allow $(PRODUCT_NAME) to save photos",
+        "NSCameraUsageDescription": "Medical Viewer uses the camera to place its AR experience in your surroundings.",
+        "NSMicrophoneUsageDescription": "Allow Medical Viewer to include microphone audio when recording an AR experience.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "backgroundColor": "#f1f0f8",
+      "package": "com.djleg.medicalviewer"
+    },
+    "backgroundColor": "#f1f0f8",
+    "androidStatusBar": {
+      "backgroundColor": "#f1f0f8",
+      "barStyle": "dark-content",
+      "translucent": false
+    },
+    "extra": {
+      "router": {},
+      "expo-navigation-bar": {
+        "enforceContrast": false,
+        "style": "dark"
+      }
+    },
+    "owner": "mrdj2u",
+    "web": {
+      "output": "static"
+    }
+  }
+}

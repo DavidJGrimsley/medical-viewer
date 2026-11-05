@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+dist/
+package-lock.json
+# Preserve the curated animation manifest byte-for-byte, including its provenance hash.
+assets/arena/fighter-animation-manifest.json
+# Generated 60 Hz collision samples; compact encoding is part of the bake hash.
+assets/arena/combat-collision-data.json
+# Generated font contours use compact encoding.
+assets/arena/ui/lettering.json

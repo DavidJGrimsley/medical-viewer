@@ -1,0 +1,6 @@
+# Curated exports must retain their verified bytes on every checkout.
+assets/arena/*.glb binary
+assets/arena/fighter-animation-manifest.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+assets/arena/combat-collision-data.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# The scan stack records this manifest's exact byte hash.
+assets/medical/volumes/metadata.json -text

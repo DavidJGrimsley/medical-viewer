@@ -1,0 +1,1073 @@
+{
+  "schemaVersion": 1,
+  "kind": "stacked-slice visualization",
+  "grid": {
+    "boundsRasMm": [
+      -124.95521545410156, 125.44452667236328, -196.61221313476562, 53.78752899169922,
+      -230.75161743164062, 2.3248720948801065
+    ],
+    "dimensions": [160, 160, 149],
+    "spacingMm": 1.5748411454494644,
+    "sampleOrder": "Array Z,Y,X = increasing S,A,R; PNG rows retain array Y order",
+    "rasToViro": "X=R, Y=S, Z=-A; centred at common-grid midpoint"
+  },
+  "sourceMetadataSha256": "4dc4bfdecd55d3da776ae5cab1e42c4ec5a512bf5017ca643dcfeafbc675ed39",
+  "mapping": "PNG columns +R, rows +A, planes +S; Viro XYZ=R,S,-A; quad UV=(rMin,aMax,rMax,aMin)",
+  "appearance": "Preset grayscale with opacity baked from real scalar density; zero alpha for air/invalid data; alpha capped at 0.40 per plane",
+  "presets": {
+    "mri-grayscale": {
+      "modality": "mri",
+      "window": 5589.0,
+      "level": 2671.5,
+      "planes": [
+        {
+          "filename": "mri-grayscale_000.png",
+          "bytes": 1562,
+          "sha256": "ae2b065851626e9223d1f2e8163e37edc4a95e2672ecf6a86da2bb022a0995eb",
+          "ijkZ": 0,
+          "positionRasMm": -230.75161743164062
+        },
+        {
+          "filename": "mri-grayscale_003.png",
+          "bytes": 3475,
+          "sha256": "8c18c90dc42be51d0a8027405868993ca0620ffbdc7b5650e20c9ab0e9a861b1",
+          "ijkZ": 3,
+          "positionRasMm": -226.02709399529223
+        },
+        {
+          "filename": "mri-grayscale_006.png",
+          "bytes": 4492,
+          "sha256": "cf64ca9789ded41c716f38f3c4a462a3921f8b480fc1d7b7fd3aee19d868969e",
+          "ijkZ": 6,
+          "positionRasMm": -221.30257055894384
+        },
+        {
+          "filename": "mri-grayscale_009.png",
+          "bytes": 5551,
+          "sha256": "60db11a56500f794e8da6260e678724e7740cdd151e2a857f64a3d51512756bb",
+          "ijkZ": 9,
+          "positionRasMm": -216.57804712259545
+        },
+        {
+          "filename": "mri-grayscale_013.png",
+          "bytes": 6734,
+          "sha256": "781a6f9d17924e4509c9b6141a71445b8db6f3508ec702cb61f98b856921afb9",
+          "ijkZ": 13,
+          "positionRasMm": -210.27868254079758
+        },
+        {
+          "filename": "mri-grayscale_016.png",
+          "bytes": 7872,
+          "sha256": "b5f70d1404cf0042e9dc0ab778d128395972c6204f69e3e16dde4f260476bb5e",
+          "ijkZ": 16,
+          "positionRasMm": -205.55415910444918
+        },
+        {
+          "filename": "mri-grayscale_019.png",
+          "bytes": 9137,
+          "sha256": "32b46736d09e5c489daeeea6465dfc656fe834ceb0f81c155efb6919c4ba6ae8",
+          "ijkZ": 19,
+          "positionRasMm": -200.8296356681008
+        },
+        {
+          "filename": "mri-grayscale_022.png",
+          "bytes": 10295,
+          "sha256": "a4718bd0ec853032d871803bc2c9c18410bf9a3f8a8e8ab472722b4e256fea00",
+          "ijkZ": 22,
+          "positionRasMm": -196.1051122317524
+        },
+        {
+          "filename": "mri-grayscale_025.png",
+          "bytes": 11624,
+          "sha256": "194b7a387c48b023d193c1497f6a60f1d6abf05a7d9cbb44b130d69d6e04202f",
+          "ijkZ": 25,
+          "positionRasMm": -191.380588795404
+        },
+        {
+          "filename": "mri-grayscale_028.png",
+          "bytes": 12854,
+          "sha256": "995ad0a5b260d14acc8d6b64a77318c7c7adfbf407fb8b8abb043402283890f8",
+          "ijkZ": 28,
+          "positionRasMm": -186.65606535905562
+        },
+        {
+          "filename": "mri-grayscale_031.png",
+          "bytes": 14401,
+          "sha256": "ce4b5b534a1b0114f097df316223fbc9a099eb98bf2f9da4b05c6a649d9cb3e9",
+          "ijkZ": 31,
+          "positionRasMm": -181.93154192270723
+        },
+        {
+          "filename": "mri-grayscale_035.png",
+          "bytes": 15655,
+          "sha256": "f62a65533cfeffcf99891abc9f8a1ae63dfed51d6e83d311b3fea7002d09f232",
+          "ijkZ": 35,
+          "positionRasMm": -175.63217734090938
+        },
+        {
+          "filename": "mri-grayscale_038.png",
+          "bytes": 15852,
+          "sha256": "81f54d1d8a229c18f46e26fed4f80e35257f980266c5943169614a86b001b1d9",
+          "ijkZ": 38,
+          "positionRasMm": -170.907653904561
+        },
+        {
+          "filename": "mri-grayscale_041.png",
+          "bytes": 15851,
+          "sha256": "48bd2de2096374aa393aa7785ca5910c383c2c15ae763894d518e3230f442087",
+          "ijkZ": 41,
+          "positionRasMm": -166.1831304682126
+        },
+        {
+          "filename": "mri-grayscale_044.png",
+          "bytes": 16239,
+          "sha256": "8c6179b47a45a781991bbb777e9e7df2b86508341253f463734e281b9caa0365",
+          "ijkZ": 44,
+          "positionRasMm": -161.45860703186418
+        },
+        {
+          "filename": "mri-grayscale_047.png",
+          "bytes": 16909,
+          "sha256": "3815fb2012a3f00d0e1753ed5b04581ffbfa848801ee872c34e51e9a34cac878",
+          "ijkZ": 47,
+          "positionRasMm": -156.7340835955158
+        },
+        {
+          "filename": "mri-grayscale_050.png",
+          "bytes": 17797,
+          "sha256": "6dca70c35dfa55acefc11b8d402f7c070fcecb884d99c12647fb55f33da989dd",
+          "ijkZ": 50,
+          "positionRasMm": -152.0095601591674
+        },
+        {
+          "filename": "mri-grayscale_054.png",
+          "bytes": 18086,
+          "sha256": "5d46942600e4bc01bf2c60c41bd007a4dd689211b73e2074a88054e832c542ce",
+          "ijkZ": 54,
+          "positionRasMm": -145.71019557736955
+        },
+        {
+          "filename": "mri-grayscale_057.png",
+          "bytes": 17629,
+          "sha256": "aa5e5db476d68f3b9fde7d6362f6c3fd6e4ba36f450f9390d9d0fd9077d4c084",
+          "ijkZ": 57,
+          "positionRasMm": -140.98567214102115
+        },
+        {
+          "filename": "mri-grayscale_060.png",
+          "bytes": 17425,
+          "sha256": "d0d3ab688b94c122ee5132742428d7490e7972383274068213d43bf9fc892d3c",
+          "ijkZ": 60,
+          "positionRasMm": -136.26114870467276
+        },
+        {
+          "filename": "mri-grayscale_063.png",
+          "bytes": 17285,
+          "sha256": "bb863cfee6f842f3d71b31e81baac269b65c459029c1b2cb9fc3bf63260142d2",
+          "ijkZ": 63,
+          "positionRasMm": -131.53662526832437
+        },
+        {
+          "filename": "mri-grayscale_066.png",
+          "bytes": 16844,
+          "sha256": "a7d5b32128747862243ce655def8fe7dfd4b639f7965ede0e942a31ec812bc42",
+          "ijkZ": 66,
+          "positionRasMm": -126.81210183197598
+        },
+        {
+          "filename": "mri-grayscale_069.png",
+          "bytes": 17051,
+          "sha256": "4d5c3c03756d3e216aebd21ecba14a313ae205591e5f43263dbf8f3e0f68b272",
+          "ijkZ": 69,
+          "positionRasMm": -122.08757839562757
+        },
+        {
+          "filename": "mri-grayscale_072.png",
+          "bytes": 16828,
+          "sha256": "bbfc268f085419a21eab16e8676597643b05c7bef37e187c1c44016e7bbb1caa",
+          "ijkZ": 72,
+          "positionRasMm": -117.36305495927918
+        },
+        {
+          "filename": "mri-grayscale_076.png",
+          "bytes": 16914,
+          "sha256": "f74d75bfdc0cae1ca2c6ee2c87fbec4945ec13e68b2be9890ea02be522f06390",
+          "ijkZ": 76,
+          "positionRasMm": -111.06369037748134
+        },
+        {
+          "filename": "mri-grayscale_079.png",
+          "bytes": 16861,
+          "sha256": "0837c925fe2a8a2912542af4ac1499cd08a91f589d552bac1259b355da28e80b",
+          "ijkZ": 79,
+          "positionRasMm": -106.33916694113293
+        },
+        {
+          "filename": "mri-grayscale_082.png",
+          "bytes": 16886,
+          "sha256": "cf95618e10d335ee5131ccee78eb701ee1a5a0a281b05a2831e4172c12011f5c",
+          "ijkZ": 82,
+          "positionRasMm": -101.61464350478454
+        },
+        {
+          "filename": "mri-grayscale_085.png",
+          "bytes": 17253,
+          "sha256": "b570569c5cb505121b6bc41a892fad726ee086f69ad90c473ed1d2ff11eccdf8",
+          "ijkZ": 85,
+          "positionRasMm": -96.89012006843615
+        },
+        {
+          "filename": "mri-grayscale_088.png",
+          "bytes": 17611,
+          "sha256": "3b3f70e215922124c1566c3e72117aa18fc1b35e1985ef0145b88056f9a82f40",
+          "ijkZ": 88,
+          "positionRasMm": -92.16559663208776
+        },
+        {
+          "filename": "mri-grayscale_091.png",
+          "bytes": 17643,
+          "sha256": "b2bd149eb3073550faacf8de3b0660279c845baedb04a015c6a469518f85988f",
+          "ijkZ": 91,
+          "positionRasMm": -87.44107319573936
+        },
+        {
+          "filename": "mri-grayscale_094.png",
+          "bytes": 17051,
+          "sha256": "baa42be24f5ac3902814151d84ac7b0915d04115cdab9dde9e7da0404027d43f",
+          "ijkZ": 94,
+          "positionRasMm": -82.71654975939097
+        },
+        {
+          "filename": "mri-grayscale_098.png",
+          "bytes": 16771,
+          "sha256": "5c51dfd20afeae276cebb585cac9ab46dd52fe3563a2d5ecb29564ed6f3186ec",
+          "ijkZ": 98,
+          "positionRasMm": -76.41718517759313
+        },
+        {
+          "filename": "mri-grayscale_101.png",
+          "bytes": 16616,
+          "sha256": "461f6a7c3307b8ebdaa1628ed85de4f95b018985c39183945ba930fe541379c4",
+          "ijkZ": 101,
+          "positionRasMm": -71.6926617412447
+        },
+        {
+          "filename": "mri-grayscale_104.png",
+          "bytes": 16296,
+          "sha256": "22d525a02ddf219e2b459e1d617a97bfcffeec5dfbda94179fe3a01f22e1e9c4",
+          "ijkZ": 104,
+          "positionRasMm": -66.96813830489631
+        },
+        {
+          "filename": "mri-grayscale_107.png",
+          "bytes": 15882,
+          "sha256": "3f4c8298f2ac6041dc12841ffbd108667bae35912911955143963b11590d203d",
+          "ijkZ": 107,
+          "positionRasMm": -62.24361486854792
+        },
+        {
+          "filename": "mri-grayscale_110.png",
+          "bytes": 15373,
+          "sha256": "6bca74b5ac617226d71865f7b7f20018be726f7e97ba20f03dc268e3284a4e41",
+          "ijkZ": 110,
+          "positionRasMm": -57.51909143219953
+        },
+        {
+          "filename": "mri-grayscale_113.png",
+          "bytes": 15132,
+          "sha256": "b4de6aab4aa1fa2420101c71e4cbc7979d2296d018070fe94ce03e3ce05a7256",
+          "ijkZ": 113,
+          "positionRasMm": -52.79456799585114
+        },
+        {
+          "filename": "mri-grayscale_117.png",
+          "bytes": 14409,
+          "sha256": "11ff4a84d7866a7b859047313178e4d8ddd8cc4994b9b512846113fc0cd76b98",
+          "ijkZ": 117,
+          "positionRasMm": -46.49520341405329
+        },
+        {
+          "filename": "mri-grayscale_120.png",
+          "bytes": 14064,
+          "sha256": "d3c80a064057eaafc3d82200b83d2951e81aff04417053b2ba0f8ebad2445355",
+          "ijkZ": 120,
+          "positionRasMm": -41.7706799777049
+        },
+        {
+          "filename": "mri-grayscale_123.png",
+          "bytes": 13547,
+          "sha256": "30007dc3d609a5d76997b09491f2f0a2c0aa273712c6744b69d2f7756034be5c",
+          "ijkZ": 123,
+          "positionRasMm": -37.04615654135651
+        },
+        {
+          "filename": "mri-grayscale_126.png",
+          "bytes": 12865,
+          "sha256": "719ffe6c670b86e5c309656cf892c441d4edfee92874245f50ff48a27be88e17",
+          "ijkZ": 126,
+          "positionRasMm": -32.32163310500812
+        },
+        {
+          "filename": "mri-grayscale_129.png",
+          "bytes": 12023,
+          "sha256": "48ad86b9da8bf3be9cbc13d28e8ed16a427a7e81b6f5a98fa05d7d0353d0d844",
+          "ijkZ": 129,
+          "positionRasMm": -27.597109668659726
+        },
+        {
+          "filename": "mri-grayscale_132.png",
+          "bytes": 10964,
+          "sha256": "21648227c2d9fec02d317b7291c7c0a62261563a62c612af42451557e5827b57",
+          "ijkZ": 132,
+          "positionRasMm": -22.872586232311335
+        },
+        {
+          "filename": "mri-grayscale_135.png",
+          "bytes": 9888,
+          "sha256": "7ee13531a06082dd82078e1160a6e47b7ef40835ad8e682aea220ef64ef933bd",
+          "ijkZ": 135,
+          "positionRasMm": -18.148062795962943
+        },
+        {
+          "filename": "mri-grayscale_139.png",
+          "bytes": 7732,
+          "sha256": "ad1230d25edf52354bf9f1ab8657ad41c6b44d9cec6416f8cf3c5e5641a6a6e2",
+          "ijkZ": 139,
+          "positionRasMm": -11.848698214165069
+        },
+        {
+          "filename": "mri-grayscale_142.png",
+          "bytes": 5893,
+          "sha256": "d76c4a5e6d162713f7a4122fdacb87a34146e70a4d496bb5b80742fa777d99a9",
+          "ijkZ": 142,
+          "positionRasMm": -7.124174777816677
+        },
+        {
+          "filename": "mri-grayscale_145.png",
+          "bytes": 3245,
+          "sha256": "b899721420ec98dc9659b555dfd276a72f553a4eb03c3d77af243c4b032c550e",
+          "ijkZ": 145,
+          "positionRasMm": -2.399651341468285
+        },
+        {
+          "filename": "mri-grayscale_148.png",
+          "bytes": 179,
+          "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+          "ijkZ": 148,
+          "positionRasMm": 2.3248720948801065
+        }
+      ]
+    },
+    "ct-bone": {
+      "modality": "ct",
+      "window": 1800.0,
+      "level": 400.0,
+      "planes": [
+        {
+          "filename": "ct-bone_000.png",
+          "bytes": 253,
+          "sha256": "229a1a7b0bc607758d0f50a7dde2d6830eebeac44a8dbdd52b16177a1a2db7b5",
+          "ijkZ": 0,
+          "positionRasMm": -230.75161743164062
+        },
+        {
+          "filename": "ct-bone_003.png",
+          "bytes": 231,
+          "sha256": "4feeabcc721776a1202ab466c309c37f6b9f5439f4ec0babeaee7d2c2126b382",
+          "ijkZ": 3,
+          "positionRasMm": -226.02709399529223
+        },
+        {
+          "filename": "ct-bone_006.png",
+          "bytes": 217,
+          "sha256": "c9774f5399ca060488274dae230c1539e4f9932bd68127a0d715af1058d7dc42",
+          "ijkZ": 6,
+          "positionRasMm": -221.30257055894384
+        },
+        {
+          "filename": "ct-bone_009.png",
+          "bytes": 417,
+          "sha256": "7fbd49e4170f4aa65849c5ee7b98ce06001d4e9aa11f84a98aae7fa5b939313b",
+          "ijkZ": 9,
+          "positionRasMm": -216.57804712259545
+        },
+        {
+          "filename": "ct-bone_013.png",
+          "bytes": 776,
+          "sha256": "279d11cf281b8d0cc5a285af99e81706f6e7d00e14d6a1a4cc3ff6e862d53337",
+          "ijkZ": 13,
+          "positionRasMm": -210.27868254079758
+        },
+        {
+          "filename": "ct-bone_016.png",
+          "bytes": 1391,
+          "sha256": "a7e2fae03a7c44b6569d7d296ec02fce60023190a412eb111ab7d5577f4f9f8f",
+          "ijkZ": 16,
+          "positionRasMm": -205.55415910444918
+        },
+        {
+          "filename": "ct-bone_019.png",
+          "bytes": 1468,
+          "sha256": "586337ad04ad30d14971f76888a8bd070af2ba12686360c9d030f1f6b7dda81e",
+          "ijkZ": 19,
+          "positionRasMm": -200.8296356681008
+        },
+        {
+          "filename": "ct-bone_022.png",
+          "bytes": 1583,
+          "sha256": "5cfa41b42f97599b8c937bd816bab691620ab51c685a7b5dd0f61eecdca77cb6",
+          "ijkZ": 22,
+          "positionRasMm": -196.1051122317524
+        },
+        {
+          "filename": "ct-bone_025.png",
+          "bytes": 1856,
+          "sha256": "0c418350c5d6cf79603480ddf84497c7985fd6fb0de6970937c0951213cf5729",
+          "ijkZ": 25,
+          "positionRasMm": -191.380588795404
+        },
+        {
+          "filename": "ct-bone_028.png",
+          "bytes": 1957,
+          "sha256": "bb5db7b7e22bd9465ebe6d3b72059c1eac5b1f59971ba12de1aa28dce3e60d11",
+          "ijkZ": 28,
+          "positionRasMm": -186.65606535905562
+        },
+        {
+          "filename": "ct-bone_031.png",
+          "bytes": 1585,
+          "sha256": "fdcf84d4ee72c278b2aa8b1dde3917444ca3953a653b310eb625dd756acd7550",
+          "ijkZ": 31,
+          "positionRasMm": -181.93154192270723
+        },
+        {
+          "filename": "ct-bone_035.png",
+          "bytes": 1718,
+          "sha256": "8c4977341c21c7b4cfd91dbcd0545f486f77e492dbf21da22f614c92dabef8c4",
+          "ijkZ": 35,
+          "positionRasMm": -175.63217734090938
+        },
+        {
+          "filename": "ct-bone_038.png",
+          "bytes": 1554,
+          "sha256": "293be01d84021b6d6e616071a36bd9bd93123fa96ba6a16f435feb144c8dd962",
+          "ijkZ": 38,
+          "positionRasMm": -170.907653904561
+        },
+        {
+          "filename": "ct-bone_041.png",
+          "bytes": 1386,
+          "sha256": "54e2d92e1feee5f37f899e9b442f0b698a33165e6316cb2100a3a293cf1f1618",
+          "ijkZ": 41,
+          "positionRasMm": -166.1831304682126
+        },
+        {
+          "filename": "ct-bone_044.png",
+          "bytes": 1334,
+          "sha256": "c69e6fd90075ade5e47c7c0b797eb55bd3f6a1a714fa8195904b3ceaa8332cde",
+          "ijkZ": 44,
+          "positionRasMm": -161.45860703186418
+        },
+        {
+          "filename": "ct-bone_047.png",
+          "bytes": 1682,
+          "sha256": "458db031055f8c944a3d95c397a32af094b3d041dbf32f2f4b944e5b288467dd",
+          "ijkZ": 47,
+          "positionRasMm": -156.7340835955158
+        },
+        {
+          "filename": "ct-bone_050.png",
+          "bytes": 1433,
+          "sha256": "0e1e69b57180b56246f570ab9c3bec210695ffa2d15e9d9851887713d93a85b8",
+          "ijkZ": 50,
+          "positionRasMm": -152.0095601591674
+        },
+        {
+          "filename": "ct-bone_054.png",
+          "bytes": 2466,
+          "sha256": "7e01a62e6e4fca813cadbf4d6fbdf89b6b6caaebcf5d67557826be36f5b28425",
+          "ijkZ": 54,
+          "positionRasMm": -145.71019557736955
+        },
+        {
+          "filename": "ct-bone_057.png",
+          "bytes": 2957,
+          "sha256": "55bc89e2a6678124cc26441b7e2affc35615355f149de1608f8bc00d33aa449d",
+          "ijkZ": 57,
+          "positionRasMm": -140.98567214102115
+        },
+        {
+          "filename": "ct-bone_060.png",
+          "bytes": 3146,
+          "sha256": "2dd6cc5b045e5d4cfa8993e47dac0128eb9572e57c31f7f80cf24d3fc6d3b427",
+          "ijkZ": 60,
+          "positionRasMm": -136.26114870467276
+        },
+        {
+          "filename": "ct-bone_063.png",
+          "bytes": 3614,
+          "sha256": "ceab782488094bd727f8015d4df311e2f8cef14729e301614024cc3546eec8bc",
+          "ijkZ": 63,
+          "positionRasMm": -131.53662526832437
+        },
+        {
+          "filename": "ct-bone_066.png",
+          "bytes": 4593,
+          "sha256": "268ccd65d4d17e68b2acd120dfe351c61913ef069a7248d141406edd192a3ae0",
+          "ijkZ": 66,
+          "positionRasMm": -126.81210183197598
+        },
+        {
+          "filename": "ct-bone_069.png",
+          "bytes": 4524,
+          "sha256": "e66b4c388d9d1604b20cbe6aa2790b6c0f1299a82da36fdfe4218e51b7bd8a9f",
+          "ijkZ": 69,
+          "positionRasMm": -122.08757839562757
+        },
+        {
+          "filename": "ct-bone_072.png",
+          "bytes": 4020,
+          "sha256": "ad90b59e205726772bbe16a51d96e3b0820cbb5c8ea349519ed35dfab404f28a",
+          "ijkZ": 72,
+          "positionRasMm": -117.36305495927918
+        },
+        {
+          "filename": "ct-bone_076.png",
+          "bytes": 3300,
+          "sha256": "61d16fe10480c0005aa4a334c52fb3343b3d438210632e036e3165eb262ed203",
+          "ijkZ": 76,
+          "positionRasMm": -111.06369037748134
+        },
+        {
+          "filename": "ct-bone_079.png",
+          "bytes": 2976,
+          "sha256": "d57a214706849af6f517f139fba57b741aa1db8e32cc331f83e8bc2c3aa8de3e",
+          "ijkZ": 79,
+          "positionRasMm": -106.33916694113293
+        },
+        {
+          "filename": "ct-bone_082.png",
+          "bytes": 2935,
+          "sha256": "c1782153c874d2dfdd2fb81ca3ca58acd89b2e31e363f4eb9f56f4da945ca035",
+          "ijkZ": 82,
+          "positionRasMm": -101.61464350478454
+        },
+        {
+          "filename": "ct-bone_085.png",
+          "bytes": 2875,
+          "sha256": "3e7c20143be0e966d59bd4e3f590795add560c2ec068e6d20b5e9bb284c6c9d9",
+          "ijkZ": 85,
+          "positionRasMm": -96.89012006843615
+        },
+        {
+          "filename": "ct-bone_088.png",
+          "bytes": 3111,
+          "sha256": "2b1a95a6038459539b04a477e33c77b86cb524b3bb49a0141ea36fdbe16f5fad",
+          "ijkZ": 88,
+          "positionRasMm": -92.16559663208776
+        },
+        {
+          "filename": "ct-bone_091.png",
+          "bytes": 3473,
+          "sha256": "2fb0e59c1aaa16e68971573c948719c74655ed4046e77fcfb1ea3b275750b5a7",
+          "ijkZ": 91,
+          "positionRasMm": -87.44107319573936
+        },
+        {
+          "filename": "ct-bone_094.png",
+          "bytes": 3682,
+          "sha256": "c4028811a5293f02b88ab0bda32a3079d8753d8ee095d9110f9b51bf1e04375b",
+          "ijkZ": 94,
+          "positionRasMm": -82.71654975939097
+        },
+        {
+          "filename": "ct-bone_098.png",
+          "bytes": 3478,
+          "sha256": "a5776945942086d1ff58143d41cc532bb9468913084a6ba6eb576ee312b56703",
+          "ijkZ": 98,
+          "positionRasMm": -76.41718517759313
+        },
+        {
+          "filename": "ct-bone_101.png",
+          "bytes": 3689,
+          "sha256": "cb3f6b23f9188b434c19fb8055d5bc709145ab03c60999f6e0c9b9e254fa2d13",
+          "ijkZ": 101,
+          "positionRasMm": -71.6926617412447
+        },
+        {
+          "filename": "ct-bone_104.png",
+          "bytes": 3619,
+          "sha256": "a06a607648d99618f643cc5bb529ab52a05ccd1f856d48c8d33f986adbb72fa5",
+          "ijkZ": 104,
+          "positionRasMm": -66.96813830489631
+        },
+        {
+          "filename": "ct-bone_107.png",
+          "bytes": 3783,
+          "sha256": "0910d412b5d41764f92682513972e0f912390b57073b63673eefa0bd25e04826",
+          "ijkZ": 107,
+          "positionRasMm": -62.24361486854792
+        },
+        {
+          "filename": "ct-bone_110.png",
+          "bytes": 3609,
+          "sha256": "78303daa313f77cb2d37bb3d9da42eff4ccfabc0929e9be88db7a02462c782d4",
+          "ijkZ": 110,
+          "positionRasMm": -57.51909143219953
+        },
+        {
+          "filename": "ct-bone_113.png",
+          "bytes": 3683,
+          "sha256": "b2c83a4d0bd75a169437c1759293f597dde152920346719571c2bb2076a10bec",
+          "ijkZ": 113,
+          "positionRasMm": -52.79456799585114
+        },
+        {
+          "filename": "ct-bone_117.png",
+          "bytes": 3827,
+          "sha256": "02836e6034f18f491c05e449b7b4847ff4f7ff2cdc19cdc02c5aacc161a4de01",
+          "ijkZ": 117,
+          "positionRasMm": -46.49520341405329
+        },
+        {
+          "filename": "ct-bone_120.png",
+          "bytes": 3995,
+          "sha256": "67b1e640e6416841784b98e491ac8f6c6905549d8b8fd6d06e19ebac10cbdce5",
+          "ijkZ": 120,
+          "positionRasMm": -41.7706799777049
+        },
+        {
+          "filename": "ct-bone_123.png",
+          "bytes": 4096,
+          "sha256": "5634ad51ac24bf4789f8b3c10a9a37a0485e64647ba60d12b6e91b9064a55ffa",
+          "ijkZ": 123,
+          "positionRasMm": -37.04615654135651
+        },
+        {
+          "filename": "ct-bone_126.png",
+          "bytes": 4055,
+          "sha256": "30a40e0d10e082b7b14d9c48238f39c944ce3a5d5257d02d8b5c238ba42d54ad",
+          "ijkZ": 126,
+          "positionRasMm": -32.32163310500812
+        },
+        {
+          "filename": "ct-bone_129.png",
+          "bytes": 4107,
+          "sha256": "62fbbebe121f97e08fe46999891cc2d01a5aa7adca1c10a21b16b7198629b795",
+          "ijkZ": 129,
+          "positionRasMm": -27.597109668659726
+        },
+        {
+          "filename": "ct-bone_132.png",
+          "bytes": 4118,
+          "sha256": "13f1ae848417da268269b37c04c87dd5982a7ecb9439b105a2f7a361663e26a2",
+          "ijkZ": 132,
+          "positionRasMm": -22.872586232311335
+        },
+        {
+          "filename": "ct-bone_135.png",
+          "bytes": 3918,
+          "sha256": "188a453510fb582af063642f6d578d4f68a0dcf2f361f993a255628868cc385c",
+          "ijkZ": 135,
+          "positionRasMm": -18.148062795962943
+        },
+        {
+          "filename": "ct-bone_139.png",
+          "bytes": 3305,
+          "sha256": "049857956799f301feaae7316ceeac7c4cbdd4ede568ec9ea33b196986c823f7",
+          "ijkZ": 139,
+          "positionRasMm": -11.848698214165069
+        },
+        {
+          "filename": "ct-bone_142.png",
+          "bytes": 2245,
+          "sha256": "3780caf5be99d41354feeee9de8b14b5e39fe0c4d604e759c8fa5824d75cd4d3",
+          "ijkZ": 142,
+          "positionRasMm": -7.124174777816677
+        },
+        {
+          "filename": "ct-bone_145.png",
+          "bytes": 179,
+          "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+          "ijkZ": 145,
+          "positionRasMm": -2.399651341468285
+        },
+        {
+          "filename": "ct-bone_148.png",
+          "bytes": 179,
+          "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+          "ijkZ": 148,
+          "positionRasMm": 2.3248720948801065
+        }
+      ]
+    },
+    "ct-soft-tissue": {
+      "modality": "ct",
+      "window": 150.0,
+      "level": 40.0,
+      "planes": [
+        {
+          "filename": "ct-soft-tissue_000.png",
+          "bytes": 1437,
+          "sha256": "cd9b0fb2a95893014e126ef06ebaca0dffc77608fadf487e026c97a6c3d8cabd",
+          "ijkZ": 0,
+          "positionRasMm": -230.75161743164062
+        },
+        {
+          "filename": "ct-soft-tissue_003.png",
+          "bytes": 1971,
+          "sha256": "566268e50d989eea2da1e867cfd717319c6d3595f96283e3b0b07f3a27f49dd1",
+          "ijkZ": 3,
+          "positionRasMm": -226.02709399529223
+        },
+        {
+          "filename": "ct-soft-tissue_006.png",
+          "bytes": 2319,
+          "sha256": "fa95895b9daf54bb045b96764addf9a86b8a94308af557d5dfee59289d87c0ef",
+          "ijkZ": 6,
+          "positionRasMm": -221.30257055894384
+        },
+        {
+          "filename": "ct-soft-tissue_009.png",
+          "bytes": 3151,
+          "sha256": "5e4fda0e43c1ada5f55c1055cf87f8e643570d3fecca03c6cd63f98660c43a02",
+          "ijkZ": 9,
+          "positionRasMm": -216.57804712259545
+        },
+        {
+          "filename": "ct-soft-tissue_013.png",
+          "bytes": 5048,
+          "sha256": "70a63d3442bb36ff0bf8499d62029932350d63438c0823a4a61731c52339cf72",
+          "ijkZ": 13,
+          "positionRasMm": -210.27868254079758
+        },
+        {
+          "filename": "ct-soft-tissue_016.png",
+          "bytes": 6253,
+          "sha256": "c4d588f23eaf12cf8626ea9329f1d365f7028848ee6455b0e3c6e9a968b88456",
+          "ijkZ": 16,
+          "positionRasMm": -205.55415910444918
+        },
+        {
+          "filename": "ct-soft-tissue_019.png",
+          "bytes": 6874,
+          "sha256": "a9a7a7f3bf9816ca6ccdfe71e87e61784248a37b0e41caa6f8d2aed5738a58ba",
+          "ijkZ": 19,
+          "positionRasMm": -200.8296356681008
+        },
+        {
+          "filename": "ct-soft-tissue_022.png",
+          "bytes": 7926,
+          "sha256": "4e7377a36d70b963dd623245c1b0fe8f9319d60ed71bbe0becd5db5c1e5caedf",
+          "ijkZ": 22,
+          "positionRasMm": -196.1051122317524
+        },
+        {
+          "filename": "ct-soft-tissue_025.png",
+          "bytes": 8783,
+          "sha256": "588530d8fc168a986359e99e59e6817667c19112fc235df3f367328ed9e3b10d",
+          "ijkZ": 25,
+          "positionRasMm": -191.380588795404
+        },
+        {
+          "filename": "ct-soft-tissue_028.png",
+          "bytes": 9507,
+          "sha256": "d9415bdd4052a9452cfebfc0e41b4b01dd4991a81e28102f2b0a3fabdab4cf0a",
+          "ijkZ": 28,
+          "positionRasMm": -186.65606535905562
+        },
+        {
+          "filename": "ct-soft-tissue_031.png",
+          "bytes": 10280,
+          "sha256": "08186b719f0b46c1f324591724571792d283793f06346a92599217697214ad4c",
+          "ijkZ": 31,
+          "positionRasMm": -181.93154192270723
+        },
+        {
+          "filename": "ct-soft-tissue_035.png",
+          "bytes": 11064,
+          "sha256": "2462ab015cea9e8c9f4e354ab1c1ffc666f899b83290d72a96169036ecbe6989",
+          "ijkZ": 35,
+          "positionRasMm": -175.63217734090938
+        },
+        {
+          "filename": "ct-soft-tissue_038.png",
+          "bytes": 11504,
+          "sha256": "b210c65851568373530cfe5d5f6aa09f74754e1b44f48effe2cf2ec530d282c4",
+          "ijkZ": 38,
+          "positionRasMm": -170.907653904561
+        },
+        {
+          "filename": "ct-soft-tissue_041.png",
+          "bytes": 11325,
+          "sha256": "f5840bf628c376b0e6e7f68aa912584bfa135e90bac3e6f75e9ac8ab855398ec",
+          "ijkZ": 41,
+          "positionRasMm": -166.1831304682126
+        },
+        {
+          "filename": "ct-soft-tissue_044.png",
+          "bytes": 11600,
+          "sha256": "9bf3d56cf4f6f8374b234290c8a432efdf3a8edce60200d57cab7ccfd243447a",
+          "ijkZ": 44,
+          "positionRasMm": -161.45860703186418
+        },
+        {
+          "filename": "ct-soft-tissue_047.png",
+          "bytes": 11690,
+          "sha256": "ac168550614aed76fe4946163c5070a25a9254d2576a5dd81b92d95d0728ab6a",
+          "ijkZ": 47,
+          "positionRasMm": -156.7340835955158
+        },
+        {
+          "filename": "ct-soft-tissue_050.png",
+          "bytes": 12301,
+          "sha256": "9088a2e7d5f77c811dca11218763d6a240562879e310b4bd00ed40367d1369fb",
+          "ijkZ": 50,
+          "positionRasMm": -152.0095601591674
+        },
+        {
+          "filename": "ct-soft-tissue_054.png",
+          "bytes": 11719,
+          "sha256": "1f13ad634d3b496278b9562c8238d8c778aa1e49decc2b1d783daa6df4fc0c45",
+          "ijkZ": 54,
+          "positionRasMm": -145.71019557736955
+        },
+        {
+          "filename": "ct-soft-tissue_057.png",
+          "bytes": 11832,
+          "sha256": "6bde3d743aa72f3d7d1bcb348e8ee3aad53e6ebc78014d9b3c98d1a3dcf5f423",
+          "ijkZ": 57,
+          "positionRasMm": -140.98567214102115
+        },
+        {
+          "filename": "ct-soft-tissue_060.png",
+          "bytes": 12522,
+          "sha256": "19d801d968d12d21748a0c6d76b403d11477f61fe00c7faf38adb887c2f3239e",
+          "ijkZ": 60,
+          "positionRasMm": -136.26114870467276
+        },
+        {
+          "filename": "ct-soft-tissue_063.png",
+          "bytes": 12483,
+          "sha256": "5545692aebd2ac69b579fcc9cea65c026c67e3fd0747732963c4a4256d2f784f",
+          "ijkZ": 63,
+          "positionRasMm": -131.53662526832437
+        },
+        {
+          "filename": "ct-soft-tissue_066.png",
+          "bytes": 12080,
+          "sha256": "6399ae00221a486cb6d2d44678fdf601c438397d492972b8d45bfe389fc24c85",
+          "ijkZ": 66,
+          "positionRasMm": -126.81210183197598
+        },
+        {
+          "filename": "ct-soft-tissue_069.png",
+          "bytes": 12616,
+          "sha256": "ecf540fb17806e88925d3c71575c3da33408960424e504fbb08b3a4fcab06dcd",
+          "ijkZ": 69,
+          "positionRasMm": -122.08757839562757
+        },
+        {
+          "filename": "ct-soft-tissue_072.png",
+          "bytes": 13243,
+          "sha256": "89aff9f0d10475bfed03336cacbabd969438c9bc3432ab5cbc9fd77840895a40",
+          "ijkZ": 72,
+          "positionRasMm": -117.36305495927918
+        },
+        {
+          "filename": "ct-soft-tissue_076.png",
+          "bytes": 14509,
+          "sha256": "b2e7dcc66922557a818c55defd23badad1183d1c0ffec8649785acf5588ab0a0",
+          "ijkZ": 76,
+          "positionRasMm": -111.06369037748134
+        },
+        {
+          "filename": "ct-soft-tissue_079.png",
+          "bytes": 15127,
+          "sha256": "3de03e6377d91acc7fd0c2db93ab53755763c7c20b9ea127bafa4906cb7658d8",
+          "ijkZ": 79,
+          "positionRasMm": -106.33916694113293
+        },
+        {
+          "filename": "ct-soft-tissue_082.png",
+          "bytes": 15208,
+          "sha256": "1792f907b49d95095cffe464927bf52d91b84c2274f8497e84dba695271757bf",
+          "ijkZ": 82,
+          "positionRasMm": -101.61464350478454
+        },
+        {
+          "filename": "ct-soft-tissue_085.png",
+          "bytes": 15264,
+          "sha256": "cd68dd2f35c34ce5c58acbe82d2cdd39ee137947421e573850ca623e3203825e",
+          "ijkZ": 85,
+          "positionRasMm": -96.89012006843615
+        },
+        {
+          "filename": "ct-soft-tissue_088.png",
+          "bytes": 15595,
+          "sha256": "c1207f297e467448bcf87307fa97f54b1de101dfe0bc3aafe16b749baf13e3af",
+          "ijkZ": 88,
+          "positionRasMm": -92.16559663208776
+        },
+        {
+          "filename": "ct-soft-tissue_091.png",
+          "bytes": 15818,
+          "sha256": "58b4617ce4c2b1e118ee321cf06d3957802c3d323b08d1bf64b4a9d8de326012",
+          "ijkZ": 91,
+          "positionRasMm": -87.44107319573936
+        },
+        {
+          "filename": "ct-soft-tissue_094.png",
+          "bytes": 15246,
+          "sha256": "adaa16338f5c6d78d65dd09a0304f2eb1a7d948f8a841828fdc8731d212c522e",
+          "ijkZ": 94,
+          "positionRasMm": -82.71654975939097
+        },
+        {
+          "filename": "ct-soft-tissue_098.png",
+          "bytes": 15092,
+          "sha256": "ede0f141d7d2b701fa5d226419c1b383e2797d1919ece85ba9f20bc529dd8b7b",
+          "ijkZ": 98,
+          "positionRasMm": -76.41718517759313
+        },
+        {
+          "filename": "ct-soft-tissue_101.png",
+          "bytes": 14768,
+          "sha256": "f42524056f612c15b3693eb53ab3c8cf505371548368a5a515118b5ed502527f",
+          "ijkZ": 101,
+          "positionRasMm": -71.6926617412447
+        },
+        {
+          "filename": "ct-soft-tissue_104.png",
+          "bytes": 14668,
+          "sha256": "c116029094842b3beb8d16dd7597795b1fe4cebfc89f999729ffb9aecdc79777",
+          "ijkZ": 104,
+          "positionRasMm": -66.96813830489631
+        },
+        {
+          "filename": "ct-soft-tissue_107.png",
+          "bytes": 14106,
+          "sha256": "7ac0cc36f8f5445d00dc9ace0d06e21e65a7cc1bd1b7f690892ff81df690926a",
+          "ijkZ": 107,
+          "positionRasMm": -62.24361486854792
+        },
+        {
+          "filename": "ct-soft-tissue_110.png",
+          "bytes": 13930,
+          "sha256": "00f8a908149c50d47f4e927c1b15140e6e7d465f7617a69f1317881172c85495",
+          "ijkZ": 110,
+          "positionRasMm": -57.51909143219953
+        },
+        {
+          "filename": "ct-soft-tissue_113.png",
+          "bytes": 13123,
+          "sha256": "6a335dd92e8ca13e009f5f6cc9591284e5e8e1b945beebda173d176d7f9772eb",
+          "ijkZ": 113,
+          "positionRasMm": -52.79456799585114
+        },
+        {
+          "filename": "ct-soft-tissue_117.png",
+          "bytes": 12632,
+          "sha256": "d86b46d3e5fd662c61e9dc8422fc85e00307135eb4e23e7623cee92f027d2efa",
+          "ijkZ": 117,
+          "positionRasMm": -46.49520341405329
+        },
+        {
+          "filename": "ct-soft-tissue_120.png",
+          "bytes": 11412,
+          "sha256": "29cd9fa94767f958cbef066a97bd37afb30075ff5d54238b2bedf27255ef1bf8",
+          "ijkZ": 120,
+          "positionRasMm": -41.7706799777049
+        },
+        {
+          "filename": "ct-soft-tissue_123.png",
+          "bytes": 10843,
+          "sha256": "c53b7a42d8543044ed364e181942523703f7a3c570b7a60240b24a9bd12d4ba2",
+          "ijkZ": 123,
+          "positionRasMm": -37.04615654135651
+        },
+        {
+          "filename": "ct-soft-tissue_126.png",
+          "bytes": 9623,
+          "sha256": "a4e077c51be21b3ea9473b7fef4d535148ae2dc0295d330af48c2e45cfff292f",
+          "ijkZ": 126,
+          "positionRasMm": -32.32163310500812
+        },
+        {
+          "filename": "ct-soft-tissue_129.png",
+          "bytes": 8277,
+          "sha256": "966cca986e2aa2d352ae1ba2a940b827bd16a1dafceb7cdae88480b7642439a1",
+          "ijkZ": 129,
+          "positionRasMm": -27.597109668659726
+        },
+        {
+          "filename": "ct-soft-tissue_132.png",
+          "bytes": 6838,
+          "sha256": "57477495cf0a626010d8648bb0087197a717a3a609a48cf1bfb836e16b47b40e",
+          "ijkZ": 132,
+          "positionRasMm": -22.872586232311335
+        },
+        {
+          "filename": "ct-soft-tissue_135.png",
+          "bytes": 5290,
+          "sha256": "189dac8c82168c241787c7dcae9313afd1dc54df5f793ea7e4f6731ea92b5cf7",
+          "ijkZ": 135,
+          "positionRasMm": -18.148062795962943
+        },
+        {
+          "filename": "ct-soft-tissue_139.png",
+          "bytes": 3138,
+          "sha256": "68ad43408795b89fb3814033fde6f8b2d7a9921330f3de3efcc3f24ef533d4ee",
+          "ijkZ": 139,
+          "positionRasMm": -11.848698214165069
+        },
+        {
+          "filename": "ct-soft-tissue_142.png",
+          "bytes": 1656,
+          "sha256": "881b21f928d1e33ab47915d344880de62d004341a15f38b91e3cd76fa9f43c43",
+          "ijkZ": 142,
+          "positionRasMm": -7.124174777816677
+        },
+        {
+          "filename": "ct-soft-tissue_145.png",
+          "bytes": 547,
+          "sha256": "2f0d4b2db7fc2ec4f1d611d1b6453ad868c3fc5d58ffd71804568e58c59790d3",
+          "ijkZ": 145,
+          "positionRasMm": -2.399651341468285
+        },
+        {
+          "filename": "ct-soft-tissue_148.png",
+          "bytes": 179,
+          "sha256": "3b2e6eac48076f216003be0d52e818fa4715a39f67284b6efda8ae35e6c80c3e",
+          "ijkZ": 148,
+          "positionRasMm": 2.3248720948801065
+        }
+      ]
+    }
+  },
+  "probes": {
+    "mri": {
+      "ijk": [99, 23, 77],
+      "uv": [0.9707977207977208, 0.42926954732510286],
+      "alphaBytes": {
+        "high": 68,
+        "low": 190,
+        "validity": 255
+      },
+      "scalar": 2056.422322233138,
+      "emptyUV": [0.3853276353276353, 0.9174382716049383]
+    },
+    "ct": {
+      "ijk": [47, 91, 73],
+      "uv": [0.6384140550807218, 0.4642489711934156],
+      "alphaBytes": {
+        "high": 108,
+        "low": 171,
+        "validity": 255
+      },
+      "scalar": 209.22577545861964,
+      "emptyUV": [0.3853276353276353, 0.9174382716049383]
+    }
+  },
+  "totalBytes": 1235361
+}

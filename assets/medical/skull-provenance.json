@@ -1,0 +1,42 @@
+{
+  "model": "skull",
+  "sourceFilename": "Skull3D.obj",
+  "collection": "NLM Visible Human Project \u2014 Additional Head Images",
+  "sourceUrl": "https://data.lhncbc.nlm.nih.gov/public/Visible-Human/Additional-Head-Images/MR_CT_DICOM/CAT/",
+  "collectionReadme": "https://data.lhncbc.nlm.nih.gov/public/Visible-Human/Additional-Head-Images/README",
+  "termsUrl": "https://www.nlm.nih.gov/research/visible/visible_human.html",
+  "attribution": "Courtesy of the U.S. National Library of Medicine. Additional Head Images: Brigham and Women's Hospital / Harvard Medical School, Peter Ratiu and colleagues.",
+  "derivation": "User-supplied CT bone segmentation exported from 3D Slicer; simplified for educational AR visualization.",
+  "blenderVersion": "5.0.1",
+  "sourceSpace": "LPS millimetres",
+  "outputSpace": "Y-up metres, anterior +Z, anatomical left +X",
+  "originLpsMm": [-8.314079284667969, 78.85992622375488, -212.7226389219286],
+  "lpsToModelMatrix": [
+    [0.001, 0, 0, 0.008314079284667968],
+    [0, 0, 0.001, 0.2127226389219286],
+    [0, -0.001, 0, 0.07885992622375489],
+    [0, 0, 0, 1]
+  ],
+  "fragmentThresholdMm": 0.1,
+  "degenerateCrossProductSquaredThresholdMm4": 1e-16,
+  "decimationRatio": 0.03145414186662388,
+  "postDecimationDegenerateFacesRemoved": 74,
+  "triangles": 145991,
+  "bytes": 3395900,
+  "sha256": "990603fd394bf12a8f65b02ee77fd9563122c9be6c08547f1e57c30da5cd8d47",
+  "cleaning": {
+    "sourceSha256": "f3b2629424b65d5d251c6dda1f085184236b33834a602ab1366c18919510403b",
+    "sourceVertices": 3273786,
+    "sourceTriangles": 6053660,
+    "sourceComponents": 129986,
+    "retainedComponents": 3587,
+    "retainedVertices": 2363933,
+    "retainedTriangles": 4737055,
+    "degenerateFacesRemoved": 3225,
+    "boundsLpsMm": [
+      -92.43255615234375, -30.822460174560547, -212.64901733398438, 75.80439758300781,
+      188.5423126220703, -2.1441988945007324
+    ]
+  },
+  "clinicalValidation": "Not clinically validated; educational visualization only."
+}

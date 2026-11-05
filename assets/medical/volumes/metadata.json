@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "coordinateSystem": "RAS mm",
+  "grid": {
+    "boundsRasMm": [
+      -124.95521545410156, 125.44452667236328, -196.61221313476562, 53.78752899169922,
+      -230.75161743164062, 2.3248720948801065
+    ],
+    "dimensions": [160, 160, 149],
+    "spacingMm": 1.5748411454494644,
+    "sampleOrder": "Array Z,Y,X = increasing S,A,R; PNG rows retain array Y order",
+    "rasToViro": "X=R, Y=S, Z=-A; centred at common-grid midpoint"
+  },
+  "atlas": {
+    "dimensions": [2106, 1944],
+    "columns": 13,
+    "tileDimensions": [162, 162],
+    "gutter": 1,
+    "encoding": "16-bit unsigned scalar, high and low bytes in separate PNG alpha channels; validity in third alpha channel",
+    "texture": "RGBA8, LINEAR filtering, no mipmaps, clamp; alpha is linear even in sRGB textures"
+  },
+  "presets": {
+    "mri-grayscale": {
+      "modality": "mri",
+      "window": 5589.0,
+      "level": 2671.5,
+      "threshold": 0.1
+    },
+    "ct-bone": {
+      "modality": "ct",
+      "window": 1800.0,
+      "level": 400.0,
+      "threshold": 0.4
+    },
+    "ct-soft-tissue": {
+      "modality": "ct",
+      "window": 150.0,
+      "level": 40.0,
+      "threshold": 0.1
+    }
+  },
+  "series": [
+    {
+      "modality": "mri",
+      "volumeName": "MRI_Elastix",
+      "scalarOffset": -446.873261867035,
+      "scalarScale": 0.14224886828617872,
+      "scalarRange": [-446.873261867035, 8875.406321267688],
+      "quantizationMaxError": 0.07112429952030652,
+      "quantizationErrorBound": 0.07112443414308936,
+      "validVoxelCount": 3788800,
+      "geometry": {
+        "voxelSha256": "9254393642d17b7b7314d775a406226b4a40146c7b8febc69ec18b0c08b5d7ce",
+        "ijkToRas": [
+          [-0.48906199999999994, 0.0, 0.0, 125.19999700000008],
+          [0.0, -0.48906199999999994, 0.0, 53.54299899999999],
+          [0.0, 0.0, 0.5032467532467527, -230.49999999999994],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "parentTransformId": null,
+        "parentTransformChain": [],
+        "displayWindowLevel": [5589.0, 2671.5],
+        "autoWindowLevel": 1
+      },
+      "originalDimensions": [512, 512, 463],
+      "originalSpacingMm": [0.48906199999999994, 0.48906199999999994, 0.5032467532467527],
+      "atlases": {
+        "high": {
+          "filename": "mri_high.png",
+          "bytes": 1974061,
+          "sha256": "4e7aa82e65baf6d7e9d498368475df6cd3c9636b8c99fde0c1c3b02fde2c62d5"
+        },
+        "low": {
+          "filename": "mri_low.png",
+          "bytes": 3861702,
+          "sha256": "6ef5892e58107e6ebf4309a79d96c06973e2e02409397c92427b54f3cd5ecf49"
+        },
+        "validity": {
+          "filename": "mri_validity.png",
+          "bytes": 20330,
+          "sha256": "d189b356c89541e7a7d6acd113802aedaae4556dd7cbdf822d91529eadf4fafb"
+        }
+      }
+    },
+    {
+      "modality": "ct",
+      "volumeName": "CT Head",
+      "scalarOffset": -1200.0,
+      "scalarScale": 0.05065695299826089,
+      "scalarRange": [-1200.0, 2119.803414741027],
+      "quantizationMaxError": 0.025328474036541593,
+      "quantizationErrorBound": 0.025328476499130444,
+      "validVoxelCount": 3788800,
+      "geometry": {
+        "voxelSha256": "dcae8d0722ff7e9af468556a67293402a93bb47b4900b455ccf8adbec97ff9d8",
+        "ijkToRas": [
+          [-0.48906199999999994, 0.0, 0.0, 125.19999700000008],
+          [0.0, -0.48906199999999994, 0.0, 53.54299899999999],
+          [0.0, 0.0, 0.5032467532467527, -230.49999999999994],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "parentTransformId": "vtkMRMLGridTransformNode2",
+        "parentTransformChain": [
+          {
+            "id": "vtkMRMLGridTransformNode2",
+            "name": "4: Unnamed Series_1 acquisition transform",
+            "nodeClass": "vtkMRMLGridTransformNode",
+            "transformClass": "vtkOrientedGridTransform",
+            "displacementGrid": {
+              "dimensions": [2, 2, 463],
+              "origin": [125.199997, 53.542999, -230.50000000000003],
+              "spacing": [250.39974399999997, 250.39974399999997, 0.5032467532467532],
+              "sha256": "86084e73769a5bdf1c12a1e4e423fd42b2e13f43c94328e3caf822ca5661eb20"
+            }
+          }
+        ],
+        "displayWindowLevel": [150.0, 40.0],
+        "autoWindowLevel": 0
+      },
+      "originalDimensions": [512, 512, 463],
+      "originalSpacingMm": [0.48906199999999994, 0.48906199999999994, 0.5032467532467527],
+      "atlases": {
+        "high": {
+          "filename": "ct_high.png",
+          "bytes": 1763845,
+          "sha256": "af0d9bcb30709025df6ca6455df6e35546518a26826f758e48353c1a3c541a9f"
+        },
+        "low": {
+          "filename": "ct_low.png",
+          "bytes": 4182024,
+          "sha256": "bbe69fcec6c6ac33cf8d7e836b60d9e300c77702e166efd6f27256752ac708fb"
+        },
+        "validity": {
+          "filename": "ct_validity.png",
+          "bytes": 20330,
+          "sha256": "d189b356c89541e7a7d6acd113802aedaae4556dd7cbdf822d91529eadf4fafb"
+        }
+      }
+    }
+  ],
+  "imageBytes": 11822292,
+  "defaults": {
+    "modality": "mri",
+    "crop": "R minimum at grid midpoint; other boundaries at full extent",
+    "opacityMultiplier": 1,
+    "quality": "balanced",
+    "samples": {
+      "balanced": 192,
+      "fast": 96
+    }
+  },
+  "sampling": {
+    "interpolation": "Trilinear: bilinear alpha texels plus adjacent axial tile interpolation",
+    "validity": "255 inside source reslice stencil, 0 outside; invalid scalar codes zero; normalize interpolated codes by interpolated validity",
+    "opacity": "smoothstep(preset threshold,1,windowed gray)*0.65 per mm; corrected by actual ray step in mm",
+    "cropFace": "Exact entry position, unlit windowed grayscale; alpha=(1-exp(-4*opacityMultiplier))*validity above density 0.001"
+  },
+  "provenance": {
+    "sourceScene": "2026-10-08-Scene.mrb",
+    "slicerVersion": "5.12.4",
+    "collection": "NLM Visible Human Project — Additional Head Images",
+    "sourceUrl": "https://data.lhncbc.nlm.nih.gov/public/Visible-Human/Additional-Head-Images/MR_CT_DICOM/",
+    "attribution": "Courtesy of the U.S. National Library of Medicine; Brigham and Women's Hospital / Harvard Medical School, Peter Ratiu and colleagues.",
+    "resampling": "VTK linear interpolation, common isotropic world RAS; parent transform applied once; registered MRI has no additional Elastix transform",
+    "usage": "Educational visualization; separate from mesh registration; original volumes remain outside Git",
+    "sourceSceneSha256": "998783662535ddd9619709cfce38b262da9bd3ca4ff588ad80f37b228d96d598",
+    "sourceSceneBytes": 1323777421,
+    "sourceNodesUnchanged": true
+  }
+}

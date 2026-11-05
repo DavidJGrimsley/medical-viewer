@@ -1,0 +1,1087 @@
+{
+  "schemaVersion": 1,
+  "coordinateSystem": "RAS mm",
+  "grid": {
+    "boundsRasMm": [
+      -124.95521545410156, 125.44452667236328, -196.61221313476562, 53.78752899169922,
+      -230.75161743164062, 2.2516233921051025
+    ],
+    "imageDimensions": [512, 512],
+    "pixelSpacingMm": 0.4900190648267414,
+    "positionsMm": [
+      -230.75161743164062, -227.80220931994765, -224.85280120825465, -221.90339309656167,
+      -218.9539849848687, -216.0045768731757, -213.05516876148272, -210.10576064978974,
+      -207.15635253809677, -204.20694442640377, -201.2575363147108, -198.30812820301782,
+      -195.3587200913248, -192.40931197963184, -189.45990386793886, -186.51049575624586,
+      -183.56108764455288, -180.6116795328599, -177.6622714211669, -174.71286330947393,
+      -171.76345519778096, -168.81404708608795, -165.86463897439498, -162.915230862702,
+      -159.965822751009, -157.01641463931603, -154.06700652762305, -151.11759841593005,
+      -148.16819030423707, -145.2187821925441, -142.2693740808511, -139.31996596915815,
+      -136.37055785746514, -133.42114974577214, -130.4717416340792, -127.52233352238619,
+      -124.57292541069322, -121.62351729900023, -118.67410918730724, -115.72470107561426,
+      -112.77529296392127, -109.82588485222828, -106.87647674053531, -103.92706862884232,
+      -100.97766051714933, -98.02825240545636, -95.07884429376338, -92.12943618207038,
+      -89.1800280703774, -86.23061995868443, -83.28121184699143, -80.33180373529845,
+      -77.38239562360548, -74.43298751191247, -71.4835794002195, -68.53417128852652,
+      -65.58476317683352, -62.635355065140544, -59.68594695344757, -56.736538841754594,
+      -53.78713073006159, -50.837722618368616, -47.88831450667564, -44.93890639498264,
+      -41.98949828328966, -39.04009017159669, -36.090682059903685, -33.14127394821071,
+      -30.191865836517735, -27.24245772482473, -24.293049613131757, -21.343641501438782,
+      -18.394233389745807, -15.444825278052804, -12.495417166359829, -9.546009054666854,
+      -6.596600942973851, -3.6471928312808757, -0.6977847195879008, 2.2516233921051025
+    ],
+    "pngTopLeftRasXYMm": [125.44452667236328, 53.78752899169922],
+    "pngColumnDirectionRas": [-1, 0, 0],
+    "pngRowDirectionRas": [0, -1, 0]
+  },
+  "provenance": {
+    "collection": "NLM Visible Human Project — Additional Head Images",
+    "sourceUrl": "https://data.lhncbc.nlm.nih.gov/public/Visible-Human/Additional-Head-Images/MR_CT_DICOM/",
+    "attribution": "Courtesy of the U.S. National Library of Medicine; Brigham and Women's Hospital / Harvard Medical School, Peter Ratiu and colleagues.",
+    "sourceScene": "2026-10-08-Scene.mrb",
+    "slicerVersion": "5.12.4",
+    "usage": "Educational visualization; panel is not registered to the packaged meshes.",
+    "sourceSceneSha256": "998783662535ddd9619709cfce38b262da9bd3ca4ff588ad80f37b228d96d598",
+    "sourceSceneBytes": 1323777421
+  },
+  "series": [
+    {
+      "modality": "mri",
+      "orientation": "axial",
+      "volumeName": "MRI_Elastix",
+      "imageCount": 80,
+      "imageDimensions": [512, 512],
+      "originalDimensions": [512, 512, 463],
+      "originalVoxelSpacingMm": [0.48906199999999994, 0.48906199999999994, 0.5032467532467527],
+      "geometry": {
+        "voxelSha256": "9254393642d17b7b7314d775a406226b4a40146c7b8febc69ec18b0c08b5d7ce",
+        "ijkToRas": [
+          [-0.48906199999999994, 0.0, 0.0, 125.19999700000008],
+          [0.0, -0.48906199999999994, 0.0, 53.54299899999999],
+          [0.0, 0.0, 0.5032467532467527, -230.49999999999994],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "parentTransformId": null,
+        "parentTransformChain": [],
+        "displayWindowLevel": [5589.0, 2671.5],
+        "autoWindowLevel": 1
+      },
+      "worldBoundsRasMm": [
+        -124.95521545410156, 125.44452667236328, -196.61221313476562, 53.78752899169922,
+        -230.75161743164062, 2.2516233921051025
+      ],
+      "window": 5589.0,
+      "level": 2671.5,
+      "resampling": "Linear interpolation on common world-RAS axial planes; current parent transform sampled once; no additional registration transform.",
+      "slices": [
+        {
+          "filename": "mri_axial_000.png",
+          "positionMm": -230.75161743164062,
+          "bytes": 11854,
+          "sha256": "546c502f4c7b8d4907ef19af4e08d175e29447b97519d5f188610515dfde808b"
+        },
+        {
+          "filename": "mri_axial_001.png",
+          "positionMm": -227.80220931994765,
+          "bytes": 29042,
+          "sha256": "3e94ecaa18c7481649553a44ac4d72f25b4afd97cf1e2449e3b1f8ac12faf7dc"
+        },
+        {
+          "filename": "mri_axial_002.png",
+          "positionMm": -224.85280120825465,
+          "bytes": 42549,
+          "sha256": "77a89bfd5c3852c0442d4feab71c3bc9f3f6a37c3f1a2a8d683cac1a62f40129"
+        },
+        {
+          "filename": "mri_axial_003.png",
+          "positionMm": -221.90339309656167,
+          "bytes": 51444,
+          "sha256": "2e587cf4958d4f3c19ee6568fdcf8b85241688f6ca8c6f4c67747e944fa26440"
+        },
+        {
+          "filename": "mri_axial_004.png",
+          "positionMm": -218.9539849848687,
+          "bytes": 57031,
+          "sha256": "33baac0f53467af5c032fee541f56548bb542b0e6e9f1dfb72c37a70cf176860"
+        },
+        {
+          "filename": "mri_axial_005.png",
+          "positionMm": -216.0045768731757,
+          "bytes": 60109,
+          "sha256": "128bcf8e567304991fcfbfdaa07654b7f921622046051a6b45493b300d80f7d1"
+        },
+        {
+          "filename": "mri_axial_006.png",
+          "positionMm": -213.05516876148272,
+          "bytes": 61682,
+          "sha256": "c947ee06c7d5c16be118bc98627a5d12375f8461614cecf25e4c87bc2c47e15b"
+        },
+        {
+          "filename": "mri_axial_007.png",
+          "positionMm": -210.10576064978974,
+          "bytes": 63474,
+          "sha256": "ab86437241797055f18e3ce8c281bd04fb013f05dddab31e0c906f43bd6eb7d4"
+        },
+        {
+          "filename": "mri_axial_008.png",
+          "positionMm": -207.15635253809677,
+          "bytes": 66756,
+          "sha256": "e3f9fe48cef6fd4de79c9a126de5d431ebd02760649dcccb8ce92fbc2aac59aa"
+        },
+        {
+          "filename": "mri_axial_009.png",
+          "positionMm": -204.20694442640377,
+          "bytes": 69332,
+          "sha256": "9af3cacb5c440b56d95e95493e590d77fba45e3f2e9cec439dd2a30fc873073b"
+        },
+        {
+          "filename": "mri_axial_010.png",
+          "positionMm": -201.2575363147108,
+          "bytes": 71929,
+          "sha256": "ef617cc7913f3e7c5cbe47964971a7fa217a9f3f2251096a1b2c0c7e9eaf4f05"
+        },
+        {
+          "filename": "mri_axial_011.png",
+          "positionMm": -198.30812820301782,
+          "bytes": 74653,
+          "sha256": "19a1f21cf37fb9d877c3e8e255b8b430738aba8d1e473c601bb85a9d2ef1066b"
+        },
+        {
+          "filename": "mri_axial_012.png",
+          "positionMm": -195.3587200913248,
+          "bytes": 76923,
+          "sha256": "0998d1b6aa66ba13da7f437fd62269e4e8176fb90c929537f89c60faa5fe8cd5"
+        },
+        {
+          "filename": "mri_axial_013.png",
+          "positionMm": -192.40931197963184,
+          "bytes": 78396,
+          "sha256": "cc8d7f23f998d3728f8e4a4c700cb1f96e66357c5b5b4655463a2a68c836b402"
+        },
+        {
+          "filename": "mri_axial_014.png",
+          "positionMm": -189.45990386793886,
+          "bytes": 81101,
+          "sha256": "d0e7c648143ef79ba8d33a2835258b9eee61329e41cf1d1b94b140f578b26409"
+        },
+        {
+          "filename": "mri_axial_015.png",
+          "positionMm": -186.51049575624586,
+          "bytes": 83645,
+          "sha256": "1789917b44c6c6ba17e0a0b504820dec99feb6172b650425ede7a5ab405c46e7"
+        },
+        {
+          "filename": "mri_axial_016.png",
+          "positionMm": -183.56108764455288,
+          "bytes": 86310,
+          "sha256": "1239828f51c7b04fac043dc2ecc128880f32f7a8a7b8ed45fc2bebc5261e60b3"
+        },
+        {
+          "filename": "mri_axial_017.png",
+          "positionMm": -180.6116795328599,
+          "bytes": 88947,
+          "sha256": "9cdf1218b60b0d33c0f83ae304341921eefb96581ad5ee8a9686aa2f2e78890e"
+        },
+        {
+          "filename": "mri_axial_018.png",
+          "positionMm": -177.6622714211669,
+          "bytes": 90896,
+          "sha256": "4c7d5be4534e1d07e09289b92427934ba4eebdbbae10af18dc7f2a6e070a69ae"
+        },
+        {
+          "filename": "mri_axial_019.png",
+          "positionMm": -174.71286330947393,
+          "bytes": 91354,
+          "sha256": "c205b64c02477871ae5c009868cb3bf14912845288157a4905ebbfe8d7566c2b"
+        },
+        {
+          "filename": "mri_axial_020.png",
+          "positionMm": -171.76345519778096,
+          "bytes": 91308,
+          "sha256": "18608c6f6820c11603352e5374b6f2cc2b86a68ed6b4f0d9e2cbd6b265141bb7"
+        },
+        {
+          "filename": "mri_axial_021.png",
+          "positionMm": -168.81404708608795,
+          "bytes": 90829,
+          "sha256": "850acb0c3247497a49a4b1c18846c76d938cc64ee3c1c892f673ac8ed940a649"
+        },
+        {
+          "filename": "mri_axial_022.png",
+          "positionMm": -165.86463897439498,
+          "bytes": 91237,
+          "sha256": "4e20d532bf0de5a693c35cccc7a335785fdb9960d7f27890a4879a5e87112769"
+        },
+        {
+          "filename": "mri_axial_023.png",
+          "positionMm": -162.915230862702,
+          "bytes": 92632,
+          "sha256": "8c8c201dd0c4bca4600347523e84bc124d8b93faf9b1897af4c5ac7fcd905f36"
+        },
+        {
+          "filename": "mri_axial_024.png",
+          "positionMm": -159.965822751009,
+          "bytes": 93994,
+          "sha256": "c4176c91e3edffbcefe2d70fd0ebd449bade83fdf1d75ec46d96a3a4accbbddd"
+        },
+        {
+          "filename": "mri_axial_025.png",
+          "positionMm": -157.01641463931603,
+          "bytes": 95698,
+          "sha256": "060b045f0d7c353d689d6028828672defffaa65eaad5968561fdb346548e9cd0"
+        },
+        {
+          "filename": "mri_axial_026.png",
+          "positionMm": -154.06700652762305,
+          "bytes": 97847,
+          "sha256": "1354600135dff8177c58ffd0fc55f2a875051e0e8b2ef3874f022cce375703d6"
+        },
+        {
+          "filename": "mri_axial_027.png",
+          "positionMm": -151.11759841593005,
+          "bytes": 98765,
+          "sha256": "bb34ea27134f5f8ec21cfe401a4fbbba1857ce62d04a15ae69ec00b5823ca602"
+        },
+        {
+          "filename": "mri_axial_028.png",
+          "positionMm": -148.16819030423707,
+          "bytes": 99208,
+          "sha256": "63275fed30b9504b1b78f88d10f003bc242236898558363ab8ddd7b6e19bcda9"
+        },
+        {
+          "filename": "mri_axial_029.png",
+          "positionMm": -145.2187821925441,
+          "bytes": 98179,
+          "sha256": "89a715032f774a06fabfd110ccc2c1c57ef90a5f2c079c3246b25f039c1a1bd6"
+        },
+        {
+          "filename": "mri_axial_030.png",
+          "positionMm": -142.2693740808511,
+          "bytes": 97666,
+          "sha256": "c8ddcfcc2d62270bcc5da182b56e0b7d82507754cbc80e5d002dda2601ded31c"
+        },
+        {
+          "filename": "mri_axial_031.png",
+          "positionMm": -139.31996596915815,
+          "bytes": 97149,
+          "sha256": "2456761062529b386c403ff1ba3af803814b8c122d7e1405be0e85cc2501f956"
+        },
+        {
+          "filename": "mri_axial_032.png",
+          "positionMm": -136.37055785746514,
+          "bytes": 97329,
+          "sha256": "a67631f65605827f78f0c35996ec28fabf090ef0fd2e3823376fdde5fa13cae2"
+        },
+        {
+          "filename": "mri_axial_033.png",
+          "positionMm": -133.42114974577214,
+          "bytes": 97015,
+          "sha256": "7524c282d8861d41d0602cd0a89415905a715ffc7cca51e8177604cc60d9288b"
+        },
+        {
+          "filename": "mri_axial_034.png",
+          "positionMm": -130.4717416340792,
+          "bytes": 96225,
+          "sha256": "f2f567bfc6a0bee9f0a2a633886caa109283913c909fc259f1255acb66a46d02"
+        },
+        {
+          "filename": "mri_axial_035.png",
+          "positionMm": -127.52233352238619,
+          "bytes": 95125,
+          "sha256": "5b9d9539b6fa5d0dead494ab7f9a76db6f42551f764964a86da7097d28684e6a"
+        },
+        {
+          "filename": "mri_axial_036.png",
+          "positionMm": -124.57292541069322,
+          "bytes": 94723,
+          "sha256": "d6d7c4eb3216107edb4596f7088672cef0c05e855fae97e1bd7a29f2a7bbf34e"
+        },
+        {
+          "filename": "mri_axial_037.png",
+          "positionMm": -121.62351729900023,
+          "bytes": 93423,
+          "sha256": "11c5d41853f89e1668312fb9527fc48f705fcc6afeab8c89d404c45bb2524c40"
+        },
+        {
+          "filename": "mri_axial_038.png",
+          "positionMm": -118.67410918730724,
+          "bytes": 93125,
+          "sha256": "f97faf10ffece53e46b6e8f53797b4dcb34ea58d11f9cb2bcd4da40a0cab227a"
+        },
+        {
+          "filename": "mri_axial_039.png",
+          "positionMm": -115.72470107561426,
+          "bytes": 92145,
+          "sha256": "a7181313ddf62a659c744346fe708c6a00a3d0c14309ccf41c9a557883d8b920"
+        },
+        {
+          "filename": "mri_axial_040.png",
+          "positionMm": -112.77529296392127,
+          "bytes": 90384,
+          "sha256": "89fe862f28a1b71783200f98751e9e3927f36499ed52098e7a1ae119d6a4a611"
+        },
+        {
+          "filename": "mri_axial_041.png",
+          "positionMm": -109.82588485222828,
+          "bytes": 89075,
+          "sha256": "4334dce03d11899bcd588ed575c0c53927921f4c50f5c66d69f7427db6512082"
+        },
+        {
+          "filename": "mri_axial_042.png",
+          "positionMm": -106.87647674053531,
+          "bytes": 88244,
+          "sha256": "e89b6a0363a84e149dc2164e063c16efbb4fb13192191c5a82dea9dc9595e053"
+        },
+        {
+          "filename": "mri_axial_043.png",
+          "positionMm": -103.92706862884232,
+          "bytes": 88420,
+          "sha256": "47e2a7e6932bcd70db764dfd245942c85fb3ee685109a4ea691bf9ab5b623708"
+        },
+        {
+          "filename": "mri_axial_044.png",
+          "positionMm": -100.97766051714933,
+          "bytes": 88752,
+          "sha256": "c01f928732e60929043f6f4c085e82579ab537e95b1eb4c2cffb25ea10f5db93"
+        },
+        {
+          "filename": "mri_axial_045.png",
+          "positionMm": -98.02825240545636,
+          "bytes": 88532,
+          "sha256": "702241673372d3073dc682fdfc9f244d4f353430270f9c763a91980a64f6b49c"
+        },
+        {
+          "filename": "mri_axial_046.png",
+          "positionMm": -95.07884429376338,
+          "bytes": 88924,
+          "sha256": "c856b4aa8135ab34b8f1da94652cbc04d2e79e0b7810bf2e2eb45f5116a769b7"
+        },
+        {
+          "filename": "mri_axial_047.png",
+          "positionMm": -92.12943618207038,
+          "bytes": 89352,
+          "sha256": "5dcc03a4766f8aa9076bfc590ae5c2e8b18ef041cf9bd4c2b9bbcc1bd238afee"
+        },
+        {
+          "filename": "mri_axial_048.png",
+          "positionMm": -89.1800280703774,
+          "bytes": 88534,
+          "sha256": "00d326424b110b117223c9054f46bd80ead890da5ae6799bbd75a9e2a4c4c943"
+        },
+        {
+          "filename": "mri_axial_049.png",
+          "positionMm": -86.23061995868443,
+          "bytes": 87962,
+          "sha256": "c5a30fb9ee6d0d3b09f05fbcc36f0dededcf99b9d3100ecdf1543ca66ebf56cb"
+        },
+        {
+          "filename": "mri_axial_050.png",
+          "positionMm": -83.28121184699143,
+          "bytes": 86735,
+          "sha256": "9f5947f8478e8b60dfe38dc2643f0325f791bff4fb24c42ff9b47f422a40aa8d"
+        },
+        {
+          "filename": "mri_axial_051.png",
+          "positionMm": -80.33180373529845,
+          "bytes": 86370,
+          "sha256": "bf9c971df11fa5ecd0a2f7fdbe5927557d64c40fda205356ad2f87187a89ef84"
+        },
+        {
+          "filename": "mri_axial_052.png",
+          "positionMm": -77.38239562360548,
+          "bytes": 86514,
+          "sha256": "cbc471dba3609894fb553e58aaa49ca26e130714bc505b765981d35c7cbceea5"
+        },
+        {
+          "filename": "mri_axial_053.png",
+          "positionMm": -74.43298751191247,
+          "bytes": 86406,
+          "sha256": "d33b3e1f5a4d90e5c3bc38755db5154df816f2d3459a3a1bfd732f03dc756fe7"
+        },
+        {
+          "filename": "mri_axial_054.png",
+          "positionMm": -71.4835794002195,
+          "bytes": 86104,
+          "sha256": "34237873d05970ae37153ad3e2b96e8d6bbfda37abb27a4c64020cf9ff3d58cb"
+        },
+        {
+          "filename": "mri_axial_055.png",
+          "positionMm": -68.53417128852652,
+          "bytes": 84883,
+          "sha256": "9c335768d2642fc03f83a72121947cc52abdc3baa0b5ed74e4193ebee47d5365"
+        },
+        {
+          "filename": "mri_axial_056.png",
+          "positionMm": -65.58476317683352,
+          "bytes": 83399,
+          "sha256": "05ebc9fed390d2338a1f8dcd7bdd21892fce0ede34b5871c66cd983779b8d4d8"
+        },
+        {
+          "filename": "mri_axial_057.png",
+          "positionMm": -62.635355065140544,
+          "bytes": 81936,
+          "sha256": "f2a784363605e0b303ec9c942ed541d161e0ae8f94061bacd9c29f930a927243"
+        },
+        {
+          "filename": "mri_axial_058.png",
+          "positionMm": -59.68594695344757,
+          "bytes": 81345,
+          "sha256": "5e7fbd5fe2a7b30ed9b48d0ed7405ea7173f02964fa24c9e56d1f34c099310a3"
+        },
+        {
+          "filename": "mri_axial_059.png",
+          "positionMm": -56.736538841754594,
+          "bytes": 81335,
+          "sha256": "13469c3539a2df63e36b4e856a3e0ebd14717d63a52d8d1d53b6d7cbb5de5deb"
+        },
+        {
+          "filename": "mri_axial_060.png",
+          "positionMm": -53.78713073006159,
+          "bytes": 80655,
+          "sha256": "5815d1a42ae7312341499c49234f2dac64dffb22152f5fc2f50e5d6396133dd7"
+        },
+        {
+          "filename": "mri_axial_061.png",
+          "positionMm": -50.837722618368616,
+          "bytes": 80158,
+          "sha256": "40a4aecc7c4450defa02bebf94e28104c2ad319740dbcaf1115c76b29ceba4a9"
+        },
+        {
+          "filename": "mri_axial_062.png",
+          "positionMm": -47.88831450667564,
+          "bytes": 79251,
+          "sha256": "eb26c76efa888feb70ad9c0ce5cf3d7f37fb40d6d5aa3b0c5657e298956f8c0e"
+        },
+        {
+          "filename": "mri_axial_063.png",
+          "positionMm": -44.93890639498264,
+          "bytes": 79050,
+          "sha256": "91965d001e25eddc8b7075c53d5bb4ca8dbf2c4bd451236487cb180eef88af5d"
+        },
+        {
+          "filename": "mri_axial_064.png",
+          "positionMm": -41.98949828328966,
+          "bytes": 78596,
+          "sha256": "8951362dd44765c6191a9090c15b7e36c2c9007c0f1a0e24bf730e1bbb714a52"
+        },
+        {
+          "filename": "mri_axial_065.png",
+          "positionMm": -39.04009017159669,
+          "bytes": 77505,
+          "sha256": "a1440878b7b8e8708a9c599a20d6f6d05f54fd6c138d617e58efd08e8bcb6fe4"
+        },
+        {
+          "filename": "mri_axial_066.png",
+          "positionMm": -36.090682059903685,
+          "bytes": 77127,
+          "sha256": "594ca1efb28bd9df29d2a21e2c164b13776a85f3f669e656b91b94271ed83f5b"
+        },
+        {
+          "filename": "mri_axial_067.png",
+          "positionMm": -33.14127394821071,
+          "bytes": 76314,
+          "sha256": "198f19cdbd903745b7d0e13240e8c994c722591126adb784babc6008096c65db"
+        },
+        {
+          "filename": "mri_axial_068.png",
+          "positionMm": -30.191865836517735,
+          "bytes": 75262,
+          "sha256": "b745e22e572952fae6b1c328ee9e895b4ec0d433407530c0af46b200c0517088"
+        },
+        {
+          "filename": "mri_axial_069.png",
+          "positionMm": -27.24245772482473,
+          "bytes": 74044,
+          "sha256": "0505ffd01ecf23f8527be34de0f7d6334a0832460e5bb8d199d3fa3be91de43f"
+        },
+        {
+          "filename": "mri_axial_070.png",
+          "positionMm": -24.293049613131757,
+          "bytes": 72225,
+          "sha256": "268327f47f868f9754bfd141fa16db56e8056030941354396f90d552a86cd45c"
+        },
+        {
+          "filename": "mri_axial_071.png",
+          "positionMm": -21.343641501438782,
+          "bytes": 70512,
+          "sha256": "d64801d278eb67e0cc977c1cd25601ddbaba7c034d6590f5e2f62365ae0d4df4"
+        },
+        {
+          "filename": "mri_axial_072.png",
+          "positionMm": -18.394233389745807,
+          "bytes": 68609,
+          "sha256": "4e715bfac3e24bfcd9cd723613baca918b983c3be8220b871bab3139cc4cffd5"
+        },
+        {
+          "filename": "mri_axial_073.png",
+          "positionMm": -15.444825278052804,
+          "bytes": 67118,
+          "sha256": "e4d35182fe6e25486cd7a4796f100dd0b4848159d1a4de8de04ca0000ec65b5a"
+        },
+        {
+          "filename": "mri_axial_074.png",
+          "positionMm": -12.495417166359829,
+          "bytes": 65295,
+          "sha256": "d9fde2ebeb3d52805811cb8c51794b6d0a43de216123fd292f58af56a635be49"
+        },
+        {
+          "filename": "mri_axial_075.png",
+          "positionMm": -9.546009054666854,
+          "bytes": 62615,
+          "sha256": "298ad90a97f799ffe7b50468ad344bfcb9a1644c7cfc3de6f8091aa26d9fd9b0"
+        },
+        {
+          "filename": "mri_axial_076.png",
+          "positionMm": -6.596600942973851,
+          "bytes": 59728,
+          "sha256": "81a5cd77a332a1c401df485a1d46a510c5cbf0d2d86e33848dee1a3f1d9b0b01"
+        },
+        {
+          "filename": "mri_axial_077.png",
+          "positionMm": -3.6471928312808757,
+          "bytes": 55484,
+          "sha256": "6b7619b2640551d5d430db6cab005c9a9027f54ca0a5eaf3a6d38b140a887a77"
+        },
+        {
+          "filename": "mri_axial_078.png",
+          "positionMm": -0.6977847195879008,
+          "bytes": 48344,
+          "sha256": "5f2c25287df595cdd3151f32739a7b47f249e20f2e61988cf6f93f561b8298b4"
+        },
+        {
+          "filename": "mri_axial_079.png",
+          "positionMm": 2.2516233921051025,
+          "bytes": 334,
+          "sha256": "f5df0628643ba99754cee39c30291c6fca5a9fe242838fbbb57dc7926aec76de"
+        }
+      ],
+      "bytes": 6322481
+    },
+    {
+      "modality": "ct",
+      "orientation": "axial",
+      "volumeName": "CT Head",
+      "imageCount": 80,
+      "imageDimensions": [512, 512],
+      "originalDimensions": [512, 512, 463],
+      "originalVoxelSpacingMm": [0.48906199999999994, 0.48906199999999994, 0.5032467532467527],
+      "geometry": {
+        "voxelSha256": "dcae8d0722ff7e9af468556a67293402a93bb47b4900b455ccf8adbec97ff9d8",
+        "ijkToRas": [
+          [-0.48906199999999994, 0.0, 0.0, 125.19999700000008],
+          [0.0, -0.48906199999999994, 0.0, 53.54299899999999],
+          [0.0, 0.0, 0.5032467532467527, -230.49999999999994],
+          [0.0, 0.0, 0.0, 1.0]
+        ],
+        "parentTransformId": "vtkMRMLGridTransformNode2",
+        "parentTransformChain": [
+          {
+            "id": "vtkMRMLGridTransformNode2",
+            "name": "4: Unnamed Series_1 acquisition transform",
+            "nodeClass": "vtkMRMLGridTransformNode",
+            "transformClass": "vtkOrientedGridTransform",
+            "displacementGrid": {
+              "dimensions": [2, 2, 463],
+              "origin": [125.199997, 53.542999, -230.50000000000003],
+              "spacing": [250.39974399999997, 250.39974399999997, 0.5032467532467532],
+              "sha256": "86084e73769a5bdf1c12a1e4e423fd42b2e13f43c94328e3caf822ca5661eb20"
+            }
+          }
+        ],
+        "displayWindowLevel": [150.0, 40.0],
+        "autoWindowLevel": 0
+      },
+      "worldBoundsRasMm": [
+        -124.95521545410156, 125.44452667236328, -196.61221313476562, 53.78752899169922,
+        -230.75161743164062, 2.2516233921051025
+      ],
+      "window": 150.0,
+      "level": 40.0,
+      "resampling": "Linear interpolation on common world-RAS axial planes; current parent transform sampled once; no additional registration transform.",
+      "slices": [
+        {
+          "filename": "ct_axial_000.png",
+          "positionMm": -230.75161743164062,
+          "bytes": 7242,
+          "sha256": "a54916b02639b6065bacb8c5b3326755d3f3f8b0941b415d4087ac2677dc0db2"
+        },
+        {
+          "filename": "ct_axial_001.png",
+          "positionMm": -227.80220931994765,
+          "bytes": 8670,
+          "sha256": "6d983af68b328c71121d3e9adad4b99b837232e55ce54b82f25d9b629d3945f0"
+        },
+        {
+          "filename": "ct_axial_002.png",
+          "positionMm": -224.85280120825465,
+          "bytes": 10746,
+          "sha256": "4ac451f82b853564dca5801283727718ab429f3e15c44fb76c7f568fa2a4f60e"
+        },
+        {
+          "filename": "ct_axial_003.png",
+          "positionMm": -221.90339309656167,
+          "bytes": 12801,
+          "sha256": "6fa52a3df5f236c734f138482d3a1ec8741ea61403784bc0f7123e3f6010cab0"
+        },
+        {
+          "filename": "ct_axial_004.png",
+          "positionMm": -218.9539849848687,
+          "bytes": 15836,
+          "sha256": "b3d7a1bbcaa94af57ca57b370d92b377963e3a1c24d5c21c9b0e54224a22a293"
+        },
+        {
+          "filename": "ct_axial_005.png",
+          "positionMm": -216.0045768731757,
+          "bytes": 21089,
+          "sha256": "71cc479078f651ba67391db98b92f5c860a025f73e2eb4345861688231a0cfc9"
+        },
+        {
+          "filename": "ct_axial_006.png",
+          "positionMm": -213.05516876148272,
+          "bytes": 25283,
+          "sha256": "91b03178dfe43ff840bd5a446b5fb376cf4e291670b857a3ba5b6702926828cb"
+        },
+        {
+          "filename": "ct_axial_007.png",
+          "positionMm": -210.10576064978974,
+          "bytes": 29694,
+          "sha256": "c2b36c41a37f08e51c559d11390f10b7e762c1ada07097f803dafeca4b052481"
+        },
+        {
+          "filename": "ct_axial_008.png",
+          "positionMm": -207.15635253809677,
+          "bytes": 33608,
+          "sha256": "967a39f880e194100fa386f93bc9a227228e2733ad297335abb24b9bfbd799b1"
+        },
+        {
+          "filename": "ct_axial_009.png",
+          "positionMm": -204.20694442640377,
+          "bytes": 36210,
+          "sha256": "1854dc36b21261fc02523083d00e8f9351345183a48f4f8e5302f8e946b4b12a"
+        },
+        {
+          "filename": "ct_axial_010.png",
+          "positionMm": -201.2575363147108,
+          "bytes": 39607,
+          "sha256": "243b2fefe27fa0be1e46c8287af4152f9bb0234436b736000515f16c43641ad4"
+        },
+        {
+          "filename": "ct_axial_011.png",
+          "positionMm": -198.30812820301782,
+          "bytes": 43484,
+          "sha256": "9efd413515de5d4af26c6b27e5d1e766a7c3ca3b0764c8558dfdfb0d287acc4d"
+        },
+        {
+          "filename": "ct_axial_012.png",
+          "positionMm": -195.3587200913248,
+          "bytes": 47137,
+          "sha256": "3940566a0dc6615ed5a2ac3d1139cd99d1e02a007af37bfc83f13b87bb4b2d5a"
+        },
+        {
+          "filename": "ct_axial_013.png",
+          "positionMm": -192.40931197963184,
+          "bytes": 51504,
+          "sha256": "6be3a03e682fa6f4385c093945ac5088ab3cca8993e9a53706c14c9980818e87"
+        },
+        {
+          "filename": "ct_axial_014.png",
+          "positionMm": -189.45990386793886,
+          "bytes": 56123,
+          "sha256": "98fa632f6c44e603236048509c88acd01ee7251275ba896750372c8478680978"
+        },
+        {
+          "filename": "ct_axial_015.png",
+          "positionMm": -186.51049575624586,
+          "bytes": 59586,
+          "sha256": "03cf69e648d4719d49b77d4f54e136a7cb66a0e7ef9ddfa661db26dd7fa75244"
+        },
+        {
+          "filename": "ct_axial_016.png",
+          "positionMm": -183.56108764455288,
+          "bytes": 61152,
+          "sha256": "6c0a3429e41c152b79bb468c5ffa93b65df4c43153d0efe7ed1fc5b11ff0e5ce"
+        },
+        {
+          "filename": "ct_axial_017.png",
+          "positionMm": -180.6116795328599,
+          "bytes": 65809,
+          "sha256": "787874ff6bda64eb900d40d575a6aa58fb203b47b6e984cf0a3852c8c30861eb"
+        },
+        {
+          "filename": "ct_axial_018.png",
+          "positionMm": -177.6622714211669,
+          "bytes": 68906,
+          "sha256": "a44eb348d1c023435bef2738911a9acbc38639b0ffb604b512311e85e72f8bc7"
+        },
+        {
+          "filename": "ct_axial_019.png",
+          "positionMm": -174.71286330947393,
+          "bytes": 70309,
+          "sha256": "3a361b88ddb1a79c1ef65cc3ad92b19723c6304850e326eb6c62ffa49c8d7173"
+        },
+        {
+          "filename": "ct_axial_020.png",
+          "positionMm": -171.76345519778096,
+          "bytes": 70840,
+          "sha256": "edf1aa17e0052fd8be2a1470db231ad62d8344ceea4b352fae694dea680b3078"
+        },
+        {
+          "filename": "ct_axial_021.png",
+          "positionMm": -168.81404708608795,
+          "bytes": 69731,
+          "sha256": "0189dd6ad2e4c7fa9443298bae96223120b99051c762eb11f4339eb9a650b056"
+        },
+        {
+          "filename": "ct_axial_022.png",
+          "positionMm": -165.86463897439498,
+          "bytes": 69564,
+          "sha256": "2e7064d772ef7e993d7058430b530136391158ad210f7efbcd12da421c653662"
+        },
+        {
+          "filename": "ct_axial_023.png",
+          "positionMm": -162.915230862702,
+          "bytes": 71651,
+          "sha256": "84e1f34173f76b3a6cddb839f78efb619f04863ef5f09da76cbc12923da8bb00"
+        },
+        {
+          "filename": "ct_axial_024.png",
+          "positionMm": -159.965822751009,
+          "bytes": 73658,
+          "sha256": "fc0e42f50fdef5665067c6c379bb0d4352fe02ffe2790719d35b28dd731ff3e2"
+        },
+        {
+          "filename": "ct_axial_025.png",
+          "positionMm": -157.01641463931603,
+          "bytes": 76688,
+          "sha256": "4cc5cf0a4086066075b28b91f408a354ed5a24c8933f3232757af56a9bbb1ed0"
+        },
+        {
+          "filename": "ct_axial_026.png",
+          "positionMm": -154.06700652762305,
+          "bytes": 79485,
+          "sha256": "a3d746f303a86c4abb5dc5911a021964c24e2820a88b6969341f0ae4b664d0b0"
+        },
+        {
+          "filename": "ct_axial_027.png",
+          "positionMm": -151.11759841593005,
+          "bytes": 81275,
+          "sha256": "aca5588c15370090137f74d401c6657d1b0f9de1ab8d83b07c509ef924d91778"
+        },
+        {
+          "filename": "ct_axial_028.png",
+          "positionMm": -148.16819030423707,
+          "bytes": 79571,
+          "sha256": "0e968dc9ce17653e0feffcacfb9ce678612af635e1bc7cafdcc8beccd48b1809"
+        },
+        {
+          "filename": "ct_axial_029.png",
+          "positionMm": -145.2187821925441,
+          "bytes": 74736,
+          "sha256": "f8bb7f17451910a19cb7d04521c7cb7670f67d30a7232a6939a87f1d27fc769c"
+        },
+        {
+          "filename": "ct_axial_030.png",
+          "positionMm": -142.2693740808511,
+          "bytes": 74386,
+          "sha256": "037496d395dbeb1e18b89e20af7aea2ef2d7f144f47f06547a9da91ff4a2c2ca"
+        },
+        {
+          "filename": "ct_axial_031.png",
+          "positionMm": -139.31996596915815,
+          "bytes": 76722,
+          "sha256": "01cb955dbcaabbcc76c037669293aede9acc962b8f616371312a829825623f43"
+        },
+        {
+          "filename": "ct_axial_032.png",
+          "positionMm": -136.37055785746514,
+          "bytes": 78464,
+          "sha256": "226e269780d642814a491f5fcf66249020a44d4d2ba2724b90ef5d9a6c35b333"
+        },
+        {
+          "filename": "ct_axial_033.png",
+          "positionMm": -133.42114974577214,
+          "bytes": 79056,
+          "sha256": "659dc8324197dc2fe67634c8d3a64ab1b3244a936766fa510961324410fda81f"
+        },
+        {
+          "filename": "ct_axial_034.png",
+          "positionMm": -130.4717416340792,
+          "bytes": 76685,
+          "sha256": "e5f043bded6ecd4ac1ce63bc0b817b815c1eff03a86e3bc1bb6477e22fd46938"
+        },
+        {
+          "filename": "ct_axial_035.png",
+          "positionMm": -127.52233352238619,
+          "bytes": 74224,
+          "sha256": "e95120b30519775f66e97d6b6e80d22a6353db8e62183d6936d67170de5be6a2"
+        },
+        {
+          "filename": "ct_axial_036.png",
+          "positionMm": -124.57292541069322,
+          "bytes": 75277,
+          "sha256": "2a031db30c5f59b3a156b1b44393dbb9599c68ff630d7c84e9c343b8ab6684e1"
+        },
+        {
+          "filename": "ct_axial_037.png",
+          "positionMm": -121.62351729900023,
+          "bytes": 76117,
+          "sha256": "98369184d948ee033c112d0c055ce426c164d547c858ace65a6decf73d3d3da0"
+        },
+        {
+          "filename": "ct_axial_038.png",
+          "positionMm": -118.67410918730724,
+          "bytes": 77623,
+          "sha256": "848a48ef8eed8102b0e26f48e362e2753d8b23aecd14e0a7fd315bd42b98c233"
+        },
+        {
+          "filename": "ct_axial_039.png",
+          "positionMm": -115.72470107561426,
+          "bytes": 79472,
+          "sha256": "3d14284193ec581f161ddf76ee02ce2105ef0c2a9e42327dbe33055386076879"
+        },
+        {
+          "filename": "ct_axial_040.png",
+          "positionMm": -112.77529296392127,
+          "bytes": 81914,
+          "sha256": "792d95a10c96185994a97e2d705a539c812262f8f31491e9d3c67fda0c27feae"
+        },
+        {
+          "filename": "ct_axial_041.png",
+          "positionMm": -109.82588485222828,
+          "bytes": 84150,
+          "sha256": "dda4fc0986256103182c5c40e5d82b00add8c9d7082aee4695e59e9ab5bc4db1"
+        },
+        {
+          "filename": "ct_axial_042.png",
+          "positionMm": -106.87647674053531,
+          "bytes": 86652,
+          "sha256": "055164b10806d37b88a32e15c241b5d6f9b152169df7d186c46c5512eac91bb6"
+        },
+        {
+          "filename": "ct_axial_043.png",
+          "positionMm": -103.92706862884232,
+          "bytes": 88695,
+          "sha256": "1bb3d0b5f7955c6625be765269442db8334de9ce4f0c24c20b63ff1010cc3b11"
+        },
+        {
+          "filename": "ct_axial_044.png",
+          "positionMm": -100.97766051714933,
+          "bytes": 89495,
+          "sha256": "581e501e6f3403713f2c937a687641af3ff1d1c433bd5aca2a8ecafc04c2aa2d"
+        },
+        {
+          "filename": "ct_axial_045.png",
+          "positionMm": -98.02825240545636,
+          "bytes": 90162,
+          "sha256": "646d19c84056e84a94497a4e2d1d2ba6fa685f844b3210ff00bd361e17db2f79"
+        },
+        {
+          "filename": "ct_axial_046.png",
+          "positionMm": -95.07884429376338,
+          "bytes": 89834,
+          "sha256": "9cc17574633a7e396800439f9f0001f56779c1d5fb06627f29ea2109e9b648d5"
+        },
+        {
+          "filename": "ct_axial_047.png",
+          "positionMm": -92.12943618207038,
+          "bytes": 90265,
+          "sha256": "d191e41b1d51f4f82351873874608aaae614437a0baa094e761413f35c0c3070"
+        },
+        {
+          "filename": "ct_axial_048.png",
+          "positionMm": -89.1800280703774,
+          "bytes": 90145,
+          "sha256": "6dabba020032b9a7bc79e7cde628aa6bfc32d3c550b0a862c31e4793acad090f"
+        },
+        {
+          "filename": "ct_axial_049.png",
+          "positionMm": -86.23061995868443,
+          "bytes": 88611,
+          "sha256": "3b161b1dabbdf7627fe94fbbbfae4c88dbf712f142e5844090f829199c2bed86"
+        },
+        {
+          "filename": "ct_axial_050.png",
+          "positionMm": -83.28121184699143,
+          "bytes": 86766,
+          "sha256": "63bab014ab1e92625fbebbed324d63e1ac02eb377cdae0b9be3dd21033bb6c9f"
+        },
+        {
+          "filename": "ct_axial_051.png",
+          "positionMm": -80.33180373529845,
+          "bytes": 86175,
+          "sha256": "147b74f4a773fd97d601dcc04154a6a2f88df7ed0b751882c8a633ed2c042e5a"
+        },
+        {
+          "filename": "ct_axial_052.png",
+          "positionMm": -77.38239562360548,
+          "bytes": 86710,
+          "sha256": "bd645c42693d2feb5b8ec72c1b151ee22ae3abc0200de7814fdda69bdf9c0c2c"
+        },
+        {
+          "filename": "ct_axial_053.png",
+          "positionMm": -74.43298751191247,
+          "bytes": 87699,
+          "sha256": "17ff94ed2e597e019c702f4d3f5033141e7599ce5a064a0c022eb5a6a0298b9e"
+        },
+        {
+          "filename": "ct_axial_054.png",
+          "positionMm": -71.4835794002195,
+          "bytes": 87618,
+          "sha256": "bfdc4e33b9182a53350d831f0d33db5d07ed5de2698b5fa64d230deca0473848"
+        },
+        {
+          "filename": "ct_axial_055.png",
+          "positionMm": -68.53417128852652,
+          "bytes": 86094,
+          "sha256": "4540ee3bf4f9f31e8931619c9203f9519b8f3719625fcfad3605bc2e8e71d500"
+        },
+        {
+          "filename": "ct_axial_056.png",
+          "positionMm": -65.58476317683352,
+          "bytes": 83018,
+          "sha256": "224a290ea8e7370e8c479c5a10228c6df543e08251344bb5808591de925e522d"
+        },
+        {
+          "filename": "ct_axial_057.png",
+          "positionMm": -62.635355065140544,
+          "bytes": 81193,
+          "sha256": "473adf7f61c95ecdd7210643f190037b14a8665a9358ce873c2e3ebd56110a20"
+        },
+        {
+          "filename": "ct_axial_058.png",
+          "positionMm": -59.68594695344757,
+          "bytes": 79346,
+          "sha256": "029bf0c0b7492507f25fc34e9b5d7b4652586df3b182ea49ac47d037065d52ed"
+        },
+        {
+          "filename": "ct_axial_059.png",
+          "positionMm": -56.736538841754594,
+          "bytes": 77426,
+          "sha256": "361e41ee7c906d68228984ee383d43b8e3ecf77c51c32816403b0f767158f285"
+        },
+        {
+          "filename": "ct_axial_060.png",
+          "positionMm": -53.78713073006159,
+          "bytes": 75345,
+          "sha256": "479478b8e00c84da795e8f80e955a99bafa5fd3cddddfc66e9b7463ffefd65e5"
+        },
+        {
+          "filename": "ct_axial_061.png",
+          "positionMm": -50.837722618368616,
+          "bytes": 72972,
+          "sha256": "55e25e87dc8aa5e5447060ce5e59846e04e1dde104f5250ec91c1cd825c46ffe"
+        },
+        {
+          "filename": "ct_axial_062.png",
+          "positionMm": -47.88831450667564,
+          "bytes": 71750,
+          "sha256": "e9b00e90bf8400954933c0c3a1dd72021d01ea5fd2b063cb037f7f2277f50168"
+        },
+        {
+          "filename": "ct_axial_063.png",
+          "positionMm": -44.93890639498264,
+          "bytes": 69242,
+          "sha256": "7d3add6b5b758a85967847f7f37afdaa5766ad2939642be57b9ce212e185b57f"
+        },
+        {
+          "filename": "ct_axial_064.png",
+          "positionMm": -41.98949828328966,
+          "bytes": 67200,
+          "sha256": "95258c3c3958eb4810946b2517e695436ca3099fc58c515d16f76f3c1cb38810"
+        },
+        {
+          "filename": "ct_axial_065.png",
+          "positionMm": -39.04009017159669,
+          "bytes": 63089,
+          "sha256": "11ba5545cdda28467ca6cd1bf3f959dc7b13e614c4f29f8f127a7c48a09048e2"
+        },
+        {
+          "filename": "ct_axial_066.png",
+          "positionMm": -36.090682059903685,
+          "bytes": 57994,
+          "sha256": "024e4d6b399ec1e18b84c54989630e21e2f6eb1bcdb4ec68aa8378efd7fe95cc"
+        },
+        {
+          "filename": "ct_axial_067.png",
+          "positionMm": -33.14127394821071,
+          "bytes": 53056,
+          "sha256": "2e4174c121bc348593df526de464cb445b75c7fa374f08ca1104a8223a4ed0ba"
+        },
+        {
+          "filename": "ct_axial_068.png",
+          "positionMm": -30.191865836517735,
+          "bytes": 48226,
+          "sha256": "9d3f69e46d867ae4c8cfe6662c5e0f157952d8e6ce830770cf8526d764ff4ee5"
+        },
+        {
+          "filename": "ct_axial_069.png",
+          "positionMm": -27.24245772482473,
+          "bytes": 43198,
+          "sha256": "ac6116d7d4fbff02b04bef9e444b11ffe99f29029924de3095d998b24751bc8a"
+        },
+        {
+          "filename": "ct_axial_070.png",
+          "positionMm": -24.293049613131757,
+          "bytes": 38041,
+          "sha256": "f3ce4e64827533520ad100e3d732d9a1fa8b28f9d9f120df72a54709b9547e05"
+        },
+        {
+          "filename": "ct_axial_071.png",
+          "positionMm": -21.343641501438782,
+          "bytes": 33162,
+          "sha256": "8e4fc9fbfeee262c3f783c3d864294037c43e4f757ab2e9bc64bcee57ea106fc"
+        },
+        {
+          "filename": "ct_axial_072.png",
+          "positionMm": -18.394233389745807,
+          "bytes": 28151,
+          "sha256": "76436cefbd4230bed5d29342b9d7a4e579b4c1309941f844a12b7a1ba9f45c49"
+        },
+        {
+          "filename": "ct_axial_073.png",
+          "positionMm": -15.444825278052804,
+          "bytes": 22308,
+          "sha256": "06ec005be6e2293c68df545baf85dd707836e7ccf4f693f419c393d58a5a15b8"
+        },
+        {
+          "filename": "ct_axial_074.png",
+          "positionMm": -12.495417166359829,
+          "bytes": 17847,
+          "sha256": "a6c7dff15a620d3f51dbf00d0ebfeb859a69adb02894e5a5faf870ed8b24204e"
+        },
+        {
+          "filename": "ct_axial_075.png",
+          "positionMm": -9.546009054666854,
+          "bytes": 12393,
+          "sha256": "35e9b93651ea92b966df9fbb345e71857b4532e42c3d372850da00d431aaa30c"
+        },
+        {
+          "filename": "ct_axial_076.png",
+          "positionMm": -6.596600942973851,
+          "bytes": 9233,
+          "sha256": "e3ea65f50b3cf7fb70db6b36425e01abf9ac761884b5689fe635333e89c86bb1"
+        },
+        {
+          "filename": "ct_axial_077.png",
+          "positionMm": -3.6471928312808757,
+          "bytes": 7435,
+          "sha256": "c587e280a27863267d9c609a4d39b69c8963de5c040ec2edcb4279471ac87aef"
+        },
+        {
+          "filename": "ct_axial_078.png",
+          "positionMm": -0.6977847195879008,
+          "bytes": 2948,
+          "sha256": "8b984e855f66dca8bca1e60b3925358a00df00639f8c5659befda10da4c9852a"
+        },
+        {
+          "filename": "ct_axial_079.png",
+          "positionMm": 2.2516233921051025,
+          "bytes": 334,
+          "sha256": "f5df0628643ba99754cee39c30291c6fca5a9fe242838fbbb57dc7926aec76de"
+        }
+      ],
+      "bytes": 4795913
+    }
+  ],
+  "imageBytes": 11118394
+}
