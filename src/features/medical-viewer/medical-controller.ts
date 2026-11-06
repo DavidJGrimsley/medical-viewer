@@ -646,6 +646,7 @@ export class MedicalController {
       this.snapshot.volume.renderer !== 'shader' ||
       ![
         'magenta',
+        'samplers',
         'high',
         'low',
         'validity',
@@ -696,12 +697,15 @@ export class MedicalController {
       !this.currentVolume(scope) ||
       !this.snapshot.anchorId ||
       this.snapshot.volume.renderer !== 'stack' ||
-      this.snapshot.volume.loadStatus !== 'loading' ||
+      (success
+        ? this.snapshot.volume.loadStatus !== 'loading'
+        : !['loading', 'binding', 'ready'].includes(this.snapshot.volume.loadStatus)) ||
       !Number.isInteger(index) ||
       index < 0 ||
       index >= STACK_PLANE_COUNT
     )
       return;
+    if (!success) this.clearGestures();
     const stackLoads = { ...this.snapshot.volume.stackLoads, [index]: success };
     this.publish({
       volume: this.volumeUpdate({
@@ -738,9 +742,12 @@ export class MedicalController {
       this.snapshot.volume.renderer !== 'shader' ||
       !this.snapshot.anchorId ||
       !VOLUME_ATLASES.includes(atlas) ||
-      this.snapshot.volume.loadStatus !== 'loading'
+      (success
+        ? this.snapshot.volume.loadStatus !== 'loading'
+        : !['loading', 'binding', 'ready'].includes(this.snapshot.volume.loadStatus))
     )
       return;
+    if (!success) this.clearGestures();
     const atlasLoads = { ...this.snapshot.volume.atlasLoads, [atlas]: success };
     this.publish({
       volume: this.volumeUpdate({

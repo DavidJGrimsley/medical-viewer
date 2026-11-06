@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import {
   Viro3DObject,
   ViroAmbientLight,
@@ -8,6 +8,7 @@ import {
   ViroMaterials,
   ViroNode,
   ViroPolyline,
+  ViroQuad,
   ViroSphere,
   ViroText,
 } from '@reactvision/react-viro';
@@ -25,12 +26,15 @@ import {
 import { MEDICAL_ASSET_SOURCES } from './medical-asset-sources.native';
 import calibration from '../../../assets/medical/skull-labels.json';
 import MedicalVolume from './medical-volume.native';
+import { isViroImageLoadSuccess } from './medical-image-events.native';
 
 export const QUEST_WORLD_ANCHOR_ID = 'quest-world-anchor';
 
 ViroMaterials.createMaterials({
   medicalLabel: { diffuseColor: '#fff1da', lightingModel: 'Constant' },
   medicalLeader: { diffuseColor: '#93f5c5', lightingModel: 'Constant' },
+  // Shown only before the first slice has loaded, so the gap is black rather than white.
+  medicalSliceBacking: { diffuseColor: '#000000', lightingModel: 'Constant' },
 });
 
 export interface MedicalSceneContentProps {
@@ -155,6 +159,9 @@ function MedicalSlicePanel({ context, controller, isQuest = false }: MedicalScen
   const { slices } = state;
   const series = controller.getSliceSeries();
   const source = medicalSliceSource(slices.modality, slices.orientation, slices.index);
+  // Last slice that finished loading. It stays visible while the next one loads, and the
+  // incoming image stays transparent until ready, so a new slice never flashes white.
+  const [shown, setShown] = useState<{ key: string; source: typeof source } | null>(null);
   const scope: MedicalSliceScope = {
     sessionId: context.sessionId,
     placementRevision: state.placementRevision,
@@ -184,6 +191,8 @@ function MedicalSlicePanel({ context, controller, isQuest = false }: MedicalScen
   if (!state.anchorId || !series || source === undefined) return null;
   const interactive = canManipulateSlices(state);
   const height = (SLICE_PANEL_WIDTH_METRES * series.imageDimensions[1]) / series.imageDimensions[0];
+  const imageKey = `${scope.sessionId}:${scope.placementRevision}:${scope.requestId}`;
+  const currentReady = shown?.key === imageKey;
   const captionText = `${slices.modality.toUpperCase()} · ${slices.orientation} · ${slices.index + 1}/${series.imageCount}\nR  ←  A at top  →  L`;
 
   return (
@@ -202,16 +211,43 @@ function MedicalSlicePanel({ context, controller, isQuest = false }: MedicalScen
           : undefined
       }>
       {slices.loadStatus !== 'error' ? (
-        <ViroImage
-          key={`${scope.sessionId}:${scope.placementRevision}:${scope.requestId}`}
-          source={source}
-          width={SLICE_PANEL_WIDTH_METRES}
-          height={height}
-          resizeMode="ScaleToFit"
-          mipmap
-          onLoadEnd={(event) => controller.finishSliceLoad(scope, event.nativeEvent.success)}
-          onError={() => controller.finishSliceLoad(scope, false)}
-        />
+        <>
+          {shown === null ? (
+            <ViroQuad
+              position={[0, 0, -0.001]}
+              width={SLICE_PANEL_WIDTH_METRES}
+              height={height}
+              materials={['medicalSliceBacking']}
+              ignoreEventHandling
+            />
+          ) : null}
+          {shown && !currentReady ? (
+            <ViroImage
+              key={shown.key}
+              source={shown.source}
+              width={SLICE_PANEL_WIDTH_METRES}
+              height={height}
+              resizeMode="ScaleToFit"
+              mipmap
+              ignoreEventHandling
+            />
+          ) : null}
+          <ViroImage
+            key={imageKey}
+            source={source}
+            width={SLICE_PANEL_WIDTH_METRES}
+            height={height}
+            resizeMode="ScaleToFit"
+            mipmap
+            opacity={currentReady ? 1 : 0}
+            onLoadEnd={(event) => {
+              const ok = isViroImageLoadSuccess(event);
+              if (ok) setShown({ key: imageKey, source });
+              controller.finishSliceLoad(scope, ok);
+            }}
+            onError={() => controller.finishSliceLoad(scope, false)}
+          />
+        </>
       ) : null}
       {isQuest ? (
         <ViroNode

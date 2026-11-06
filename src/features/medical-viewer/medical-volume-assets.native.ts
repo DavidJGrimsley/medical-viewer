@@ -11,3 +11,5 @@ export const MEDICAL_VOLUME_DATASET = valid
   : { ...parsed, series: [], error: 'Volume images are missing.' };
 export const medicalVolumeSource = (modality: SliceModality, atlas: VolumeAtlas) =>
   MEDICAL_VOLUME_SOURCES[modality]?.[atlas];
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+export const MEDICAL_VOLUME_BOX_SOURCE = require('../../../assets/medical/volumes/volume-box.obj');

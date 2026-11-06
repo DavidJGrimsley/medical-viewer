@@ -20,6 +20,47 @@ export function volumeDiagnosticShader(
       body: '_output_color = vec4(1.0, 0.0, 1.0, 1.0);',
       textures: [] as string[],
     };
+  if (mode === 'samplers') {
+    const uv = probe.uv.map((value) => value.toFixed(12)).join(',');
+    const emptyUV = probe.emptyUV.map((value) => value.toFixed(12)).join(',');
+    const expHigh = (probe.alphaBytes.high / 255).toFixed(12);
+    const expLow = (probe.alphaBytes.low / 255).toFixed(12);
+    const expVal = (probe.alphaBytes.validity / 255).toFixed(12);
+    return {
+      entry: 'surface' as const,
+      uniforms: `uniform highp sampler2D u_high;\nuniform highp sampler2D u_low;\nuniform highp sampler2D u_validity;`,
+      body: `highp vec2 probeUV = vec2(${uv});
+highp vec2 emptyUV = vec2(${emptyUV});
+highp float actualHigh = texture(u_high, probeUV).a;
+highp float actualLow = texture(u_low, probeUV).a;
+highp float actualVal = texture(u_validity, probeUV).a;
+highp float emptyHigh = texture(u_high, emptyUV).a;
+highp float emptyLow = texture(u_low, emptyUV).a;
+highp float emptyVal = texture(u_validity, emptyUV).a;
+highp float expHigh = ${expHigh};
+highp float expLow = ${expLow};
+highp float expVal = ${expVal};
+highp float tol = 1.5 / 255.0;
+bool passHigh = abs(actualHigh - expHigh) <= tol && emptyHigh <= tol;
+bool passLow = abs(actualLow - expLow) <= tol && emptyLow <= tol;
+bool passVal = abs(actualVal - expVal) <= tol && emptyVal <= tol;
+bool passAll = passHigh && passLow && passVal;
+
+highp vec2 tc = _surface.diffuse_texcoord;
+if (tc.x < 0.08) {
+  _surface.diffuse_color = (tc.y > 0.7) ? vec4(1.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 1.0, 1.0);
+} else if (tc.y > 0.82) {
+  _surface.diffuse_color = passAll ? vec4(0.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 0.0, 1.0);
+} else {
+  highp float actual = (tc.x < 0.386) ? actualHigh : ((tc.x < 0.693) ? actualLow : actualVal);
+  highp float expected = (tc.x < 0.386) ? expHigh : ((tc.x < 0.693) ? expLow : expVal);
+  highp float empty = (tc.x < 0.386) ? emptyHigh : ((tc.x < 0.693) ? emptyLow : emptyVal);
+  highp float shade = (tc.y > 0.54) ? expected : ((tc.y > 0.26) ? actual : empty);
+  _surface.diffuse_color = vec4(vec3(shade), 1.0);
+}`,
+      textures: ['high', 'low', 'validity'] as string[],
+    };
+  }
   if (mode === 'high' || mode === 'low' || mode === 'validity') {
     return {
       entry: 'surface' as const,

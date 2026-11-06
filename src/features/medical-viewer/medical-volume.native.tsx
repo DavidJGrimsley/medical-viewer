@@ -1,7 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { Image, NativeModules, TurboModuleRegistry } from 'react-native';
 import {
-  ViroBox,
+  Viro3DObject,
   ViroImage,
   ViroMaterials,
   ViroNode,
@@ -14,10 +14,11 @@ import {
   type MedicalVolumeScope,
   type MedicalSnapshot,
 } from './medical-controller';
-import { medicalVolumeSource } from './medical-volume-assets.native';
+import { medicalVolumeSource, MEDICAL_VOLUME_BOX_SOURCE } from './medical-volume-assets.native';
 import { VOLUME_ATLASES } from './medical-volumes';
 import { volumeExtent, volumeUniforms } from './medical-volume-uniforms';
 import { volumeDiagnosticShader, medicalNativeError } from './medical-volume-diagnostics';
+import { isViroImageLoadSuccess } from './medical-image-events.native';
 import stackMetadata from '../../../assets/medical/stack/metadata.json';
 import MedicalVolumeStack from './medical-volume-stack.native';
 
@@ -113,17 +114,7 @@ function useVolumeRendering({ context, controller }: MedicalSceneProps, state: M
       ViroMaterials.deleteMaterials([MATERIAL]);
       return;
     }
-    let cancelled = false,
-      second: number | undefined;
-    const first = requestAnimationFrame(() => {
-      second = requestAnimationFrame(() => {
-        if (!cancelled) controller.finishVolumeBinding(scope, 'ready');
-      });
-    });
     return () => {
-      cancelled = true;
-      cancelAnimationFrame(first);
-      if (second !== undefined) cancelAnimationFrame(second);
       ViroMaterials.deleteMaterials([MATERIAL]);
     };
     // Scalar controls update uniforms below, without recreating texture resources.
@@ -224,7 +215,7 @@ export default function MedicalVolume({ context, controller }: MedicalSceneProps
               mipmap={false}
               format="RGBA8"
               onLoadEnd={(event) =>
-                controller.finishVolumeAtlas(scope, key, event.nativeEvent.success)
+                controller.finishVolumeAtlas(scope, key, isViroImageLoadSuccess(event))
               }
               onError={(event) => {
                 controller.recordVolumeDiagnostic(
@@ -236,16 +227,32 @@ export default function MedicalVolume({ context, controller }: MedicalSceneProps
             />
           ))
         : null}
-      {volume.renderer === 'shader' && volume.loadStatus === 'ready' ? (
-        <ViroBox
+      {volume.renderer === 'shader' &&
+      (['binding', 'ready'].includes(volume.loadStatus) ||
+        (magenta && volume.loadStatus === 'loading')) ? (
+        <Viro3DObject
           key={`${scope.sessionId}:${scope.placementRevision}:${scope.requestId}:${volume.debugMode}`}
-          width={extent[0]}
-          height={extent[2]}
-          length={extent[1]}
+          source={MEDICAL_VOLUME_BOX_SOURCE}
+          type="OBJ"
           // iOS's materials clone omits custom sampler textures; shaderOverrides copies them.
           shaderOverrides={[MATERIAL]}
+          onLoadStart={() => {
+            controller.recordVolumeDiagnostic(scope, 'Volume proxy mesh load started.');
+          }}
+          onLoadEnd={() => {
+            controller.recordVolumeDiagnostic(
+              scope,
+              `Volume proxy mesh loaded · ${volume.debugMode}. Drawing unconfirmed.`
+            );
+            if (volume.loadStatus === 'binding' || (magenta && volume.loadStatus === 'loading')) {
+              controller.finishVolumeBinding(scope, 'ready');
+            }
+          }}
           onError={(event) => {
-            controller.recordVolumeDiagnostic(scope, `Native box: ${medicalNativeError(event)}`);
+            controller.recordVolumeDiagnostic(
+              scope,
+              `Volume proxy mesh: ${medicalNativeError(event)}`
+            );
             controller.finishVolumeBinding(scope, 'error');
           }}
         />

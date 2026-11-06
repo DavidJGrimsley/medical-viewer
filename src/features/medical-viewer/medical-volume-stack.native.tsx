@@ -8,6 +8,7 @@ import { stackPlaneGeometry } from './medical-volume-stack';
 import { STACK_PLANE_COUNT } from './medical-volumes';
 import { medicalNativeError } from './medical-volume-diagnostics';
 import { STACK_IOS_COLOR_FRAGMENT } from './medical-stack-color';
+import { isViroImageLoadSuccess } from './medical-image-events.native';
 
 const NAMES = Array.from({ length: STACK_PLANE_COUNT }, (_, index) => `medicalStack${index}`);
 export default function MedicalVolumeStack({ context, controller }: MedicalSceneProps) {
@@ -92,7 +93,7 @@ export default function MedicalVolumeStack({ context, controller }: MedicalScene
             mipmap={false}
             format="RGBA8"
             onLoadEnd={(event) =>
-              controller.finishVolumeStackImage(scope, index, event.nativeEvent.success)
+              controller.finishVolumeStackImage(scope, index, isViroImageLoadSuccess(event))
             }
             onError={(event) => {
               controller.recordVolumeDiagnostic(

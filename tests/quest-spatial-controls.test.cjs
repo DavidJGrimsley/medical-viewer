@@ -639,6 +639,7 @@ test('QuestSpatialControls renders supersampled crisp text, non-occluding quads,
   let hoveredState = false;
   let pressedState = false;
   let exitedVR = 0;
+  let movedTo = null;
   const createdMaterials = {};
 
   const element = (type, props, key) =>
@@ -648,6 +649,8 @@ test('QuestSpatialControls renders supersampled crisp text, non-occluding quads,
   vm.runInNewContext(source, {
     module: moduleObj,
     exports: moduleObj.exports,
+    setTimeout: () => 0,
+    clearTimeout: () => {},
     require(name) {
       if (name === 'react/jsx-runtime')
         return { jsx: element, jsxs: element, Fragment: 'Fragment' };
@@ -660,9 +663,12 @@ test('QuestSpatialControls renders supersampled crisp text, non-occluding quads,
             },
           ],
           useSyncExternalStore: (_sub, snap) => snap(),
+          useRef: (init) => ({ current: init ?? null }),
+          useEffect: () => {},
         };
       if (name === '@reactvision/react-viro')
         return {
+          ViroPolygon: 'ViroPolygon',
           useAnySourceHover: () => [hoveredState, () => {}],
           useAnySourcePressed: () => [pressedState, () => {}],
           ViroMaterials: {
@@ -672,12 +678,8 @@ test('QuestSpatialControls renders supersampled crisp text, non-occluding quads,
           ViroQuad: 'ViroQuad',
           ViroText: 'ViroText',
         };
-      if (name.includes('VRModuleOpenXR'))
-        return {
-          exitVRScene: () => {
-            exitedVR++;
-          },
-        };
+      if (name === '@/features/ar/quest-spatial-math')
+        return require('../src/features/ar/quest-spatial-math.ts');
       if (name === './medical-controller')
         return require('../src/features/medical-viewer/medical-controller.ts');
       if (name === './medical-models')
@@ -720,9 +722,17 @@ test('QuestSpatialControls renders supersampled crisp text, non-occluding quads,
       const y = offsetY + pos[1] * parentScale;
       const nextScale = parentScale * scale;
 
-      if (node.type === 'ViroQuad') {
-        const w = node.props.width * nextScale;
-        const h = node.props.height * nextScale;
+      if (node.type === 'ViroQuad' || node.type === 'ViroPolygon') {
+        let nodeW = node.props.width;
+        let nodeH = node.props.height;
+        if (node.type === 'ViroPolygon') {
+          const xs = node.props.vertices.map((v) => v[0]);
+          const ys = node.props.vertices.map((v) => v[1]);
+          nodeW = Math.max(...xs) - Math.min(...xs);
+          nodeH = Math.max(...ys) - Math.min(...ys);
+        }
+        const w = nodeW * nextScale;
+        const h = nodeH * nextScale;
         if ((node.props.renderingOrder ?? 0) <= 0) {
           decorativeQuads.push(node);
           assert.equal(
@@ -790,8 +800,13 @@ test('QuestSpatialControls renders supersampled crisp text, non-occluding quads,
       }
     }
 
-    // Start inside the panel root node (ignore panel's world pose offset)
-    walk(rootNode.props.children, 0, 0, 1);
+    // Start inside the panel root node (ignore panel's world pose offset). When
+    // the controls render drag handles the root is a fragment and the panel is last.
+    const panelNode =
+      rootNode.type === 'Fragment'
+        ? rootNode.props.children[rootNode.props.children.length - 1]
+        : rootNode;
+    walk(panelNode.props.children, 0, 0, 1);
 
     assert.ok(decorativeQuads.length >= 4, `[${modeName}] Expected panel frame/surface quads`);
     assert.ok(interactiveQuads.length >= 5, `[${modeName}] Expected interactive button quads`);
@@ -804,7 +819,7 @@ test('QuestSpatialControls renders supersampled crisp text, non-occluding quads,
         `[${modeName}] "${a.label}" exceeds panel width: [${a.x - a.width / 2}, ${a.x + a.width / 2}]`
       );
       assert.ok(
-        a.y - a.height / 2 >= -0.235 && a.y + a.height / 2 <= 0.235,
+        a.y - a.height / 2 >= -0.235 && a.y + a.height / 2 <= 0.275,
         `[${modeName}] "${a.label}" exceeds panel height: [${a.y - a.height / 2}, ${a.y + a.height / 2}]`
       );
       for (let j = i + 1; j < layoutBoxes.length; j++) {
@@ -844,31 +859,48 @@ test('QuestSpatialControls renders supersampled crisp text, non-occluding quads,
       onPlaceInFront: () => {
         placeInFrontCount++;
       },
+      onExit: () => {
+        exitedVR++;
+      },
+      onMoveRig: (pos) => {
+        movedTo = pos;
+      },
     });
 
-  // 1. Unplaced state shows "Place In Front" CTA with zero overlaps
+  // 1. Unplaced state: only one large Place In Front button, nothing else interactive
   controller.reposition(sessionId);
   transformOpenState = false;
-  const unplacedInfo = inspectPanelTree(renderControls(), 'unplaced');
-  assert.ok(unplacedInfo.textEntries.some((t) => t.text === 'Place In Front'));
-
-  // Clicking "Place In Front" button quad invokes onPlaceInFront, and Exit VR calls exitVRScene without premature detach
-  const placeBtnIndex = unplacedInfo.textEntries.findIndex((t) => t.text === 'Place In Front');
-  assert.ok(placeBtnIndex >= 0);
-  for (const q of unplacedInfo.interactiveQuads) {
-    if (Math.abs(q.x - 0.29) < 1e-3 && Math.abs(q.y - 0.14) < 1e-3) {
-      q.node.props.onClick();
-    }
-    if (Math.abs(q.x - 0.145) < 1e-3 && Math.abs(q.y - 0.195) < 1e-3) {
-      q.node.props.onClick();
-    }
-    if (Math.abs(q.x - 0.335) < 1e-3 && Math.abs(q.y - 0.195) < 1e-3) {
-      q.node.props.onClick();
-    }
-  }
+  controller.setTracking(sessionId, false);
+  const unplaced = renderControls();
+  assert.equal(unplaced.type, 'ViroNode', 'unplaced controls must not render drag handles');
+  const unplacedPolys = [];
+  (function collect(node) {
+    if (!node) return;
+    if (Array.isArray(node)) return node.forEach(collect);
+    if (typeof node !== 'object') return;
+    if (node.type === 'ViroPolygon' && node.props.onClick) unplacedPolys.push(node);
+    if (node.type === 'ViroText')
+      unplacedPolys.labels = [...(unplacedPolys.labels ?? []), node.props.text];
+    collect(node.props?.children);
+  })(unplaced);
+  assert.equal(unplacedPolys.length, 0, 'tracking not normal yet: the big button is disabled');
+  controller.setTracking(sessionId, true);
+  const unplacedReady = renderControls();
+  const bigButtons = [];
+  (function collect(node) {
+    if (!node) return;
+    if (Array.isArray(node)) return node.forEach(collect);
+    if (typeof node !== 'object') return;
+    if (node.type === 'ViroPolygon' && node.props.onClick) bigButtons.push(node);
+    collect(node.props?.children);
+  })(unplacedReady);
+  assert.equal(bigButtons.length, 1, 'exactly one interactive control before placement');
+  const bigXs = bigButtons[0].props.vertices.map((v) => v[0]);
+  const bigYs = bigButtons[0].props.vertices.map((v) => v[1]);
+  assert.ok(Math.max(...bigXs) - Math.min(...bigXs) >= 0.5, 'Place In Front must be large');
+  assert.ok(Math.max(...bigYs) - Math.min(...bigYs) >= 0.15, 'Place In Front must be tall');
+  bigButtons[0].props.onClick();
   assert.equal(placeInFrontCount, 1);
-  assert.equal(recenterCount, 1);
-  assert.equal(exitedVR, 1);
   assert.equal(controller.getSnapshot().sessionId, sessionId);
 
   // Place and verify Anatomy ready + error states
@@ -881,8 +913,36 @@ test('QuestSpatialControls renders supersampled crisp text, non-occluding quads,
     controller.finishLoad(getScope(), assetId, true);
   }
   hoveredState = true;
-  inspectPanelTree(renderControls(), 'anatomy-ready');
+  const readyInfo = inspectPanelTree(renderControls(), 'anatomy-ready');
   hoveredState = false;
+
+  // Header buttons: Recenter and Exit VR are wired
+  for (const q of readyInfo.interactiveQuads) {
+    if (Math.abs(q.x - 0) < 1e-3 && Math.abs(q.y - 0.208) < 1e-3) q.node.props.onClick();
+    if (Math.abs(q.x - 0.285) < 1e-3 && Math.abs(q.y - 0.208) < 1e-3) q.node.props.onClick();
+  }
+  assert.equal(recenterCount, 1);
+  assert.equal(exitedVR, 1);
+
+  // Placed state renders a move handle and a rotate handle beside the panel
+  const placedTree = renderControls();
+  assert.equal(placedTree.type, 'Fragment');
+  const handles = placedTree.props.children.slice(0, 2);
+  const draggable = (handle) =>
+    handle.props.children.find((c) => c.type === 'ViroPolygon' && c.props.onDrag);
+  const moveHandle = draggable(handles[0]);
+  const rotateHandle = draggable(handles[1]);
+  assert.ok(moveHandle && rotateHandle, 'both handles expose onDrag');
+  assert.equal(moveHandle.props.dragType, 'FixedDistance');
+
+  moveHandle.props.onDrag([0.4, 0.7, -1.2]);
+  assert.deepEqual(Array.from(movedTo), [0.4, 0.7, -1.2]);
+
+  const yawBefore = controller.getSnapshot().yaw;
+  rotateHandle.props.onDrag([0, 1, -1]); // first sample only establishes the start
+  assert.equal(controller.getSnapshot().yaw, yawBefore);
+  rotateHandle.props.onDrag([-0.1, 1, -1]); // test panel is yawed 180deg: -0.1m world x is 0.1m to its right = 60 degrees
+  assert.ok(Math.abs(controller.getSnapshot().yaw - (yawBefore + 60)) < 1e-3);
 
   controller.selectModel(sessionId, 'skull');
   controller.finishLoad(getScope(), 'skull', false);
@@ -894,6 +954,21 @@ test('QuestSpatialControls renders supersampled crisp text, non-occluding quads,
   controller.selectViewerMode(sessionId, 'slices');
   controller.finishSliceLoad(getSliceScope(), true);
   inspectPanelTree(renderControls(), 'slices-ready');
+
+  // Slider thumb: sits beside the panel and scrubs through the series when dragged
+  const slicesTree = renderControls();
+  assert.equal(slicesTree.type, 'Fragment');
+  const thumb = slicesTree.props.children[2];
+  assert.ok(thumb, 'slices mode renders a slider thumb');
+  const thumbQuad = thumb.props.children.find((c) => c.type === 'ViroPolygon' && c.props.onDrag);
+  const imageCount = controller.getSliceSeries().imageCount;
+  // Test panel is yawed 180deg, so world x = -local x; far right of the track is world x -0.36
+  thumbQuad.props.onDrag([-0.36, 1, -1]);
+  assert.equal(controller.getSnapshot().slices.index, imageCount - 1);
+  controller.finishSliceLoad(getSliceScope(), true);
+  thumbQuad.props.onDrag([0.36, 1, -1]);
+  assert.equal(controller.getSnapshot().slices.index, 0);
+  controller.finishSliceLoad(getSliceScope(), true);
   controller.finishSliceLoad(getSliceScope(), false);
   inspectPanelTree(renderControls(), 'slices-error');
   controller.retrySliceLoad(sessionId);

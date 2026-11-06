@@ -5,6 +5,7 @@ export type VolumeQuality = 'balanced' | 'fast';
 export type VolumeRenderer = 'stack' | 'shader';
 export type VolumeDebugMode =
   | 'magenta'
+  | 'samplers'
   | 'high'
   | 'low'
   | 'validity'
@@ -16,14 +17,15 @@ export type VolumeDebugMode =
 export const STACK_PLANE_COUNT = 48;
 export const VOLUME_DEBUG_LABELS: Record<VolumeDebugMode, string> = {
   magenta: '1 · Magenta (no textures)',
-  high: '2 · High byte',
-  low: '3 · Low byte',
-  validity: '4 · Validity',
-  coordinates: '5 · Coordinates',
-  uniforms: '6 · Uniforms',
-  ray: '7 · Ray interval',
-  opacity: '8 · Accumulated opacity',
-  raymarch: '9 · Ray march (experimental)',
+  samplers: '2 · 3-Sampler diagnostic',
+  high: '3 · High byte',
+  low: '4 · Low byte',
+  validity: '5 · Validity',
+  coordinates: '6 · Coordinates',
+  uniforms: '7 · Uniforms',
+  ray: '8 · Ray interval',
+  opacity: '9 · Accumulated opacity',
+  raymarch: '10 · Ray march (experimental)',
 };
 export type VolumeAtlas = 'high' | 'low' | 'validity';
 export type VolumeBounds = [number, number, number, number, number, number];

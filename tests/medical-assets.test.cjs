@@ -342,8 +342,10 @@ test('the pair preserves one Slicer conversion frame, retains physical bounds an
 // This checks scene/controller wiring; it does not emulate native AR rendering.
 function renderScene(
   controller,
-  { shaderAPI = true, failUniformUpdates = false, platform = 'ios' } = {}
+  { shaderAPI = true, failUniformUpdates = false, platform = 'ios', stateStore = [] } = {}
 ) {
+  // useState slots persist across renders only when the caller passes the same stateStore.
+  let stateCursor = 0;
   const effects = [],
     timers = new Map();
   const materials = [],
@@ -368,6 +370,17 @@ function renderScene(
             return {
               useEffect: (effect) => effects.push(effect),
               useRef: () => ({ current: null }),
+              useState: (init) => {
+                const slot = stateCursor++;
+                if (!(slot in stateStore))
+                  stateStore[slot] = typeof init === 'function' ? init() : init;
+                return [
+                  stateStore[slot],
+                  (next) => {
+                    stateStore[slot] = typeof next === 'function' ? next(stateStore[slot]) : next;
+                  },
+                ];
+              },
               useSyncExternalStore: (_subscribe, getSnapshot) => getSnapshot(),
             };
           if (name === '@reactvision/react-viro')
@@ -401,7 +414,8 @@ function renderScene(
               },
             };
           const resolved = path.resolve(path.dirname(file), name);
-          if (name.endsWith('.glb') || name.endsWith('.png')) return resolved;
+          if (name.endsWith('.glb') || name.endsWith('.png') || name.endsWith('.obj'))
+            return resolved;
           if (name.endsWith('.native'))
             return load(fs.existsSync(`${resolved}.ts`) ? `${resolved}.ts` : `${resolved}.tsx`);
           return require(
@@ -604,6 +618,53 @@ test('slice scene mounts one image, shares the plane, changes only its key and i
   assert.equal(next.timers.size, 0);
 });
 
+test('slice scene never shows the incoming image before it loads and keeps the previous slice visible', () => {
+  const c = sliceSceneController();
+  const store = [];
+  const first = renderScene(c, { stateStore: store });
+  // Before the first slice loads: black backing, incoming image fully transparent
+  const backing = first.nodes.filter(({ type }) => type === 'ViroQuad');
+  assert.equal(backing.length, 1);
+  assert.deepEqual(Array.from(backing[0].props.materials), ['medicalSliceBacking']);
+  const firstImages = first.nodes.filter(({ type }) => type === 'ViroImage');
+  assert.equal(firstImages.length, 1);
+  assert.equal(firstImages[0].props.opacity, 0);
+  firstImages[0].props.onLoadEnd({ nativeEvent: { success: true } });
+
+  const loaded = renderScene(c, { stateStore: store });
+  const loadedImages = loaded.nodes.filter(({ type }) => type === 'ViroImage');
+  assert.equal(loadedImages.length, 1);
+  assert.equal(loadedImages[0].props.opacity, 1);
+  assert.equal(loaded.nodes.filter(({ type }) => type === 'ViroQuad').length, 0);
+
+  // Next slice: previous image stays visible, new one is transparent until it loads
+  const before = c.getSnapshot();
+  c.selectSlice(
+    {
+      sessionId: 1,
+      placementRevision: before.placementRevision,
+      requestId: before.slices.requestId,
+    },
+    60
+  );
+  const switching = renderScene(c, { stateStore: store });
+  const images = switching.nodes.filter(({ type }) => type === 'ViroImage');
+  assert.equal(images.length, 2);
+  const [previous, incoming] = images;
+  assert.ok(previous.props.source.endsWith('mri_axial_040.png'));
+  assert.notEqual(previous.props.opacity, 0);
+  assert.ok(incoming.props.source.endsWith('mri_axial_060.png'));
+  assert.equal(incoming.props.opacity, 0);
+
+  incoming.props.onLoadEnd({ nativeEvent: { success: true } });
+  const done = renderScene(c, { stateStore: store });
+  const doneImages = done.nodes.filter(({ type }) => type === 'ViroImage');
+  assert.equal(doneImages.length, 1);
+  assert.equal(doneImages[0].props.opacity, 1);
+  assert.ok(doneImages[0].props.source.endsWith('mri_axial_060.png'));
+  for (const render of [first, loaded, switching, done]) render.cleanup();
+});
+
 test('slice scene handles failed load events, deadline, retry and teardown', () => {
   const c = sliceSceneController();
   const loading = renderScene(c);
@@ -655,6 +716,52 @@ function volumeSceneController(renderer = 'shader') {
   return c;
 }
 
+// Quest regression: what RN 0.86 Fabric actually delivers for Viro's Android onLoadEndViro.
+// Viro emits a null map; Android Fabric turns it into {}; UIManagerBinding mixes in `target`
+// and `timeStamp`; ReactFabric wraps it in a SyntheticEvent with _targetInst and friends.
+function androidFabricLoadEnd(tag) {
+  return {
+    dispatchConfig: { registrationName: 'onLoadEndViro' },
+    _targetInst: { tag: 5, stateNode: {} },
+    nativeEvent: { target: tag, timeStamp: 52474.318 },
+    _dispatchInstances: null,
+    _dispatchListeners: null,
+    type: 'topLoadEndViro',
+    target: { __nativeTag: tag },
+    currentTarget: null,
+    timeStamp: 52474.318,
+    isDefaultPrevented: () => false,
+    isPropagationStopped: () => false,
+  };
+}
+
+test('Android Fabric load-end events complete Quest slices and volume atlases', () => {
+  const slices = sliceSceneController();
+  const image = renderScene(slices, { platform: 'android' }).nodes.find(
+    ({ type }) => type === 'ViroImage'
+  );
+  image.props.onLoadEnd(androidFabricLoadEnd(1124));
+  assert.equal(slices.getSnapshot().slices.loadStatus, 'ready');
+
+  const volume = volumeSceneController();
+  const probes = renderScene(volume, { platform: 'android' }).nodes.filter(
+    ({ type }) => type === 'ViroImage'
+  );
+  assert.equal(probes.length, 3);
+  probes.forEach(({ props }, i) => props.onLoadEnd(androidFabricLoadEnd(1126 + 2 * i)));
+  assert.equal(volume.getSnapshot().volume.loadStatus, 'binding');
+  const binding = renderScene(volume, { platform: 'android' });
+  assert.ok(binding.materials.some((value) => value.medicalVolume));
+  assert.ok(binding.nodes.some(({ type }) => type === 'Viro3DObject'));
+
+  // Android failures arrive through onError, which stays authoritative.
+  const failed = sliceSceneController();
+  renderScene(failed, { platform: 'android' })
+    .nodes.find(({ type }) => type === 'ViroImage')
+    .props.onError({ nativeEvent: { error: 'decode failed', target: 1124 } });
+  assert.equal(failed.getSnapshot().slices.loadStatus, 'error');
+});
+
 test('volume probes gate one proxy box, alpha textures and bounded material cleanup', () => {
   const c = volumeSceneController();
   const loading = renderScene(c);
@@ -672,7 +779,13 @@ test('volume probes gate one proxy box, alpha textures and bounded material clea
   const material = binding.materials.find((value) => value.medicalVolume)?.medicalVolume;
   assert.equal(c.getSnapshot().volume.loadStatus, 'binding');
   assert.equal(binding.nodes.filter(({ type }) => type === 'ViroBox').length, 0);
-  binding.flushFrames();
+  const proxy = binding.nodes.find(({ type }) => type === 'Viro3DObject');
+  assert.ok(proxy);
+  assert.equal(proxy.props.type, 'OBJ');
+  assert.ok(proxy.props.source.endsWith('volume-box.obj'));
+  assert.deepEqual(Array.from(proxy.props.shaderOverrides), ['medicalVolume']);
+  assert.equal(proxy.props.materials, undefined);
+  proxy.props.onLoadEnd();
   assert.equal(c.getSnapshot().volume.loadStatus, 'ready');
   assert.equal(material.cullMode, 'Front');
   assert.equal(material.writesToDepthBuffer, false);
@@ -690,20 +803,17 @@ test('volume probes gate one proxy box, alpha textures and bounded material clea
     )
   );
   const ready = renderScene(c);
-  const boxes = ready.nodes.filter(({ type }) => type === 'ViroBox');
-  assert.equal(boxes.length, 1);
-  // Viro iOS 3.0.3 drops custom textures in its materials clone constructor.
-  // shaderOverrides explicitly merges the three textures onto the geometry's material.
-  assert.equal(boxes[0].props.materials, undefined);
-  assert.deepEqual(Array.from(boxes[0].props.shaderOverrides), ['medicalVolume']);
+  const objects = ready.nodes.filter(({ type }) => type === 'Viro3DObject');
+  assert.equal(objects.length, 1);
+  assert.equal(objects[0].props.type, 'OBJ');
+  assert.deepEqual(Array.from(objects[0].props.shaderOverrides), ['medicalVolume']);
   assert.equal(ready.nodes.filter(({ type }) => type === 'ViroImage').length, 0);
   assert.equal(ready.nodes.filter(({ type }) => type === 'ViroARPlaneSelector').length, 1);
-  assert.equal(Math.max(boxes[0].props.width, boxes[0].props.height, boxes[0].props.length), 0.55);
   for (const callback of ready.frames.values()) callback();
   assert.ok(ready.uniforms.length > 0);
   assert.ok(ready.uniforms.every(([name]) => name === 'medicalVolume'));
   c.selectViewerMode(1, 'anatomy');
-  boxes[0].props.onError();
+  objects[0].props.onError();
   probes[0].props.onError();
   assert.equal(c.getSnapshot().volume.loadStatus, 'idle');
   for (const rendered of [loading, binding, ready]) {
@@ -745,7 +855,8 @@ test('a rejected shader update becomes a recoverable volume error', () => {
     .filter(({ type }) => type === 'ViroImage')
     .forEach(({ props }) => props.onLoadEnd({ nativeEvent: { success: true } }));
   const binding = renderScene(c);
-  binding.flushFrames();
+  const proxy = binding.nodes.find(({ type }) => type === 'Viro3DObject');
+  proxy.props.onLoadEnd();
   const ready = renderScene(c, { failUniformUpdates: true });
   for (const update of ready.frames.values()) assert.doesNotThrow(update);
   assert.equal(c.getSnapshot().volume.loadStatus, 'error');
@@ -886,7 +997,9 @@ test('medical-scene wires ViroARScene anchor callbacks to ViroARPlaneSelector, h
 });
 
 test('Quest raymarch volume loads scan assets and uniforms by default without magenta confirmation', () => {
-  const { parseMedicalVolumeDataset } = require('../src/features/medical-viewer/medical-volumes.ts');
+  const {
+    parseMedicalVolumeDataset,
+  } = require('../src/features/medical-viewer/medical-volumes.ts');
   const c = new MedicalController(
     undefined,
     undefined,
@@ -908,10 +1021,11 @@ test('Quest raymarch volume loads scan assets and uniforms by default without ma
   const loading = renderScene(c);
   const probes = loading.nodes.filter(({ type }) => type === 'ViroImage');
   assert.equal(probes.length, 3);
-  assert.deepEqual(
-    Array.from(probes.map((p) => path.basename(p.props.source))),
-    ['mri_high.png', 'mri_low.png', 'mri_validity.png']
-  );
+  assert.deepEqual(Array.from(probes.map((p) => path.basename(p.props.source))), [
+    'mri_high.png',
+    'mri_low.png',
+    'mri_validity.png',
+  ]);
   assert.ok(
     probes.every(
       ({ props }) => props.opacity === 0 && props.mipmap === false && props.format === 'RGBA8'
@@ -928,10 +1042,7 @@ test('Quest raymarch volume loads scan assets and uniforms by default without ma
   assert.ok(material);
   const samplers = material.materialUniforms.filter(({ type }) => type === 'sampler2D');
   assert.equal(samplers.length, 3);
-  assert.deepEqual(
-    Array.from(samplers.map((s) => s.name)),
-    ['u_high', 'u_low', 'u_validity']
-  );
+  assert.deepEqual(Array.from(samplers.map((s) => s.name)), ['u_high', 'u_low', 'u_validity']);
   const uniforms = material.materialUniforms.filter(({ type }) => type !== 'sampler2D');
   assert.ok(uniforms.length >= 8);
   const uniformNames = uniforms.map((u) => u.name);
@@ -941,15 +1052,18 @@ test('Quest raymarch volume loads scan assets and uniforms by default without ma
   assert.ok(uniformNames.includes('u_crop_max'));
   assert.ok(uniformNames.includes('u_appearance'));
 
-  // Flush frames to reach ready state
-  binding.flushFrames();
+  // Load proxy 3D object to reach ready state
+  const proxy = binding.nodes.find(({ type }) => type === 'Viro3DObject');
+  assert.ok(proxy);
+  proxy.props.onLoadEnd();
   assert.equal(c.getSnapshot().volume.loadStatus, 'ready');
 
   // Verify proxy geometry renders with shader
   const ready = renderScene(c);
-  const boxes = ready.nodes.filter(({ type }) => type === 'ViroBox');
-  assert.equal(boxes.length, 1);
-  assert.deepEqual(Array.from(boxes[0].props.shaderOverrides), ['medicalVolume']);
+  const objects = ready.nodes.filter(({ type }) => type === 'Viro3DObject');
+  assert.equal(objects.length, 1);
+  assert.equal(objects[0].props.type, 'OBJ');
+  assert.deepEqual(Array.from(objects[0].props.shaderOverrides), ['medicalVolume']);
 
   // Verify uniforms dispatch to native manager
   for (const callback of ready.frames.values()) callback();
@@ -966,10 +1080,11 @@ test('Quest raymarch volume loads scan assets and uniforms by default without ma
   const ctLoading = renderScene(c);
   const ctProbes = ctLoading.nodes.filter(({ type }) => type === 'ViroImage');
   assert.equal(ctProbes.length, 3);
-  assert.deepEqual(
-    Array.from(ctProbes.map((p) => path.basename(p.props.source))),
-    ['ct_high.png', 'ct_low.png', 'ct_validity.png']
-  );
+  assert.deepEqual(Array.from(ctProbes.map((p) => path.basename(p.props.source))), [
+    'ct_high.png',
+    'ct_low.png',
+    'ct_validity.png',
+  ]);
 
   c.detach(1);
   for (const rendered of [loading, binding, ready, ctLoading]) {

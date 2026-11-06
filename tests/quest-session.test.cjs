@@ -9,6 +9,17 @@ const {
   computeHeadLockedTransform,
   computeQuestPanelTransform,
   computeQuestSpecimenTransform,
+  computeSpecimenFromRig,
+  dragToYawDelta,
+  QUEST_GRAB_BAR_LOCAL_X,
+  QUEST_GRAB_BAR_LOCAL_Y,
+  rigLocalToWorld,
+  rigForGrabBarFacing,
+  rigPositionForGrabBar,
+  yawFacing,
+  rigWorldToLocalX,
+  sliderIndexFromLocalX,
+  roundedRectVertices,
 } = require('../src/features/ar/quest-spatial-math.ts');
 const { DEFAULT_AR_HEIGHT } = require('../src/features/ar/ar-transform.ts');
 const { SLICE_PANEL_WIDTH_METRES } = require('../src/features/medical-viewer/medical-slices.ts');
@@ -293,10 +304,10 @@ test('computeQuestPanelTransform projects forward onto horizontal plane so head 
   const downPanel = computeQuestPanelTransform(pitchedDownPose);
   const upPanel = computeQuestPanelTransform(pitchedUpPose);
 
-  // Both place the console at the exact same horizontal distance (1.10m) and desk height (1.6 - 0.46 = 1.14m)
+  // Both place the console at the exact same horizontal distance (1.10m) and desk height (1.6 - 0.65 = 0.95m)
   assert.deepEqual(downPanel.position, upPanel.position);
   assert.ok(Math.abs(downPanel.position[0] - 0) < 1e-4);
-  assert.ok(Math.abs(downPanel.position[1] - 1.14) < 1e-4);
+  assert.ok(Math.abs(downPanel.position[1] - 0.95) < 1e-4);
   assert.ok(Math.abs(downPanel.position[2] - -1.1) < 1e-4);
   assert.equal(downPanel.rotation[0], 0);
   assert.equal(downPanel.rotation[2], 0);
@@ -323,15 +334,114 @@ test('computeQuestSpecimenTransform places specimen in clear view above console 
 
   // Effective specimen center in world space once MedicalSceneContent adds DEFAULT_AR_HEIGHT
   const specimenCenterY = specimenAnchor.position[1] + DEFAULT_AR_HEIGHT;
-  assert.ok(Math.abs(specimenCenterY - (eyeY + 0.16)) < 1e-4);
+  assert.ok(Math.abs(specimenCenterY - (eyeY + 0.04)) < 1e-4);
 
   // Verify angular elevation of lowest slice caption edge is strictly above top edge of console panel
   const sliceBottomOffset = SLICE_PANEL_WIDTH_METRES / 2 + 0.065;
   const lowestSpecimenElevation =
     (specimenCenterY - sliceBottomOffset - eyeY) / Math.abs(specimenAnchor.position[2]);
-  const panelTopElevation = (panel.position[1] + 0.24 - eyeY) / Math.abs(panel.position[2]);
+  const panelTopElevation = (panel.position[1] + 0.28 - eyeY) / Math.abs(panel.position[2]);
   assert.ok(
     lowestSpecimenElevation > panelTopElevation,
     `Expected specimen bottom (${lowestSpecimenElevation.toFixed(3)}) above console top (${panelTopElevation.toFixed(3)})`
   );
+});
+
+test('specimen derived from rig stays glued to the panel when the rig moves', () => {
+  const pose = { position: [0, 1.6, 0], forward: [0, 0, -1], up: [0, 1, 0] };
+  const rig = computeQuestPanelTransform(pose);
+  const specimen = computeSpecimenFromRig(rig);
+  assert.ok(Math.abs(specimen.position[2] - -0.95) < 1e-4);
+  assert.deepEqual(specimen.rotation, rig.rotation);
+
+  const moved = { ...rig, position: [0.5, rig.position[1] + 0.2, rig.position[2] - 0.3] };
+  const movedSpecimen = computeSpecimenFromRig(moved);
+  for (let i = 0; i < 3; i++) {
+    assert.ok(
+      Math.abs(
+        movedSpecimen.position[i] - specimen.position[i] - (moved.position[i] - rig.position[i])
+      ) < 1e-4
+    );
+  }
+
+  // Rotated rig: local +z (toward wearer) follows the rig yaw
+  const turned = { position: [0, 0, 0], rotation: [0, 90, 0] };
+  const world = rigLocalToWorld(turned, [0, 0, 1]);
+  assert.ok(Math.abs(world[0] - 1) < 1e-4 && Math.abs(world[2]) < 1e-4);
+});
+
+test('rigPositionForGrabBar puts the grab bar exactly where it was dragged', () => {
+  const rig = { position: [0.2, 0.9, -1.1], rotation: [0, 35, 0] };
+  const target = [1, 0.5, -2];
+  const next = rigPositionForGrabBar(rig, target);
+  const barWorld = rigLocalToWorld({ position: next, rotation: rig.rotation }, [
+    QUEST_GRAB_BAR_LOCAL_X,
+    QUEST_GRAB_BAR_LOCAL_Y,
+    0,
+  ]);
+  for (let i = 0; i < 3; i++) assert.ok(Math.abs(barWorld[i] - target[i]) < 1e-4);
+});
+
+test('dragToYawDelta maps rightward drag to positive yaw and ignores depth motion', () => {
+  assert.ok(Math.abs(dragToYawDelta([0, 0, 0], [0.1, 0, 0], 0, 0.6) - 60) < 1e-4);
+  assert.ok(Math.abs(dragToYawDelta([0, 0, 0], [0, 0, 0.5], 0, 0.6)) < 1e-4);
+  assert.ok(Math.abs(dragToYawDelta([0, 0, 0], [0, 0, -0.1], 90, 0.6) - 60) < 1e-4);
+  assert.equal(dragToYawDelta([0, 0, 0], [NaN, 0, 0], 0), 0);
+});
+
+test('roundedRectVertices outlines a rounded rectangle within its bounds', () => {
+  const v = roundedRectVertices(0.4, 0.1, 0.03);
+  assert.ok(v.length >= 24);
+  for (const [x, y] of v) {
+    assert.ok(Math.abs(x) <= 0.2 + 1e-9 && Math.abs(y) <= 0.05 + 1e-9);
+  }
+  // Corner points are cut back: no vertex sits at the sharp corner
+  assert.ok(!v.some(([x, y]) => Math.abs(x) > 0.199 && Math.abs(y) > 0.049));
+  assert.equal(roundedRectVertices(0.4, 0.1, 0).length, 4);
+  // Radius is clamped to half the short side
+  assert.ok(roundedRectVertices(0.4, 0.1, 5).every(([, y]) => Math.abs(y) <= 0.05 + 1e-9));
+});
+
+test('slider maps a world drag position to the nearest slice and clamps at the ends', () => {
+  const rig = { position: [0.3, 1, -1], rotation: [0, 40, 0] };
+  // rigWorldToLocalX inverts rigLocalToWorld
+  const world = rigLocalToWorld(rig, [0.2, 0.1, 0.05]);
+  assert.ok(Math.abs(rigWorldToLocalX(rig, world) - 0.2) < 1e-6);
+
+  assert.equal(sliderIndexFromLocalX(-0.36, 0, 0.72, 11), 0);
+  assert.equal(sliderIndexFromLocalX(0.36, 0, 0.72, 11), 10);
+  assert.equal(sliderIndexFromLocalX(0, 0, 0.72, 11), 5);
+  assert.equal(sliderIndexFromLocalX(-5, 0, 0.72, 11), 0);
+  assert.equal(sliderIndexFromLocalX(5, 0, 0.72, 11), 10);
+  assert.equal(sliderIndexFromLocalX(NaN, 0, 0.72, 11), 0);
+  assert.equal(sliderIndexFromLocalX(0.1, 0, 0.72, 1), 0);
+});
+
+test('dragging the grab bar keeps the rig upright, under the pointer, and facing the wearer', () => {
+  const camera = [0, 1.6, 0];
+  const rig = { position: [0, 0.95, -1.1], rotation: [0, 0, 0] };
+  for (const target of [
+    [0.8, 0.8, -1.0],
+    [-0.9, 0.9, -0.6],
+    [0.2, 0.9, 1.2],
+  ]) {
+    const next = rigForGrabBarFacing(rig, target, camera);
+    assert.equal(next.rotation[0], 0);
+    assert.equal(next.rotation[2], 0);
+    // the bar is still under the pointer (within solver tolerance)
+    const bar = rigLocalToWorld(next, [QUEST_GRAB_BAR_LOCAL_X, QUEST_GRAB_BAR_LOCAL_Y, 0]);
+    for (let i = 0; i < 3; i++) assert.ok(Math.abs(bar[i] - target[i]) < 0.02);
+    // the front (+z local) points at the wearer
+    const front = rigLocalToWorld({ position: [0, 0, 0], rotation: next.rotation }, [0, 0, 1]);
+    const toCamera = [camera[0] - next.position[0], camera[2] - next.position[2]];
+    const len = Math.hypot(toCamera[0], toCamera[1]);
+    const dot = (front[0] * toCamera[0] + front[2] * toCamera[1]) / len;
+    assert.ok(dot > 0.999, `front should face the wearer (dot=${dot})`);
+  }
+  // Without a camera pose the previous yaw is kept
+  assert.equal(
+    rigForGrabBarFacing({ ...rig, rotation: [0, 33, 0] }, [1, 1, -1], null).rotation[1],
+    33
+  );
+  assert.equal(yawFacing([0, 0, 0], [0, 5, 0]), null);
 });

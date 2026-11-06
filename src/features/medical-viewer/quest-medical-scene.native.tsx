@@ -6,18 +6,23 @@ import {
   ViroTrackingStateConstants,
 } from '@reactvision/react-viro';
 import { VRQuestNavigatorBridge } from '@reactvision/react-viro/dist/components/Utilities/VRQuestNavigatorBridge';
+import { exitVRScene } from '@reactvision/react-viro/dist/components/Utilities/VRModuleOpenXR';
 import { useQuestSession } from '@/features/ar/quest-session-bridge';
 import {
   computeQuestPanelTransform,
-  computeQuestSpecimenTransform,
+  computeSpecimenFromRig,
+  rigForGrabBarFacing,
   type CameraPose,
   type Point3,
-  type Rotation3,
+  type RigPose,
 } from '@/features/ar/quest-spatial-math';
 import { MedicalSceneContent, QUEST_WORLD_ANCHOR_ID } from './medical-scene-content.native';
 import { QuestSpatialControls } from './quest-spatial-controls.native';
 
 const ORIGIN: Point3 = [0, 0, 0];
+// Gives React a frame to unmount the scene (hover state, text bitmaps, volume shader)
+// before the OpenXR activity is torn down.
+const EXIT_TEARDOWN_DELAY_MS = 150;
 const DEFAULT_CAMERA_POSE: CameraPose = {
   position: [0, 1.5, 0],
   forward: [0, 0, -1],
@@ -35,13 +40,11 @@ export function hasActiveQuestSceneMount(sessionId: number): boolean {
 
 export default function QuestMedicalScene() {
   const session = useQuestSession();
-  const [panelPose, setPanelPose] = useState<{ position: Point3; rotation: Rotation3 } | null>(
-    null
-  );
-  const [worldAnchorPose, setWorldAnchorPose] = useState<{
-    position: Point3;
-    rotation: Rotation3;
-  } | null>(null);
+  // One rig pose drives both the control panel and the placed specimen so the
+  // grab handle moves them together.
+  const [rigPose, setRigPose] = useState<RigPose | null>(null);
+  const [exiting, setExiting] = useState(false);
+  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestCameraRef = useRef<CameraPose | null>(null);
   const selectorRef = useRef<ViroARPlaneSelector>(null);
   const trackingState = useRef<number | null>(null);
@@ -68,6 +71,7 @@ export default function QuestMedicalScene() {
 
     return () => {
       unsubscribeError();
+      if (exitTimer.current) clearTimeout(exitTimer.current);
       const remaining = (activeQuestSceneMounts.get(sessionId) ?? 1) - 1;
       if (remaining <= 0) {
         activeQuestSceneMounts.delete(sessionId);
@@ -80,14 +84,35 @@ export default function QuestMedicalScene() {
 
   const handleRecenter = useCallback(() => {
     const pose = latestCameraRef.current ?? DEFAULT_CAMERA_POSE;
-    setPanelPose(computeQuestPanelTransform(pose));
+    setRigPose(computeQuestPanelTransform(pose));
   }, []);
+
+  const handleMoveRig = useCallback((handleWorld: Point3) => {
+    // Moving the rig also turns it to keep facing the wearer so it stays readable.
+    const camera = latestCameraRef.current?.position ?? null;
+    setRigPose((prev) => (prev ? rigForGrabBarFacing(prev, handleWorld, camera) : prev));
+  }, []);
+
+  const handleExit = useCallback(() => {
+    if (!controller || exitTimer.current) return;
+    controller.clearGestures();
+    // Unmount all scene content first, then finish the activity on a later tick.
+    setExiting(true);
+    exitTimer.current = setTimeout(() => {
+      exitTimer.current = null;
+      exitVRScene();
+      // If the activity did not finish, restore the scene instead of leaving it blank.
+      exitTimer.current = setTimeout(() => {
+        exitTimer.current = null;
+        setExiting(false);
+      }, 4000);
+    }, EXIT_TEARDOWN_DELAY_MS);
+  }, [controller]);
 
   const handlePlaceInFront = useCallback(() => {
     if (!controller || !context) return;
     const pose = latestCameraRef.current ?? DEFAULT_CAMERA_POSE;
-    const nextSpecimenPose = computeQuestSpecimenTransform(pose);
-    setWorldAnchorPose(nextSpecimenPose);
+    setRigPose(computeQuestPanelTransform(pose));
 
     if (controller.getSnapshot().tracking === 'initializing' && cameraReady.current) {
       controller.setTracking(context.sessionId, true);
@@ -106,6 +131,8 @@ export default function QuestMedicalScene() {
   if (!session || !controller || !context) {
     return null;
   }
+
+  const worldAnchorPose = rigPose ? computeSpecimenFromRig(rigPose) : null;
 
   const handleCameraUpdate = (camera: any) => {
     // Quest can report tracking unavailable during startup and then deliver
@@ -138,7 +165,7 @@ export default function QuestMedicalScene() {
     latestCameraRef.current = pose;
 
     // Initialize stationary panel pose on first camera update if not already set
-    setPanelPose((prev) => prev ?? computeQuestPanelTransform(pose));
+    setRigPose((prev) => prev ?? computeQuestPanelTransform(pose));
   };
 
   return (
@@ -169,22 +196,28 @@ export default function QuestMedicalScene() {
       <ViroNode position={ORIGIN} rotation={ORIGIN}>
         <ViroNode position={ORIGIN} rotation={ORIGIN}>
           {/* 3D Scene Content: Anatomy, Slices, Volume with Plane & World Placement */}
-          <MedicalSceneContent
-            context={context}
-            controller={controller}
-            isQuest={true}
-            selectorRef={selectorRef}
-            worldAnchorPose={worldAnchorPose}
-          />
+          {exiting ? null : (
+            <MedicalSceneContent
+              context={context}
+              controller={controller}
+              isQuest={true}
+              selectorRef={selectorRef}
+              worldAnchorPose={worldAnchorPose}
+            />
+          )}
 
           {/* In-Scene Stationary Spatial Controls */}
-          <QuestSpatialControls
-            context={context}
-            controller={controller}
-            panelPose={panelPose}
-            onRecenter={handleRecenter}
-            onPlaceInFront={handlePlaceInFront}
-          />
+          {exiting ? null : (
+            <QuestSpatialControls
+              context={context}
+              controller={controller}
+              panelPose={rigPose}
+              onRecenter={handleRecenter}
+              onPlaceInFront={handlePlaceInFront}
+              onExit={handleExit}
+              onMoveRig={handleMoveRig}
+            />
+          )}
         </ViroNode>
       </ViroNode>
     </ViroARScene>
