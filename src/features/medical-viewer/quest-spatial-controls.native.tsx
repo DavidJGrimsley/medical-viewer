@@ -5,7 +5,7 @@ import {
   ViroMaterials,
   ViroNode,
   ViroQuad,
-  ViroText,
+  ViroText as NativeViroText,
 } from '@reactvision/react-viro';
 import { exitVRScene } from '@reactvision/react-viro/dist/components/Utilities/VRModuleOpenXR';
 import type { ARSceneContext } from '@/features/ar/ar-session-types';
@@ -25,51 +25,175 @@ import { type VolumePreset, type VolumeQuality } from './medical-volumes';
 import { hasMedicalLabels, type MedicalModelId } from './medical-models';
 import type { SliceModality } from './medical-slices';
 
+// Viro's native VRTText rasterizes `fontSize` directly as Android Bitmap pixel
+// height and maps 1 unit of fontSize to ~0.01m (1cm) at scale = 1.
+// Scaling a wrapper ViroNode by 0.025 lets a 13.5mm physical glyph render from
+// a 54px bitmap (~3.8x supersampled for Quest 3S's ~20 PPD) with crisp edges.
+export const QUEST_TEXT_SCALE = 0.025;
+const VIRO_METRES_PER_FONT_UNIT = 0.01;
+const MIN_NATIVE_FONT_PX = 36;
+const MAX_NATIVE_FONT_PX = 128;
+
+export interface QuestTextProps {
+  text: string;
+  position?: [number, number, number];
+  width: number;
+  height: number;
+  worldFontSize: number;
+  color?: string;
+  fontWeight?: 'normal' | 'bold';
+  textAlign?: 'left' | 'center' | 'right';
+  maxLines?: number;
+}
+
+export function QuestText({
+  text,
+  position = [0, 0, 0],
+  width,
+  height,
+  worldFontSize,
+  color = '#f8fafc',
+  fontWeight = 'normal',
+  textAlign = 'center',
+  maxLines = 1,
+}: QuestTextProps) {
+  const nativeFontSize = Math.max(
+    MIN_NATIVE_FONT_PX,
+    Math.min(
+      MAX_NATIVE_FONT_PX,
+      Math.round(worldFontSize / (VIRO_METRES_PER_FONT_UNIT * QUEST_TEXT_SCALE))
+    )
+  );
+
+  return (
+    <ViroNode
+      position={position}
+      scale={[QUEST_TEXT_SCALE, QUEST_TEXT_SCALE, QUEST_TEXT_SCALE]}
+      ignoreEventHandling>
+      <NativeViroText
+        text={text}
+        width={width / QUEST_TEXT_SCALE}
+        height={height / QUEST_TEXT_SCALE}
+        maxLines={maxLines}
+        textClipMode="None"
+        textLineBreakMode={maxLines === 1 ? 'None' : 'WordWrap'}
+        renderingOrder={2}
+        ignoreEventHandling
+        style={{
+          fontFamily: 'sans-serif',
+          fontSize: nativeFontSize,
+          fontWeight,
+          color,
+          textAlign,
+          textAlignVertical: 'center',
+        }}
+      />
+    </ViroNode>
+  );
+}
+
 ViroMaterials.createMaterials({
-  questPanelBg: {
-    lightingModel: 'Constant',
-    diffuseColor: '#0f172aee',
-    writesToDepthBuffer: true,
-  },
   questPanelBorder: {
     lightingModel: 'Constant',
     diffuseColor: '#334155',
     writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
+  },
+  questPanelBg: {
+    lightingModel: 'Constant',
+    diffuseColor: '#0b1220',
+    writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
+  },
+  questCardBg: {
+    lightingModel: 'Constant',
+    diffuseColor: '#111c30',
+    writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
+  },
+  questDivider: {
+    lightingModel: 'Constant',
+    diffuseColor: '#1e293b',
+    writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
+  },
+  questBtnBorderIdle: {
+    lightingModel: 'Constant',
+    diffuseColor: '#334155',
+    writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
+  },
+  questBtnBorderActive: {
+    lightingModel: 'Constant',
+    diffuseColor: '#7dd3fc',
+    writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
+  },
+  questBtnBorderSelected: {
+    lightingModel: 'Constant',
+    diffuseColor: '#38bdf8',
+    writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
+  },
+  questBtnBorderDisabled: {
+    lightingModel: 'Constant',
+    diffuseColor: '#1e293b',
+    writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
   },
   questBtnIdle: {
     lightingModel: 'Constant',
-    diffuseColor: '#1e293bcc',
+    diffuseColor: '#1e293b',
     writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
   },
   questBtnHover: {
     lightingModel: 'Constant',
-    diffuseColor: '#38bdf8cc',
+    diffuseColor: '#0369a1',
     writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
   },
   questBtnPressed: {
     lightingModel: 'Constant',
     diffuseColor: '#0284c7',
     writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
   },
   questBtnSelected: {
     lightingModel: 'Constant',
     diffuseColor: '#0ea5e9',
     writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
   },
   questBtnDisabled: {
     lightingModel: 'Constant',
-    diffuseColor: '#33415588',
+    diffuseColor: '#172033',
     writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
   },
   questBtnDanger: {
     lightingModel: 'Constant',
-    diffuseColor: '#ef4444cc',
+    diffuseColor: '#b91c1c',
     writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
+  },
+  questBtnDangerHover: {
+    lightingModel: 'Constant',
+    diffuseColor: '#dc2626',
+    writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
   },
   questBtnAccent: {
     lightingModel: 'Constant',
-    diffuseColor: '#10b981cc',
+    diffuseColor: '#059669',
     writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
+  },
+  questBtnAccentHover: {
+    lightingModel: 'Constant',
+    diffuseColor: '#10b981',
+    writesToDepthBuffer: true,
+    readsFromDepthBuffer: true,
   },
 });
 
@@ -92,20 +216,29 @@ export function QuestSpatialButton({
   selected = false,
   disabled = false,
   width = 0.18,
-  height = 0.05,
-  fontSize = 14,
+  height = 0.044,
+  fontSize = 0.0135,
   position = [0, 0, 0],
   variant = 'default',
+  testID,
 }: QuestSpatialButtonProps) {
   const [hovered, onHover] = useAnySourceHover();
   const [pressed, onClickState] = useAnySourcePressed();
 
-  const material = disabled
+  const isHovered = !disabled && hovered;
+  const isPressed = !disabled && pressed;
+  const worldFontSize = fontSize > 0.2 ? fontSize * 0.001 : fontSize;
+
+  const fillMaterial = disabled
     ? 'questBtnDisabled'
-    : pressed
+    : isPressed
       ? 'questBtnPressed'
-      : hovered
-        ? 'questBtnHover'
+      : isHovered
+        ? variant === 'danger'
+          ? 'questBtnDangerHover'
+          : variant === 'accent'
+            ? 'questBtnAccentHover'
+            : 'questBtnHover'
         : selected
           ? 'questBtnSelected'
           : variant === 'danger'
@@ -114,37 +247,50 @@ export function QuestSpatialButton({
               ? 'questBtnAccent'
               : 'questBtnIdle';
 
-  const textColor = disabled
-    ? '#64748b'
-    : pressed
-      ? '#ffffff'
-      : hovered
-        ? '#0f172a'
-        : selected
-          ? '#ffffff'
-          : '#f8fafc';
+  const borderMaterial = disabled
+    ? 'questBtnBorderDisabled'
+    : isPressed || isHovered
+      ? 'questBtnBorderActive'
+      : selected
+        ? 'questBtnBorderSelected'
+        : 'questBtnBorderIdle';
+
+  // Keep text style independent of hover/press so sweeping controller or hand
+  // rays across buttons never triggers Android Bitmap re-rasterization in VRTText.
+  const textColor = disabled ? '#64748b' : '#f8fafc';
+  const fontWeight = selected || variant !== 'default' ? 'bold' : 'normal';
 
   return (
-    <ViroNode
-      position={position}
-      onHover={disabled ? undefined : onHover}
-      onClickState={disabled ? undefined : onClickState}
-      onClick={disabled ? undefined : onPress}>
-      <ViroQuad width={width} height={height} materials={[material]} />
-      <ViroText
-        text={label}
-        position={[0, 0, 0.002]}
+    <ViroNode position={position}>
+      <ViroQuad
+        position={[0, 0, -0.001]}
+        width={width + 0.005}
+        height={height + 0.005}
+        materials={[borderMaterial]}
+        renderingOrder={0}
+        ignoreEventHandling
+      />
+      <ViroQuad
+        testID={testID}
+        position={[0, 0, 0.001]}
         width={width}
         height={height}
+        materials={[fillMaterial]}
+        renderingOrder={1}
+        ignoreEventHandling={disabled}
+        onHover={disabled ? undefined : onHover}
+        onClickState={disabled ? undefined : onClickState}
+        onClick={disabled ? undefined : onPress}
+      />
+      <QuestText
+        text={label}
+        position={[0, 0, 0.004]}
+        width={Math.max(0.04, width - 0.014)}
+        height={height}
+        worldFontSize={worldFontSize}
+        fontWeight={fontWeight}
+        color={textColor}
         maxLines={1}
-        style={{
-          fontFamily: 'sans-serif',
-          fontSize,
-          fontWeight: selected || hovered ? 'bold' : 'normal',
-          color: textColor,
-          textAlign: 'center',
-          textAlignVertical: 'center',
-        }}
       />
     </ViroNode>
   );
@@ -155,6 +301,7 @@ export interface QuestSpatialControlsProps {
   controller: MedicalController;
   panelPose: { position: [number, number, number]; rotation: [number, number, number] } | null;
   onRecenter: () => void;
+  onPlaceInFront?: () => void;
 }
 
 export function QuestSpatialControls({
@@ -162,6 +309,7 @@ export function QuestSpatialControls({
   controller,
   panelPose,
   onRecenter,
+  onPlaceInFront,
 }: QuestSpatialControlsProps) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const [transformOpen, setTransformOpen] = useState(false);
@@ -189,9 +337,25 @@ export function QuestSpatialControls({
   };
 
   const sliceSeries = controller.getSliceSeries();
+  const canTransformPose =
+    state.mode === 'anatomy'
+      ? canManipulateMedical(state)
+      : state.mode === 'slices'
+        ? canManipulateSlices(state)
+        : canManipulateVolume(state);
+
+  const hasLoadError =
+    state.loadStatus === 'error' ||
+    state.slices.loadStatus === 'error' ||
+    state.volume.loadStatus === 'error';
+
+  const statusText = !state.anchorId
+    ? state.tracking === 'initializing'
+      ? 'Starting Quest tracking…'
+      : 'Use Place In Front or tap a detected room surface.'
+    : currentStatus || 'Specimen active · Use controls below';
 
   const handleExit = () => {
-    controller.detach(sessionId);
     exitVRScene();
   };
 
@@ -199,71 +363,113 @@ export function QuestSpatialControls({
 
   return (
     <ViroNode position={panelPose.position} rotation={panelPose.rotation}>
-      {/* Background Panel */}
-      <ViroQuad position={[0, 0, -0.005]} width={0.88} height={0.58} materials={['questPanelBg']} />
+      {/* Decorative Console Frame & Surface (strictly ignoreEventHandling so rotated panel AABBs never swallow rays) */}
+      <ViroQuad
+        position={[0, 0, -0.008]}
+        width={0.92}
+        height={0.48}
+        materials={['questPanelBorder']}
+        renderingOrder={-3}
+        ignoreEventHandling
+      />
+      <ViroQuad
+        position={[0, 0, -0.006]}
+        width={0.908}
+        height={0.468}
+        materials={['questPanelBg']}
+        renderingOrder={-2}
+        ignoreEventHandling
+      />
+      <ViroQuad
+        position={[0, 0.114, -0.004]}
+        width={0.86}
+        height={0.002}
+        materials={['questDivider']}
+        renderingOrder={-1}
+        ignoreEventHandling
+      />
+      <ViroQuad
+        position={[0, -0.084, -0.004]}
+        width={0.86}
+        height={0.268}
+        materials={['questCardBg']}
+        renderingOrder={-1}
+        ignoreEventHandling
+      />
 
-      {/* Header Bar */}
-      <ViroText
-        text="Medical Viewer (MR)"
-        position={[-0.22, 0.24, 0.002]}
-        width={0.4}
-        height={0.05}
-        style={{
-          fontFamily: 'sans-serif',
-          fontSize: 18,
-          fontWeight: 'bold',
-          color: '#38bdf8',
-          textAlign: 'left',
-          textAlignVertical: 'center',
-        }}
+      {/* Row 1: Header Bar (y = +0.195) */}
+      <QuestText
+        text="Medical Viewer · Quest MR"
+        position={[-0.215, 0.195, 0.004]}
+        width={0.41}
+        height={0.042}
+        worldFontSize={0.019}
+        fontWeight="bold"
+        color="#38bdf8"
+        textAlign="left"
       />
       <QuestSpatialButton
         label="Recenter"
-        position={[0.2, 0.24, 0.002]}
+        position={[0.145, 0.195, 0.002]}
         width={0.16}
-        height={0.045}
-        fontSize={13}
+        height={0.04}
+        fontSize={0.013}
         onPress={onRecenter}
       />
       <QuestSpatialButton
         label="Exit VR"
         variant="danger"
-        position={[0.36, 0.24, 0.002]}
-        width={0.14}
-        height={0.045}
-        fontSize={13}
+        position={[0.335, 0.195, 0.002]}
+        width={0.16}
+        height={0.04}
+        fontSize={0.013}
         onPress={handleExit}
       />
 
-      {/* Status Line */}
-      <ViroText
-        text={currentStatus || 'Ready'}
-        position={[0, 0.18, 0.002]}
-        width={0.84}
-        height={0.04}
-        style={{
-          fontFamily: 'sans-serif',
-          fontSize: 13,
-          color:
-            state.loadStatus === 'error' ||
-            state.slices.loadStatus === 'error' ||
-            state.volume.loadStatus === 'error'
-              ? '#fde68a'
-              : '#94a3b8',
-          textAlign: 'center',
-          textAlignVertical: 'center',
-        }}
-      />
+      {/* Row 2: Status & Room-Model-Free Placement Bar (y = +0.140) */}
+      {!state.anchorId && onPlaceInFront ? (
+        <>
+          <QuestText
+            text={statusText}
+            position={[-0.135, 0.14, 0.004]}
+            width={0.55}
+            height={0.036}
+            worldFontSize={0.0125}
+            color={hasLoadError ? '#fde68a' : '#cbd5e1'}
+            textAlign="left"
+          />
+          <QuestSpatialButton
+            label="Place In Front"
+            variant="accent"
+            disabled={state.tracking !== 'normal'}
+            position={[0.29, 0.14, 0.002]}
+            width={0.25}
+            height={0.038}
+            fontSize={0.0135}
+            onPress={onPlaceInFront}
+          />
+        </>
+      ) : (
+        <QuestText
+          text={statusText}
+          position={[0, 0.14, 0.004]}
+          width={0.82}
+          height={0.036}
+          worldFontSize={0.0125}
+          color={hasLoadError ? '#fde68a' : '#94a3b8'}
+          textAlign="center"
+        />
+      )}
 
-      {/* Mode Switcher */}
-      <ViroNode position={[0, 0.12, 0]}>
+      {/* Row 3: Mode Switcher Tabs (y = +0.082) */}
+      <ViroNode position={[0, 0.082, 0]}>
         <QuestSpatialButton
           label="Anatomy"
           selected={state.mode === 'anatomy'}
-          position={[-0.28, 0, 0.002]}
-          width={0.24}
-          height={0.05}
-          fontSize={15}
+          position={[-0.285, 0, 0.002]}
+          width={0.25}
+          height={0.044}
+          fontSize={0.0145}
           onPress={() => {
             setTransformOpen(false);
             controller.selectViewerMode(sessionId, 'anatomy');
@@ -273,9 +479,9 @@ export function QuestSpatialControls({
           label="Scan Slices"
           selected={state.mode === 'slices'}
           position={[0, 0, 0.002]}
-          width={0.24}
-          height={0.05}
-          fontSize={15}
+          width={0.25}
+          height={0.044}
+          fontSize={0.0145}
           onPress={() => {
             setTransformOpen(false);
             controller.selectViewerMode(sessionId, 'slices');
@@ -284,10 +490,10 @@ export function QuestSpatialControls({
         <QuestSpatialButton
           label="3D Scan"
           selected={state.mode === 'volume'}
-          position={[0.28, 0, 0.002]}
-          width={0.24}
-          height={0.05}
-          fontSize={15}
+          position={[0.285, 0, 0.002]}
+          width={0.25}
+          height={0.044}
+          fontSize={0.0145}
           onPress={() => {
             setTransformOpen(false);
             controller.selectViewerMode(sessionId, 'volume');
@@ -295,36 +501,24 @@ export function QuestSpatialControls({
         />
       </ViroNode>
 
-      {/* Sub-Panel: Transform Mode or Representation Mode Controls */}
+      {/* Sub-Panel Content (y in [-0.218, +0.050]) */}
       {transformOpen ? (
-        <ViroNode position={[0, -0.06, 0]}>
-          <ViroText
-            text="Adjust Placement & Pose"
-            position={[0, 0.08, 0.002]}
-            width={0.8}
-            height={0.03}
-            style={{
-              fontFamily: 'sans-serif',
-              fontSize: 14,
-              fontWeight: 'bold',
-              color: '#38bdf8',
-              textAlign: 'center',
-            }}
-          />
-
-          {/* Scale adjustments */}
-          <ViroNode position={[0, 0.02, 0]}>
+        <ViroNode position={[0, -0.084, 0]}>
+          {/* Scale Row (local y = +0.102 -> panel y = +0.018) */}
+          <ViroNode position={[0, 0.102, 0]}>
             <QuestSpatialButton
               label="Scale -"
               position={[-0.26, 0, 0.002]}
-              width={0.16}
-              height={0.045}
+              width={0.17}
+              height={0.04}
+              fontSize={0.013}
               disabled={
-                state.mode === 'anatomy'
+                !canTransformPose ||
+                (state.mode === 'anatomy'
                   ? state.scale <= MIN_MODEL_SCALE
                   : state.mode === 'slices'
-                    ? state.slices.scale <= 0.4
-                    : state.volume.scale <= 0.4
+                    ? state.slices.scale <= MIN_MODEL_SCALE
+                    : state.volume.scale <= MIN_MODEL_SCALE)
               }
               onPress={() => {
                 if (state.mode === 'anatomy') {
@@ -333,41 +527,38 @@ export function QuestSpatialControls({
                   controller.setPanelTransform(
                     sliceScope,
                     'scale',
-                    Math.max(0.4, state.slices.scale - 0.2)
+                    Math.max(MIN_MODEL_SCALE, state.slices.scale - 0.2)
                   );
                 } else {
                   controller.setVolumeTransform(
                     volumeScope,
                     'scale',
-                    Math.max(0.4, state.volume.scale - 0.2)
+                    Math.max(MIN_MODEL_SCALE, state.volume.scale - 0.2)
                   );
                 }
               }}
             />
-            <ViroText
+            <QuestText
               text={`Scale: ${(state.mode === 'anatomy' ? state.scale : state.mode === 'slices' ? state.slices.scale : state.volume.scale).toFixed(2)}x`}
-              position={[0, 0, 0.002]}
-              width={0.24}
-              height={0.04}
-              style={{
-                fontFamily: 'sans-serif',
-                fontSize: 14,
-                color: '#f8fafc',
-                textAlign: 'center',
-                textAlignVertical: 'center',
-              }}
+              position={[0, 0, 0.004]}
+              width={0.3}
+              height={0.038}
+              worldFontSize={0.0135}
+              color="#f8fafc"
             />
             <QuestSpatialButton
               label="Scale +"
               position={[0.26, 0, 0.002]}
-              width={0.16}
-              height={0.045}
+              width={0.17}
+              height={0.04}
+              fontSize={0.013}
               disabled={
-                state.mode === 'anatomy'
+                !canTransformPose ||
+                (state.mode === 'anatomy'
                   ? state.scale >= MAX_MODEL_SCALE
                   : state.mode === 'slices'
-                    ? state.slices.scale >= 3.0
-                    : state.volume.scale >= 3.0
+                    ? state.slices.scale >= MAX_MODEL_SCALE
+                    : state.volume.scale >= MAX_MODEL_SCALE)
               }
               onPress={() => {
                 if (state.mode === 'anatomy') {
@@ -376,26 +567,28 @@ export function QuestSpatialControls({
                   controller.setPanelTransform(
                     sliceScope,
                     'scale',
-                    Math.min(3.0, state.slices.scale + 0.2)
+                    Math.min(MAX_MODEL_SCALE, state.slices.scale + 0.2)
                   );
                 } else {
                   controller.setVolumeTransform(
                     volumeScope,
                     'scale',
-                    Math.min(3.0, state.volume.scale + 0.2)
+                    Math.min(MAX_MODEL_SCALE, state.volume.scale + 0.2)
                   );
                 }
               }}
             />
           </ViroNode>
 
-          {/* Height adjustments */}
-          <ViroNode position={[0, -0.04, 0]}>
+          {/* Height Row (local y = +0.046 -> panel y = -0.038) */}
+          <ViroNode position={[0, 0.046, 0]}>
             <QuestSpatialButton
               label="Lower (-5cm)"
               position={[-0.26, 0, 0.002]}
-              width={0.16}
-              height={0.045}
+              width={0.17}
+              height={0.04}
+              fontSize={0.0125}
+              disabled={!canTransformPose}
               onPress={() => {
                 if (state.mode === 'anatomy') {
                   controller.setHeight(scope, Math.max(MIN_MODEL_HEIGHT, state.height - 0.05));
@@ -414,24 +607,21 @@ export function QuestSpatialControls({
                 }
               }}
             />
-            <ViroText
+            <QuestText
               text={`Height: ${Math.round((state.mode === 'anatomy' ? state.height : state.mode === 'slices' ? state.slices.height : state.volume.height) * 100)}cm`}
-              position={[0, 0, 0.002]}
-              width={0.24}
-              height={0.04}
-              style={{
-                fontFamily: 'sans-serif',
-                fontSize: 14,
-                color: '#f8fafc',
-                textAlign: 'center',
-                textAlignVertical: 'center',
-              }}
+              position={[0, 0, 0.004]}
+              width={0.3}
+              height={0.038}
+              worldFontSize={0.0135}
+              color="#f8fafc"
             />
             <QuestSpatialButton
               label="Raise (+5cm)"
               position={[0.26, 0, 0.002]}
-              width={0.16}
-              height={0.045}
+              width={0.17}
+              height={0.04}
+              fontSize={0.0125}
+              disabled={!canTransformPose}
               onPress={() => {
                 if (state.mode === 'anatomy') {
                   controller.setHeight(scope, Math.min(MAX_MODEL_HEIGHT, state.height + 0.05));
@@ -452,13 +642,15 @@ export function QuestSpatialControls({
             />
           </ViroNode>
 
-          {/* Yaw rotation adjustments */}
-          <ViroNode position={[0, -0.1, 0]}>
+          {/* Yaw Row (local y = -0.010 -> panel y = -0.094) */}
+          <ViroNode position={[0, -0.01, 0]}>
             <QuestSpatialButton
               label="Turn Left"
               position={[-0.26, 0, 0.002]}
-              width={0.16}
-              height={0.045}
+              width={0.17}
+              height={0.04}
+              fontSize={0.013}
+              disabled={!canTransformPose}
               onPress={() => {
                 if (state.mode === 'anatomy') {
                   controller.setYaw(scope, state.yaw - 15);
@@ -469,24 +661,21 @@ export function QuestSpatialControls({
                 }
               }}
             />
-            <ViroText
+            <QuestText
               text={`Yaw: ${Math.round(state.mode === 'anatomy' ? state.yaw : state.mode === 'slices' ? state.slices.yaw : state.volume.yaw)}°`}
-              position={[0, 0, 0.002]}
-              width={0.24}
-              height={0.04}
-              style={{
-                fontFamily: 'sans-serif',
-                fontSize: 14,
-                color: '#f8fafc',
-                textAlign: 'center',
-                textAlignVertical: 'center',
-              }}
+              position={[0, 0, 0.004]}
+              width={0.3}
+              height={0.038}
+              worldFontSize={0.0135}
+              color="#f8fafc"
             />
             <QuestSpatialButton
               label="Turn Right"
               position={[0.26, 0, 0.002]}
-              width={0.16}
-              height={0.045}
+              width={0.17}
+              height={0.04}
+              fontSize={0.013}
+              disabled={!canTransformPose}
               onPress={() => {
                 if (state.mode === 'anatomy') {
                   controller.setYaw(scope, state.yaw + 15);
@@ -499,48 +688,114 @@ export function QuestSpatialControls({
             />
           </ViroNode>
 
-          {/* Reposition & Done */}
-          <ViroNode position={[0, -0.16, 0]}>
-            <QuestSpatialButton
-              label="Reposition"
-              position={[-0.24, 0, 0.002]}
-              width={0.18}
-              height={0.045}
-              onPress={() => {
-                controller.reposition(sessionId);
-              }}
-            />
-            <QuestSpatialButton
-              label="Reset Pose"
-              position={[0, 0, 0.002]}
-              width={0.18}
-              height={0.045}
-              onPress={() => {
-                if (state.mode === 'anatomy') {
-                  controller.setScale(scope, 1.0);
-                  controller.setHeight(scope, DEFAULT_MODEL_HEIGHT);
-                  controller.setYaw(scope, 0);
-                } else if (state.mode === 'slices') {
-                  controller.resetPanel(sessionId);
-                } else {
-                  controller.resetVolumeTransform(sessionId);
-                }
-              }}
-            />
-            <QuestSpatialButton
-              label="Done"
-              variant="accent"
-              position={[0.24, 0, 0.002]}
-              width={0.18}
-              height={0.045}
-              onPress={() => setTransformOpen(false)}
-            />
+          {/* Actions Row (local y = -0.072 -> panel y = -0.156) */}
+          <ViroNode position={[0, -0.072, 0]}>
+            {onPlaceInFront ? (
+              <>
+                <QuestSpatialButton
+                  label="Move Here"
+                  disabled={state.tracking !== 'normal'}
+                  position={[-0.3075, 0, 0.002]}
+                  width={0.185}
+                  height={0.042}
+                  fontSize={0.0125}
+                  onPress={onPlaceInFront}
+                />
+                <QuestSpatialButton
+                  label="Reposition"
+                  disabled={!state.anchorId}
+                  position={[-0.1025, 0, 0.002]}
+                  width={0.185}
+                  height={0.042}
+                  fontSize={0.0125}
+                  onPress={() => {
+                    setTransformOpen(false);
+                    controller.reposition(sessionId);
+                  }}
+                />
+                <QuestSpatialButton
+                  label="Reset Pose"
+                  disabled={
+                    state.mode === 'anatomy' ? !canManipulateMedical(state) : !state.anchorId
+                  }
+                  position={[0.1025, 0, 0.002]}
+                  width={0.185}
+                  height={0.042}
+                  fontSize={0.0125}
+                  onPress={() => {
+                    if (state.mode === 'anatomy') {
+                      controller.setScale(scope, 1.0);
+                      controller.setHeight(scope, DEFAULT_MODEL_HEIGHT);
+                      controller.setYaw(scope, 0);
+                    } else if (state.mode === 'slices') {
+                      controller.resetPanel(sessionId);
+                    } else {
+                      controller.resetVolumeTransform(sessionId);
+                    }
+                  }}
+                />
+                <QuestSpatialButton
+                  label="Done"
+                  variant="accent"
+                  position={[0.3075, 0, 0.002]}
+                  width={0.185}
+                  height={0.042}
+                  fontSize={0.013}
+                  onPress={() => setTransformOpen(false)}
+                />
+              </>
+            ) : (
+              <>
+                <QuestSpatialButton
+                  label="Reposition"
+                  disabled={!state.anchorId}
+                  position={[-0.25, 0, 0.002]}
+                  width={0.21}
+                  height={0.042}
+                  fontSize={0.013}
+                  onPress={() => {
+                    setTransformOpen(false);
+                    controller.reposition(sessionId);
+                  }}
+                />
+                <QuestSpatialButton
+                  label="Reset Pose"
+                  disabled={
+                    state.mode === 'anatomy' ? !canManipulateMedical(state) : !state.anchorId
+                  }
+                  position={[0, 0, 0.002]}
+                  width={0.21}
+                  height={0.042}
+                  fontSize={0.013}
+                  onPress={() => {
+                    if (state.mode === 'anatomy') {
+                      controller.setScale(scope, 1.0);
+                      controller.setHeight(scope, DEFAULT_MODEL_HEIGHT);
+                      controller.setYaw(scope, 0);
+                    } else if (state.mode === 'slices') {
+                      controller.resetPanel(sessionId);
+                    } else {
+                      controller.resetVolumeTransform(sessionId);
+                    }
+                  }}
+                />
+                <QuestSpatialButton
+                  label="Done"
+                  variant="accent"
+                  position={[0.25, 0, 0.002]}
+                  width={0.21}
+                  height={0.042}
+                  fontSize={0.013}
+                  onPress={() => setTransformOpen(false)}
+                />
+              </>
+            )}
           </ViroNode>
         </ViroNode>
       ) : state.mode === 'anatomy' ? (
-        <ViroNode position={[0, -0.06, 0]}>
-          {/* Anatomy Models Selector Row */}
-          <ViroNode position={[0, 0.05, 0]}>
+        <ViroNode position={[0, -0.084, 0]}>
+          {/* Anatomy Model Selector Row (local y = +0.088 -> panel y = +0.004) */}
+          <ViroNode position={[0, 0.088, 0]}>
             {(
               [
                 ['both', 'Both'],
@@ -553,92 +808,88 @@ export function QuestSpatialControls({
                 key={modelId}
                 label={label}
                 selected={state.modelId === modelId}
-                position={[-0.315 + i * 0.21, 0, 0.002]}
-                width={0.19}
-                height={0.048}
-                fontSize={13}
+                position={[-0.3075 + i * 0.205, 0, 0.002]}
+                width={0.185}
+                height={0.044}
+                fontSize={0.0135}
                 onPress={() => controller.selectModel(sessionId, modelId as MedicalModelId)}
               />
             ))}
           </ViroNode>
 
-          {/* Anatomy Actions Row */}
-          <ViroNode position={[0, -0.04, 0]}>
+          {/* Anatomy Actions Row (local y = +0.016 -> panel y = -0.068) */}
+          <ViroNode position={[0, 0.016, 0]}>
             <QuestSpatialButton
               label={state.labelsVisible ? 'Labels: ON' : 'Labels: OFF'}
               selected={state.labelsVisible}
               disabled={!canManipulateMedical(state) || !hasMedicalLabels(state.modelId)}
-              position={[-0.22, 0, 0.002]}
-              width={0.24}
-              height={0.048}
-              fontSize={13}
+              position={[-0.155, 0, 0.002]}
+              width={0.26}
+              height={0.044}
+              fontSize={0.0135}
               onPress={() => controller.toggleLabels(sessionId)}
             />
             <QuestSpatialButton
               label="Transform"
               disabled={!state.anchorId}
-              position={[0.22, 0, 0.002]}
-              width={0.24}
-              height={0.048}
-              fontSize={13}
+              position={[0.155, 0, 0.002]}
+              width={0.26}
+              height={0.044}
+              fontSize={0.0135}
               onPress={() => setTransformOpen(true)}
             />
           </ViroNode>
 
           {state.loadStatus === 'error' ? (
-            <ViroNode position={[0, -0.12, 0]}>
+            <ViroNode position={[0, -0.058, 0]}>
               <QuestSpatialButton
                 label="Retry Loading Anatomy"
                 variant="danger"
                 position={[0, 0, 0.002]}
                 width={0.34}
-                height={0.048}
+                height={0.042}
+                fontSize={0.013}
                 onPress={() => controller.retryLoad(sessionId)}
               />
             </ViroNode>
           ) : null}
         </ViroNode>
       ) : state.mode === 'slices' ? (
-        <ViroNode position={[0, -0.06, 0]}>
-          {/* Modality & Orientation Row */}
-          <ViroNode position={[0, 0.06, 0]}>
+        <ViroNode position={[0, -0.084, 0]}>
+          {/* Modality & Orientation Row (local y = +0.098 -> panel y = +0.014) */}
+          <ViroNode position={[0, 0.098, 0]}>
             {(['mri', 'ct'] as const).map((mod, i) => (
               <QuestSpatialButton
                 key={mod}
                 label={mod.toUpperCase()}
                 selected={state.slices.modality === mod}
-                position={[-0.24 + i * 0.22, 0, 0.002]}
-                width={0.2}
-                height={0.045}
-                fontSize={13}
+                position={[-0.295 + i * 0.215, 0, 0.002]}
+                width={0.19}
+                height={0.04}
+                fontSize={0.0135}
                 onPress={() => controller.selectModality(sessionId, mod as SliceModality)}
               />
             ))}
-            <ViroText
+            <QuestText
               text="Axial Series (RAS)"
-              position={[0.2, 0, 0.002]}
-              width={0.3}
-              height={0.04}
-              style={{
-                fontFamily: 'sans-serif',
-                fontSize: 13,
-                color: '#94a3b8',
-                textAlign: 'center',
-                textAlignVertical: 'center',
-              }}
+              position={[0.22, 0, 0.004]}
+              width={0.36}
+              height={0.036}
+              worldFontSize={0.0125}
+              color="#94a3b8"
             />
           </ViroNode>
 
-          {/* Slice Browsing Row */}
+          {/* Slice Browsing Row (local y = +0.036 -> panel y = -0.048) */}
           {sliceSeries ? (
-            <ViroNode position={[0, -0.01, 0]}>
+            <ViroNode position={[0, 0.036, 0]}>
               <QuestSpatialButton
                 label="<< -5"
                 disabled={state.slices.index < 5}
-                position={[-0.32, 0, 0.002]}
+                position={[-0.34, 0, 0.002]}
                 width={0.12}
-                height={0.045}
-                fontSize={12}
+                height={0.04}
+                fontSize={0.012}
                 onPress={() =>
                   controller.selectSlice(sliceScope, Math.max(0, state.slices.index - 5))
                 }
@@ -646,41 +897,36 @@ export function QuestSpatialControls({
               <QuestSpatialButton
                 label="< Prev"
                 disabled={state.slices.index === 0}
-                position={[-0.18, 0, 0.002]}
+                position={[-0.195, 0, 0.002]}
                 width={0.13}
-                height={0.045}
-                fontSize={13}
+                height={0.04}
+                fontSize={0.0125}
                 onPress={() => controller.selectSlice(sliceScope, state.slices.index - 1)}
               />
-              <ViroText
+              <QuestText
                 text={`Slice ${state.slices.index + 1}/${sliceSeries.imageCount}`}
-                position={[0.02, 0, 0.002]}
+                position={[0, 0, 0.004]}
                 width={0.22}
-                height={0.04}
-                style={{
-                  fontFamily: 'sans-serif',
-                  fontSize: 13,
-                  color: '#f8fafc',
-                  textAlign: 'center',
-                  textAlignVertical: 'center',
-                }}
+                height={0.036}
+                worldFontSize={0.013}
+                color="#f8fafc"
               />
               <QuestSpatialButton
                 label="Next >"
                 disabled={state.slices.index >= sliceSeries.imageCount - 1}
-                position={[0.18, 0, 0.002]}
+                position={[0.195, 0, 0.002]}
                 width={0.13}
-                height={0.045}
-                fontSize={13}
+                height={0.04}
+                fontSize={0.0125}
                 onPress={() => controller.selectSlice(sliceScope, state.slices.index + 1)}
               />
               <QuestSpatialButton
                 label="+5 >>"
                 disabled={state.slices.index >= sliceSeries.imageCount - 5}
-                position={[0.32, 0, 0.002]}
+                position={[0.34, 0, 0.002]}
                 width={0.12}
-                height={0.045}
-                fontSize={12}
+                height={0.04}
+                fontSize={0.012}
                 onPress={() =>
                   controller.selectSlice(
                     sliceScope,
@@ -691,35 +937,36 @@ export function QuestSpatialControls({
             </ViroNode>
           ) : null}
 
-          {/* Slices Actions */}
-          <ViroNode position={[0, -0.08, 0]}>
+          {/* Slices Actions Row (local y = -0.026 -> panel y = -0.110) */}
+          <ViroNode position={[0, -0.026, 0]}>
             <QuestSpatialButton
               label="Reset Slice"
-              position={[-0.22, 0, 0.002]}
-              width={0.22}
-              height={0.045}
-              fontSize={13}
+              position={[-0.155, 0, 0.002]}
+              width={0.25}
+              height={0.04}
+              fontSize={0.013}
               onPress={() => controller.resetSlice(sessionId)}
             />
             <QuestSpatialButton
               label="Transform"
-              disabled={!canManipulateSlices(state)}
-              position={[0.22, 0, 0.002]}
-              width={0.22}
-              height={0.045}
-              fontSize={13}
+              disabled={!state.anchorId}
+              position={[0.155, 0, 0.002]}
+              width={0.25}
+              height={0.04}
+              fontSize={0.013}
               onPress={() => setTransformOpen(true)}
             />
           </ViroNode>
 
           {state.slices.loadStatus === 'error' ? (
-            <ViroNode position={[0, -0.15, 0]}>
+            <ViroNode position={[0, -0.084, 0]}>
               <QuestSpatialButton
                 label="Retry Loading Slice"
                 variant="danger"
                 position={[0, 0, 0.002]}
                 width={0.34}
-                height={0.045}
+                height={0.04}
+                fontSize={0.0125}
                 onPress={() => controller.retrySliceLoad(sessionId)}
               />
             </ViroNode>
@@ -727,32 +974,18 @@ export function QuestSpatialControls({
         </ViroNode>
       ) : (
         /* 3D Scan (Volume) Mode */
-        <ViroNode position={[0, -0.06, 0]}>
-          {/* Experimental Notice */}
-          <ViroText
-            text="Experimental 3D Scan Volume (Raymarch)"
-            position={[0, 0.08, 0.002]}
-            width={0.8}
-            height={0.025}
-            style={{
-              fontFamily: 'sans-serif',
-              fontSize: 11,
-              color: '#38bdf8',
-              textAlign: 'center',
-            }}
-          />
-
-          {/* Modality & Quality Row */}
-          <ViroNode position={[0, 0.04, 0]}>
+        <ViroNode position={[0, -0.084, 0]}>
+          {/* Modality & Quality Row (local y = +0.100 -> panel y = +0.016) */}
+          <ViroNode position={[0, 0.1, 0]}>
             {(['mri', 'ct'] as const).map((mod, i) => (
               <QuestSpatialButton
                 key={mod}
                 label={mod.toUpperCase()}
                 selected={state.volume.modality === mod}
-                position={[-0.3 + i * 0.2, 0, 0.002]}
-                width={0.18}
-                height={0.042}
-                fontSize={13}
+                position={[-0.3075 + i * 0.205, 0, 0.002]}
+                width={0.185}
+                height={0.04}
+                fontSize={0.013}
                 onPress={() => controller.selectVolumeModality(sessionId, mod as SliceModality)}
               />
             ))}
@@ -761,10 +994,10 @@ export function QuestSpatialControls({
                 key={q}
                 label={q === 'balanced' ? 'Balanced' : 'Fast'}
                 selected={state.volume.quality === q}
-                position={[0.12 + i * 0.22, 0, 0.002]}
-                width={0.2}
-                height={0.042}
-                fontSize={12}
+                position={[0.1025 + i * 0.205, 0, 0.002]}
+                width={0.185}
+                height={0.04}
+                fontSize={0.0125}
                 onPress={() =>
                   controller.configureVolume(volumeScope, { quality: q as VolumeQuality })
                 }
@@ -772,16 +1005,16 @@ export function QuestSpatialControls({
             ))}
           </ViroNode>
 
-          {/* Presets Row */}
-          <ViroNode position={[0, -0.015, 0]}>
+          {/* Presets & Renderer Row (local y = +0.040 -> panel y = -0.044) */}
+          <ViroNode position={[0, 0.04, 0]}>
             {state.volume.modality === 'mri' ? (
               <QuestSpatialButton
                 label="T1 Grayscale"
                 selected
-                position={[-0.22, 0, 0.002]}
-                width={0.24}
-                height={0.042}
-                fontSize={12}
+                position={[-0.165, 0, 0.002]}
+                width={0.32}
+                height={0.04}
+                fontSize={0.0125}
                 onPress={() => {}}
               />
             ) : (
@@ -791,24 +1024,23 @@ export function QuestSpatialControls({
                     key={preset}
                     label={preset === 'ct-soft-tissue' ? 'Soft Tissue' : 'Bone'}
                     selected={state.volume.appearance.ct.preset === preset}
-                    position={[-0.22 + i * 0.24, 0, 0.002]}
+                    position={[-0.28 + i * 0.26, 0, 0.002]}
                     width={0.22}
-                    height={0.042}
-                    fontSize={12}
+                    height={0.04}
+                    fontSize={0.0125}
                     onPress={() => controller.setVolumePreset(volumeScope, preset as VolumePreset)}
                   />
                 ))}
               </>
             )}
 
-            {/* Renderer Switcher */}
             <QuestSpatialButton
               label={state.volume.renderer === 'shader' ? 'Raymarch' : 'Stack'}
               selected={state.volume.renderer === 'shader' && state.volume.debugMode === 'raymarch'}
-              position={[0.26, 0, 0.002]}
-              width={0.22}
-              height={0.042}
-              fontSize={12}
+              position={[state.volume.modality === 'mri' ? 0.215 : 0.26, 0, 0.002]}
+              width={state.volume.modality === 'mri' ? 0.25 : 0.24}
+              height={0.04}
+              fontSize={0.0125}
               onPress={() => {
                 if (state.volume.renderer === 'shader' && state.volume.debugMode === 'raymarch') {
                   controller.setVolumeRenderer(sessionId, 'stack');
@@ -822,14 +1054,14 @@ export function QuestSpatialControls({
             />
           </ViroNode>
 
-          {/* Opacity & Transform Actions */}
-          <ViroNode position={[0, -0.07, 0]}>
+          {/* Opacity & Transform Row (local y = -0.020 -> panel y = -0.104) */}
+          <ViroNode position={[0, -0.02, 0]}>
             <QuestSpatialButton
               label="Opacity -"
-              position={[-0.3, 0, 0.002]}
+              position={[-0.315, 0, 0.002]}
               width={0.16}
-              height={0.042}
-              fontSize={12}
+              height={0.04}
+              fontSize={0.0125}
               onPress={() => {
                 const current = state.volume.appearance[state.volume.modality].opacity;
                 controller.setVolumeAppearance(
@@ -839,25 +1071,20 @@ export function QuestSpatialControls({
                 );
               }}
             />
-            <ViroText
+            <QuestText
               text={`Opacity: ${Math.round(state.volume.appearance[state.volume.modality].opacity * 100)}%`}
-              position={[-0.1, 0, 0.002]}
-              width={0.18}
-              height={0.04}
-              style={{
-                fontFamily: 'sans-serif',
-                fontSize: 12,
-                color: '#f8fafc',
-                textAlign: 'center',
-                textAlignVertical: 'center',
-              }}
+              position={[-0.115, 0, 0.004]}
+              width={0.2}
+              height={0.036}
+              worldFontSize={0.0125}
+              color="#f8fafc"
             />
             <QuestSpatialButton
               label="Opacity +"
-              position={[0.08, 0, 0.002]}
+              position={[0.085, 0, 0.002]}
               width={0.16}
-              height={0.042}
-              fontSize={12}
+              height={0.04}
+              fontSize={0.0125}
               onPress={() => {
                 const current = state.volume.appearance[state.volume.modality].opacity;
                 controller.setVolumeAppearance(
@@ -869,27 +1096,37 @@ export function QuestSpatialControls({
             />
             <QuestSpatialButton
               label="Transform"
-              disabled={!canManipulateVolume(state)}
-              position={[0.28, 0, 0.002]}
-              width={0.18}
-              height={0.042}
-              fontSize={12}
+              disabled={!state.anchorId}
+              position={[0.295, 0, 0.002]}
+              width={0.2}
+              height={0.04}
+              fontSize={0.0125}
               onPress={() => setTransformOpen(true)}
             />
           </ViroNode>
 
           {state.volume.loadStatus === 'error' ? (
-            <ViroNode position={[0, -0.13, 0]}>
+            <ViroNode position={[0, -0.08, 0]}>
               <QuestSpatialButton
                 label="Retry Loading Volume"
                 variant="danger"
                 position={[0, 0, 0.002]}
                 width={0.34}
-                height={0.042}
+                height={0.038}
+                fontSize={0.0125}
                 onPress={() => controller.retryVolumeLoad(sessionId)}
               />
             </ViroNode>
-          ) : null}
+          ) : (
+            <QuestText
+              text="Experimental 3D Scan Volume · Raymarch / Stack"
+              position={[0, -0.08, 0.004]}
+              width={0.78}
+              height={0.028}
+              worldFontSize={0.0115}
+              color="#64748b"
+            />
+          )}
         </ViroNode>
       )}
     </ViroNode>

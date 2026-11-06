@@ -73,10 +73,27 @@ export default function ARSessionBoundary({
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
   const appState = useSyncExternalStore(subscribeAppState, () => AppState.currentState);
-  const enabled = shouldActivateAR(featureEnabled, focused, appState, keepSessionOnInactive);
   const isQuest = isQuestDevice();
+  // Quest moves the shared React host between panel and immersive activities.
+  // AppState briefly reports background for that handoff; unmounting here would
+  // relaunch VRActivity and create overlapping OpenXR sessions.
+  const enabled = shouldActivateAR(
+    featureEnabled,
+    focused,
+    appState,
+    keepSessionOnInactive,
+    isQuest
+  );
   const runtime = isQuest ? questARRuntime : nativeARRuntime;
-  const [controller] = useState(() => new ARSessionController(runtime));
+  // Quest mounts ViroXRSceneNavigator on a 2D launcher panel first and requests
+  // HEADSET_CAMERA / enters OpenXR asynchronously on user action, so phone AR's
+  // 25s post-mount camera startup timeout must not tear down the Quest bridge.
+  const [controller] = useState(
+    () =>
+      new ARSessionController(runtime, undefined, undefined, {
+        mountTimeoutMs: isQuest ? null : 25000,
+      })
+  );
   const snapshot = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const [settingsError, setSettingsError] = useState(false);
 
@@ -187,7 +204,7 @@ export default function ARSessionBoundary({
       ) : null}
       {hasActiveOverlay && activeOverlayLayout === 'fullscreen' ? (
         activeOverlay
-      ) : (
+      ) : isQuest && mounting ? null : (
         <View pointerEvents="box-none" style={mounting ? styles.overlay : styles.fill}>
           <ScrollView
             style={mounting ? { maxHeight: '55%', flexGrow: 0 } : styles.fill}

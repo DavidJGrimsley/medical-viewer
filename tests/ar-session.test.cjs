@@ -4,6 +4,14 @@ const {
   ARSessionController,
   createARSessionCoordinator,
 } = require('../src/features/ar/ar-session-controller.ts');
+const { shouldActivateAR } = require('../src/features/ar/ar-activation.ts');
+
+test('Quest activity handoffs keep the session mounted without changing phone lifecycle', () => {
+  assert.equal(shouldActivateAR(true, true, 'background', false, true), true);
+  assert.equal(shouldActivateAR(true, true, 'background'), false);
+  assert.equal(shouldActivateAR(true, false, 'background', false, true), false);
+  assert.equal(shouldActivateAR(false, true, 'background', false, true), false);
+});
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -17,7 +25,7 @@ function deferred() {
   return { promise, resolve, reject };
 }
 
-function harness(overrides = {}, coordinator = createARSessionCoordinator()) {
+function harness(overrides = {}, coordinator = createARSessionCoordinator(), options = undefined) {
   const pending = new Map();
   const calls = { support: 0, checkCamera: 0, requestCamera: 0 };
   const permissions = { granted: true };
@@ -45,7 +53,7 @@ function harness(overrides = {}, coordinator = createARSessionCoordinator()) {
     },
     ...overrides,
   };
-  const controller = new ARSessionController(runtime, coordinator, clock);
+  const controller = new ARSessionController(runtime, coordinator, clock, options);
   return { controller, coordinator, pending, calls, permissions };
 }
 
@@ -265,5 +273,30 @@ test('immediate scene readiness cancels the startup timeout', async () => {
   assert.equal(h.controller.getSnapshot().status, 'running');
   assert.equal(h.pending.size, 0);
   unsubscribe();
+  h.controller.setActive(false);
+});
+
+test('Quest mountTimeoutMs: null keeps launcher/OpenXR session alive past 25s without disabling 12s prepare check', async () => {
+  const check = deferred();
+  const h = harness({ checkSupport: () => check.promise }, createARSessionCoordinator(), {
+    mountTimeoutMs: null,
+  });
+  h.controller.setActive(true);
+  // 12s device/permission check guard still exists while checking
+  assert.equal(h.pending.size, 1);
+  assert.equal([...h.pending.values()][0].delay, 12000);
+
+  check.resolve('supported');
+  await flush();
+
+  // Mounted in 'starting' on Quest 2D launcher panel with zero post-mount 25s timer
+  assert.equal(h.controller.getSnapshot().status, 'starting');
+  assert.equal(h.pending.size, 0);
+  assert.equal(h.coordinator.getOwner(), h.controller);
+
+  // Ready and error transitions still work when OpenXR immersive scene reports back
+  const sessionId = h.controller.getSnapshot().sessionId;
+  h.controller.reportReady(sessionId);
+  assert.equal(h.controller.getSnapshot().status, 'running');
   h.controller.setActive(false);
 });

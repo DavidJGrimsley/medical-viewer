@@ -59,6 +59,10 @@ export function createARSessionCoordinator() {
 
 export const arSessionCoordinator = createARSessionCoordinator();
 
+export interface ARSessionControllerOptions {
+  mountTimeoutMs?: number | null;
+}
+
 export class ARSessionController {
   private snapshot: ARSessionSnapshot = { status: 'inactive', sessionId: 0, instruction: '' };
   private listeners = new Set<() => void>();
@@ -70,11 +74,18 @@ export class ARSessionController {
   private runtime: ARRuntime;
   private coordinator: ReturnType<typeof createARSessionCoordinator>;
   private clock: SessionClock;
+  private mountTimeoutMs: number | null;
 
-  constructor(runtime: ARRuntime, coordinator = arSessionCoordinator, clock = defaultClock) {
+  constructor(
+    runtime: ARRuntime,
+    coordinator = arSessionCoordinator,
+    clock = defaultClock,
+    options: ARSessionControllerOptions = {}
+  ) {
     this.runtime = runtime;
     this.coordinator = coordinator;
     this.clock = clock;
+    this.mountTimeoutMs = options.mountTimeoutMs === undefined ? 25000 : options.mountTimeoutMs;
   }
 
   getSnapshot = () => this.snapshot;
@@ -214,11 +225,13 @@ export class ARSessionController {
     if (!this.coordinator.acquire(this, () => this.setActive(false))) return;
     this.snapshot = { ...this.snapshot, sessionId: this.snapshot.sessionId + 1 };
     const sessionId = this.snapshot.sessionId;
-    this.timer = this.clock.schedule(() => {
-      if (this.isLiveSession(sessionId)) {
-        this.fail('AR tracking did not start. Try again in a well-lit space.');
-      }
-    }, 25000);
+    if (this.mountTimeoutMs !== null && this.mountTimeoutMs > 0) {
+      this.timer = this.clock.schedule(() => {
+        if (this.isLiveSession(sessionId)) {
+          this.fail('AR tracking did not start. Try again in a well-lit space.');
+        }
+      }, this.mountTimeoutMs);
+    }
     this.publish('starting', 'Move your phone slowly to find a table or floor.');
   };
 }

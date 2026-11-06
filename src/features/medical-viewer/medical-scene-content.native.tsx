@@ -26,6 +26,8 @@ import { MEDICAL_ASSET_SOURCES } from './medical-asset-sources.native';
 import calibration from '../../../assets/medical/skull-labels.json';
 import MedicalVolume from './medical-volume.native';
 
+export const QUEST_WORLD_ANCHOR_ID = 'quest-world-anchor';
+
 ViroMaterials.createMaterials({
   medicalLabel: { diffuseColor: '#fff1da', lightingModel: 'Constant' },
   medicalLeader: { diffuseColor: '#93f5c5', lightingModel: 'Constant' },
@@ -36,6 +38,7 @@ export interface MedicalSceneContentProps {
   controller: MedicalController;
   isQuest?: boolean;
   selectorRef?: React.RefObject<ViroARPlaneSelector | null>;
+  worldAnchorPose?: { position: Point3; rotation: [number, number, number] } | null;
 }
 
 function MedicalModels({ context, controller }: MedicalSceneContentProps) {
@@ -147,7 +150,7 @@ function MedicalModels({ context, controller }: MedicalSceneContentProps) {
   );
 }
 
-function MedicalSlicePanel({ context, controller }: MedicalSceneContentProps) {
+function MedicalSlicePanel({ context, controller, isQuest = false }: MedicalSceneContentProps) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const { slices } = state;
   const series = controller.getSliceSeries();
@@ -181,6 +184,7 @@ function MedicalSlicePanel({ context, controller }: MedicalSceneContentProps) {
   if (!state.anchorId || !series || source === undefined) return null;
   const interactive = canManipulateSlices(state);
   const height = (SLICE_PANEL_WIDTH_METRES * series.imageDimensions[1]) / series.imageDimensions[0];
+  const captionText = `${slices.modality.toUpperCase()} · ${slices.orientation} · ${slices.index + 1}/${series.imageCount}\nR  ←  A at top  →  L`;
 
   return (
     <ViroNode
@@ -209,14 +213,30 @@ function MedicalSlicePanel({ context, controller }: MedicalSceneContentProps) {
           onError={() => controller.finishSliceLoad(scope, false)}
         />
       ) : null}
-      <ViroText
-        text={`${slices.modality.toUpperCase()} · ${slices.orientation} · ${slices.index + 1}/${series.imageCount}\nR  ←  A at top  →  L`}
-        position={[0, -height / 2 - 0.055, 0.002]}
-        width={SLICE_PANEL_WIDTH_METRES / 0.05}
-        height={0.09 / 0.05}
-        scale={[0.05, 0.05, 0.05]}
-        style={{ fontSize: 20, color: '#e2e8f0', textAlign: 'center' }}
-      />
+      {isQuest ? (
+        <ViroNode
+          position={[0, -height / 2 - 0.055, 0.002]}
+          scale={[0.015, 0.015, 0.015]}
+          ignoreEventHandling>
+          <ViroText
+            text={captionText}
+            width={SLICE_PANEL_WIDTH_METRES / 0.015}
+            height={0.09 / 0.015}
+            textClipMode="None"
+            ignoreEventHandling
+            style={{ fontSize: 92, color: '#e2e8f0', textAlign: 'center' }}
+          />
+        </ViroNode>
+      ) : (
+        <ViroText
+          text={captionText}
+          position={[0, -height / 2 - 0.055, 0.002]}
+          width={SLICE_PANEL_WIDTH_METRES / 0.05}
+          height={0.09 / 0.05}
+          scale={[0.05, 0.05, 0.05]}
+          style={{ fontSize: 20, color: '#e2e8f0', textAlign: 'center' }}
+        />
+      )}
     </ViroNode>
   );
 }
@@ -226,6 +246,7 @@ export function MedicalSceneContent({
   controller,
   isQuest = false,
   selectorRef: externalSelectorRef,
+  worldAnchorPose = null,
 }: MedicalSceneContentProps) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const internalSelectorRef = useRef<ViroARPlaneSelector>(null);
@@ -235,32 +256,71 @@ export function MedicalSceneContent({
     selector.current?.reset();
   }, [selector, state.placementRevision, context.sessionId]);
 
+  const activeContent =
+    state.mode === 'anatomy' ? (
+      <MedicalModels context={context} controller={controller} isQuest={isQuest} />
+    ) : state.mode === 'slices' ? (
+      <MedicalSlicePanel context={context} controller={controller} isQuest={isQuest} />
+    ) : (
+      <MedicalVolume context={context} controller={controller} />
+    );
+
+  const isWorldAnchored = Boolean(
+    isQuest && state.anchorId === QUEST_WORLD_ANCHOR_ID && worldAnchorPose
+  );
+
+  if (!isQuest) {
+    return (
+      <>
+        <ViroAmbientLight color="#ffffff" intensity={550} />
+        <ViroDirectionalLight color="#ffffff" intensity={750} direction={[-1, -1, -1]} />
+        <ViroARPlaneSelector
+          ref={selector}
+          alignment="Horizontal"
+          minWidth={0.25}
+          minHeight={0.25}
+          hideOverlayOnSelection
+          disableClickSelection={state.tracking !== 'normal' || !!state.anchorId}
+          onPlaneSelected={(plane) => {
+            controller.selectPlane(context.sessionId, state.placementRevision, plane.anchorId);
+            if (!controller.getSnapshot().anchorId) selector.current?.reset();
+          }}
+          onPlaneRemoved={(id) =>
+            controller.losePlane(context.sessionId, state.placementRevision, id)
+          }>
+          {activeContent}
+        </ViroARPlaneSelector>
+      </>
+    );
+  }
+
   return (
     <>
       <ViroAmbientLight color="#ffffff" intensity={550} />
       <ViroDirectionalLight color="#ffffff" intensity={750} direction={[-1, -1, -1]} />
-      <ViroARPlaneSelector
-        ref={selector}
-        alignment="Horizontal"
-        minWidth={0.25}
-        minHeight={0.25}
-        hideOverlayOnSelection
-        disableClickSelection={state.tracking !== 'normal' || !!state.anchorId}
-        onPlaneSelected={(plane) => {
-          controller.selectPlane(context.sessionId, state.placementRevision, plane.anchorId);
-          if (!controller.getSnapshot().anchorId) selector.current?.reset();
-        }}
-        onPlaneRemoved={(id) =>
-          controller.losePlane(context.sessionId, state.placementRevision, id)
-        }>
-        {state.mode === 'anatomy' ? (
-          <MedicalModels context={context} controller={controller} isQuest={isQuest} />
-        ) : state.mode === 'slices' ? (
-          <MedicalSlicePanel context={context} controller={controller} isQuest={isQuest} />
-        ) : (
-          <MedicalVolume context={context} controller={controller} />
-        )}
-      </ViroARPlaneSelector>
+      <ViroNode visible={!isWorldAnchored} ignoreEventHandling={isWorldAnchored}>
+        <ViroARPlaneSelector
+          ref={selector}
+          alignment="Horizontal"
+          minWidth={0.25}
+          minHeight={0.25}
+          hideOverlayOnSelection
+          disableClickSelection={state.tracking !== 'normal' || !!state.anchorId}
+          onPlaneSelected={(plane) => {
+            controller.selectPlane(context.sessionId, state.placementRevision, plane.anchorId);
+            if (!controller.getSnapshot().anchorId) selector.current?.reset();
+          }}
+          onPlaneRemoved={(id) =>
+            controller.losePlane(context.sessionId, state.placementRevision, id)
+          }>
+          {isWorldAnchored ? null : activeContent}
+        </ViroARPlaneSelector>
+      </ViroNode>
+      {isWorldAnchored && worldAnchorPose ? (
+        <ViroNode position={worldAnchorPose.position} rotation={worldAnchorPose.rotation}>
+          {activeContent}
+        </ViroNode>
+      ) : null}
     </>
   );
 }

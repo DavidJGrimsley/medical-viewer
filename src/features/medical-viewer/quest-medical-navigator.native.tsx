@@ -6,7 +6,7 @@ import { questSessionBridge } from '@/features/ar/quest-session-bridge';
 import { GameButton as Button } from '@/ui/game-button';
 import { useAppTheme } from '@/theme/provider';
 import type { MedicalController } from './medical-controller';
-import QuestMedicalScene from './quest-medical-scene.native';
+import QuestMedicalScene, { hasActiveQuestSceneMount } from './quest-medical-scene.native';
 
 export interface QuestMedicalNavigatorProps {
   context: ARSceneContext;
@@ -45,7 +45,9 @@ export default function QuestMedicalNavigator({
       bloomEnabled={false}
       vrModeEnabled={true}
       onExitViro={() => {
-        controller.detach(context.sessionId);
+        if (!hasActiveQuestSceneMount(context.sessionId)) {
+          controller.detach(context.sessionId);
+        }
       }}
       renderQuestPanel={(enter) => (
         <View style={[styles.panelContainer, { backgroundColor: colors.background }]}>
@@ -59,10 +61,10 @@ export default function QuestMedicalNavigator({
             </Text>
 
             <View style={styles.guidanceBox}>
-              <Text style={styles.guidanceTitle}>Room & Space Setup Guidance</Text>
+              <Text style={styles.guidanceTitle}>Placement & Space Setup</Text>
               <Text style={styles.guidanceText}>
-                Surfaces in Quest Mixed Reality come from your saved Space Setup. If room planes are
-                not detected, look around your space or run Space Setup in Quest Settings:
+                Use Place In Front on the spatial console to place specimens immediately anywhere in
+                passthrough, or tap a detected Space Setup surface:
               </Text>
               <Text style={styles.guidanceStep}>Settings → Physical Space → Space Setup</Text>
             </View>
@@ -74,7 +76,8 @@ export default function QuestMedicalNavigator({
                   actions.
                 </Text>
                 <Text style={styles.detailText}>
-                  • Tap a highlighted surface to place models, or use Recenter to position controls.
+                  • Use Place In Front or tap a highlighted surface to place models; use Recenter to
+                  reposition the console.
                 </Text>
                 <Text style={styles.detailText}>
                   • The control panel stays stationary in your room once opened.

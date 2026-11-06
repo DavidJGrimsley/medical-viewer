@@ -5,7 +5,13 @@ const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
 
-const { computeHeadLockedTransform } = require('../src/features/ar/quest-spatial-math.ts');
+const {
+  computeHeadLockedTransform,
+  computeQuestPanelTransform,
+  computeQuestSpecimenTransform,
+} = require('../src/features/ar/quest-spatial-math.ts');
+const { DEFAULT_AR_HEIGHT } = require('../src/features/ar/ar-transform.ts');
+const { SLICE_PANEL_WIDTH_METRES } = require('../src/features/medical-viewer/medical-slices.ts');
 const { questSessionBridge } = require('../src/features/ar/quest-session-bridge.ts');
 
 function loadQuestModule(filePath, mockRN) {
@@ -270,4 +276,62 @@ test('computeHeadLockedTransform maintains upright panel when wearer looks diago
   // Pitch and roll are strictly 0
   assert.equal(transform.rotation[0], 0);
   assert.equal(transform.rotation[2], 0);
+});
+
+test('computeQuestPanelTransform projects forward onto horizontal plane so head pitch never strands controls', () => {
+  const pitchedDownPose = {
+    position: [0, 1.6, 0],
+    forward: [0, -Math.sin(Math.PI / 5), -Math.cos(Math.PI / 5)],
+    up: [0, Math.cos(Math.PI / 5), -Math.sin(Math.PI / 5)],
+  };
+  const pitchedUpPose = {
+    position: [0, 1.6, 0],
+    forward: [0, Math.sin(Math.PI / 5), -Math.cos(Math.PI / 5)],
+    up: [0, Math.cos(Math.PI / 5), Math.sin(Math.PI / 5)],
+  };
+
+  const downPanel = computeQuestPanelTransform(pitchedDownPose);
+  const upPanel = computeQuestPanelTransform(pitchedUpPose);
+
+  // Both place the console at the exact same horizontal distance (1.10m) and desk height (1.6 - 0.46 = 1.14m)
+  assert.deepEqual(downPanel.position, upPanel.position);
+  assert.ok(Math.abs(downPanel.position[0] - 0) < 1e-4);
+  assert.ok(Math.abs(downPanel.position[1] - 1.14) < 1e-4);
+  assert.ok(Math.abs(downPanel.position[2] - -1.1) < 1e-4);
+  assert.equal(downPanel.rotation[0], 0);
+  assert.equal(downPanel.rotation[2], 0);
+
+  // Degenerate straight-up/down gaze falls back cleanly to -Z
+  const zenithPanel = computeQuestPanelTransform({
+    position: [1, 1.5, 2],
+    forward: [0, 1, 0],
+  });
+  assert.ok(Math.abs(zenithPanel.position[0] - 1) < 1e-4);
+  assert.ok(Math.abs(zenithPanel.position[2] - 0.9) < 1e-4);
+});
+
+test('computeQuestSpecimenTransform places specimen in clear view above console without overlapping slice panel', () => {
+  const eyeY = 1.6;
+  const pose = {
+    position: [0, eyeY, 0],
+    forward: [0, 0, -1],
+    up: [0, 1, 0],
+  };
+
+  const panel = computeQuestPanelTransform(pose);
+  const specimenAnchor = computeQuestSpecimenTransform(pose);
+
+  // Effective specimen center in world space once MedicalSceneContent adds DEFAULT_AR_HEIGHT
+  const specimenCenterY = specimenAnchor.position[1] + DEFAULT_AR_HEIGHT;
+  assert.ok(Math.abs(specimenCenterY - (eyeY + 0.16)) < 1e-4);
+
+  // Verify angular elevation of lowest slice caption edge is strictly above top edge of console panel
+  const sliceBottomOffset = SLICE_PANEL_WIDTH_METRES / 2 + 0.065;
+  const lowestSpecimenElevation =
+    (specimenCenterY - sliceBottomOffset - eyeY) / Math.abs(specimenAnchor.position[2]);
+  const panelTopElevation = (panel.position[1] + 0.24 - eyeY) / Math.abs(panel.position[2]);
+  assert.ok(
+    lowestSpecimenElevation > panelTopElevation,
+    `Expected specimen bottom (${lowestSpecimenElevation.toFixed(3)}) above console top (${panelTopElevation.toFixed(3)})`
+  );
 });
