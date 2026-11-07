@@ -17,6 +17,7 @@ module.exports = async function testVolumeDiagnostics(browser, directory) {
     const shaders = Object.fromEntries(
       [
         'magenta',
+        'samplers',
         'high',
         'low',
         'validity',
@@ -146,6 +147,42 @@ module.exports = async function testVolumeDiagnostics(browser, directory) {
               empty: pixel(24, 5),
               edge: pixel(3, 32),
             };
+            if (mode === 'samplers') {
+              modes[mode].columns = {
+                high: {
+                  sample: pixel(24, 22),
+                  reference: pixel(24, 44),
+                  empty: pixel(24, 5),
+                },
+                low: {
+                  sample: pixel(34, 22),
+                  reference: pixel(34, 44),
+                  empty: pixel(34, 5),
+                },
+                validity: {
+                  sample: pixel(54, 22),
+                  reference: pixel(54, 44),
+                  empty: pixel(54, 5),
+                },
+              };
+              modes[mode].statusBar = pixel(32, 58);
+
+              // Intentional sampler swapping: swap u_high and u_low
+              gl.uniform1i(u('u_high'), 1);
+              gl.uniform1i(u('u_low'), 0);
+              gl.drawArrays(gl.TRIANGLES, 0, 3);
+              modes[mode].swappedStatusBar = pixel(32, 58);
+
+              // Intentional sampler aliasing: bind u_low to u_high's unit 0
+              gl.uniform1i(u('u_high'), 0);
+              gl.uniform1i(u('u_low'), 0);
+              gl.drawArrays(gl.TRIANGLES, 0, 3);
+              modes[mode].aliasedStatusBar = pixel(32, 58);
+
+              // Restore valid sampler bindings
+              gl.uniform1i(u('u_high'), 0);
+              gl.uniform1i(u('u_low'), 1);
+            }
             if (mode === 'uniforms') {
               gl.uniform3fv(u('u_dimensions'), [1, 1, 1]);
               gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -178,6 +215,40 @@ module.exports = async function testVolumeDiagnostics(browser, directory) {
       );
       assert.equal(output.glError, 0);
       assert.deepEqual(output.modes.magenta.sample, [1, 0, 1, 1]);
+      assert.deepEqual(output.modes.samplers.edge, [1, 0, 1, 1]);
+      // Assert all three columns (high, low, validity) for samplers mode
+      for (const key of ['high', 'low', 'validity']) {
+        const col = output.modes.samplers.columns[key];
+        assert.ok(
+          Math.abs(col.sample[0] - probe.alphaBytes[key] / 255) < 0.002,
+          `${series.modality} samplers ${key} actual ${col.sample[0]}`
+        );
+        assert.ok(
+          Math.abs(col.sample[0] - col.reference[0]) < 0.002,
+          `${series.modality} samplers ${key} sample vs reference mismatch ${col.sample[0]} vs ${col.reference[0]}`
+        );
+        assert.ok(
+          col.empty[0] < 0.002,
+          `${series.modality} samplers ${key} empty texel ${col.empty[0]}`
+        );
+      }
+      // Assert green comparison bar on valid simultaneous sampler bindings
+      assert.deepEqual(
+        output.modes.samplers.statusBar,
+        [0, 1, 0, 1],
+        `${series.modality} samplers comparison bar must be green [0, 1, 0, 1]`
+      );
+      // Assert red comparison bar on intentional sampler swapping and aliasing
+      assert.deepEqual(
+        output.modes.samplers.swappedStatusBar,
+        [1, 0, 0, 1],
+        `${series.modality} samplers comparison bar must turn red [1, 0, 0, 1] on swapped samplers`
+      );
+      assert.deepEqual(
+        output.modes.samplers.aliasedStatusBar,
+        [1, 0, 0, 1],
+        `${series.modality} samplers comparison bar must turn red [1, 0, 0, 1] on aliased samplers`
+      );
       for (const key of ['high', 'low', 'validity']) {
         const mode = output.modes[key];
         assert.deepEqual(mode.edge, [1, 0, 1, 1]);

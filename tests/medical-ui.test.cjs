@@ -120,6 +120,15 @@ function load(
     '@/features/ar/ar-transform-controls.native': { ARTransformControls: 'Transform' },
     '@/features/ar/ar-transform-editor.native': { ARTransformEditor: 'Transform' },
     '@/features/ar/ar-session-boundary': { default: 'ARBoundary' },
+    '@/features/ar/quest-device': { isQuestDevice: () => false, hasOpenXRSupport: () => false },
+    './quest-medical-navigator.native': { default: 'QuestNavigator' },
+    'expo-router': {
+      router: {
+        dismissTo: () => {},
+        push: () => {},
+        back: () => {},
+      },
+    },
     'expo-router/stack': {
       Stack: Object.assign('Stack', {
         Screen: 'StackScreen',

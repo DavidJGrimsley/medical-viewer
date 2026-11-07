@@ -1,7 +1,7 @@
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Image, NativeModules, TurboModuleRegistry } from 'react-native';
 import {
-  ViroBox,
+  Viro3DObject,
   ViroImage,
   ViroMaterials,
   ViroNode,
@@ -14,10 +14,11 @@ import {
   type MedicalVolumeScope,
   type MedicalSnapshot,
 } from './medical-controller';
-import { medicalVolumeSource } from './medical-volume-assets.native';
+import { medicalVolumeSource, MEDICAL_VOLUME_BOX_SOURCE } from './medical-volume-assets.native';
 import { VOLUME_ATLASES } from './medical-volumes';
 import { volumeExtent, volumeUniforms } from './medical-volume-uniforms';
 import { volumeDiagnosticShader, medicalNativeError } from './medical-volume-diagnostics';
+import { isViroImageLoadSuccess } from './medical-image-events.native';
 import stackMetadata from '../../../assets/medical/stack/metadata.json';
 import MedicalVolumeStack from './medical-volume-stack.native';
 
@@ -28,6 +29,16 @@ function uniforms(values: Record<string, number | number[]>): ViroShaderUniform[
     value,
     type: typeof value === 'number' ? 'float' : value.length === 3 ? 'vec3' : 'vec4',
   }));
+}
+/** Viro resolves shaderOverrides once, when the proxy mesh finishes loading, and never retries
+ * while createMaterials is still decoding atlases; the mesh then keeps its default white material.
+ * Android runs every native module call in order on one queue, so an AppState callback queued after
+ * createMaterials arrives only once Viro has registered the material and its textures. */
+function nativeMaterialQueue() {
+  const appState = NativeModules.AppState ?? TurboModuleRegistry.get('AppState');
+  return appState && typeof appState.getCurrentAppState === 'function'
+    ? (callback: () => void) => appState.getCurrentAppState(callback, callback)
+    : null;
 }
 function useVolumeRendering({ context, controller }: MedicalSceneProps, state: MedicalSnapshot) {
   const { volume } = state;
@@ -50,6 +61,18 @@ function useVolumeRendering({ context, controller }: MedicalSceneProps, state: M
     (['binding', 'ready'].includes(volume.loadStatus) ||
       (magenta && volume.loadStatus === 'loading'));
   const pending = ['loading', 'binding'].includes(volume.loadStatus);
+  const materialKey = `${scope.sessionId}:${scope.placementRevision}:${scope.requestId}:${volume.modality}:${volume.debugMode}`;
+  const [registeredMaterial, setRegisteredMaterial] = useState<string | null>(null);
+  const afterMaterialQueue = nativeMaterialQueue();
+  const materialReady = !afterMaterialQueue || registeredMaterial === materialKey;
+  // Viro's render thread attaches the loaded OBJ with its default white material before the UI
+  // thread applies shaderOverrides, so at least one white frame can be drawn. onLoadEnd is
+  // dispatched only after the override on Android and iOS, and Viro queues both the material swap
+  // and `visible` to the render thread in call order, so the proxy stays hidden until then. The
+  // proxy is keyed by materialKey: each key is a fresh mount and therefore a fresh onLoadEnd.
+  const [loadedProxy, setLoadedProxy] = useState<string | null>(null);
+  const proxyVisible = loadedProxy === materialKey;
+  const showProxy = () => setLoadedProxy(materialKey);
   useEffect(() => {
     if (!state.anchorId || !pending) return;
     const timeout = setTimeout(() => {
@@ -113,17 +136,19 @@ function useVolumeRendering({ context, controller }: MedicalSceneProps, state: M
       ViroMaterials.deleteMaterials([MATERIAL]);
       return;
     }
-    let cancelled = false,
-      second: number | undefined;
-    const first = requestAnimationFrame(() => {
-      second = requestAnimationFrame(() => {
-        if (!cancelled) controller.finishVolumeBinding(scope, 'ready');
-      });
+    let current = true;
+    afterMaterialQueue?.(() => {
+      if (!current) return;
+      setRegisteredMaterial(materialKey);
+      controller.recordVolumeDiagnostic(
+        scope,
+        `Native material registered · ${volume.debugMode}. Attaching volume proxy.`
+      );
     });
     return () => {
-      cancelled = true;
-      cancelAnimationFrame(first);
-      if (second !== undefined) cancelAnimationFrame(second);
+      current = false;
+      setRegisteredMaterial(null);
+      setLoadedProxy(null);
       ViroMaterials.deleteMaterials([MATERIAL]);
     };
     // Scalar controls update uniforms below, without recreating texture resources.
@@ -171,13 +196,14 @@ function useVolumeRendering({ context, controller }: MedicalSceneProps, state: M
     volume.loadStatus,
     volume.requestId,
   ]);
-  return { scope, series, magenta };
+  return { scope, series, magenta, materialKey, materialReady, proxyVisible, showProxy };
 }
 export default function MedicalVolume({ context, controller }: MedicalSceneProps) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const { volume } = state;
   const dataset = controller.volumeDataset;
-  const { scope, series, magenta } = useVolumeRendering({ context, controller }, state);
+  const { scope, series, magenta, materialKey, materialReady, proxyVisible, showProxy } =
+    useVolumeRendering({ context, controller }, state);
   if (!state.anchorId || !series) return null;
   const extent = volumeExtent(dataset),
     interactive = canManipulateVolume(state);
@@ -224,7 +250,7 @@ export default function MedicalVolume({ context, controller }: MedicalSceneProps
               mipmap={false}
               format="RGBA8"
               onLoadEnd={(event) =>
-                controller.finishVolumeAtlas(scope, key, event.nativeEvent.success)
+                controller.finishVolumeAtlas(scope, key, isViroImageLoadSuccess(event))
               }
               onError={(event) => {
                 controller.recordVolumeDiagnostic(
@@ -236,16 +262,35 @@ export default function MedicalVolume({ context, controller }: MedicalSceneProps
             />
           ))
         : null}
-      {volume.renderer === 'shader' && volume.loadStatus === 'ready' ? (
-        <ViroBox
-          key={`${scope.sessionId}:${scope.placementRevision}:${scope.requestId}:${volume.debugMode}`}
-          width={extent[0]}
-          height={extent[2]}
-          length={extent[1]}
+      {volume.renderer === 'shader' &&
+      materialReady &&
+      (['binding', 'ready'].includes(volume.loadStatus) ||
+        (magenta && volume.loadStatus === 'loading')) ? (
+        <Viro3DObject
+          key={materialKey}
+          source={MEDICAL_VOLUME_BOX_SOURCE}
+          type="OBJ"
           // iOS's materials clone omits custom sampler textures; shaderOverrides copies them.
           shaderOverrides={[MATERIAL]}
+          visible={proxyVisible}
+          onLoadStart={() => {
+            controller.recordVolumeDiagnostic(scope, 'Volume proxy mesh load started.');
+          }}
+          onLoadEnd={() => {
+            showProxy();
+            controller.recordVolumeDiagnostic(
+              scope,
+              `Volume proxy mesh loaded · ${volume.debugMode}. Drawing unconfirmed.`
+            );
+            if (volume.loadStatus === 'binding' || (magenta && volume.loadStatus === 'loading')) {
+              controller.finishVolumeBinding(scope, 'ready');
+            }
+          }}
           onError={(event) => {
-            controller.recordVolumeDiagnostic(scope, `Native box: ${medicalNativeError(event)}`);
+            controller.recordVolumeDiagnostic(
+              scope,
+              `Volume proxy mesh: ${medicalNativeError(event)}`
+            );
             controller.finishVolumeBinding(scope, 'error');
           }}
         />

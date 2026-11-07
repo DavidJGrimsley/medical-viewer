@@ -38,16 +38,19 @@ function checkIosTextureOverrideContract() {
     true,
     ts.ScriptKind.TSX
   );
-  const boxes = [];
+  const proxies = [];
   function visit(node) {
-    if (ts.isJsxSelfClosingElement(node) && node.tagName.getText(scene) === 'ViroBox')
-      boxes.push(node);
+    if (
+      ts.isJsxSelfClosingElement(node) &&
+      (node.tagName.getText(scene) === 'Viro3DObject' || node.tagName.getText(scene) === 'ViroBox')
+    )
+      proxies.push(node);
     ts.forEachChild(node, visit);
   }
   visit(scene);
-  assert.equal(boxes.length, 1);
-  const attributes = boxes[0].attributes.properties.map((node) => node.name?.getText(scene));
-  assert.ok(attributes.includes('shaderOverrides'), 'Volume box must retain custom textures');
+  assert.equal(proxies.length, 1);
+  const attributes = proxies[0].attributes.properties.map((node) => node.name?.getText(scene));
+  assert.ok(attributes.includes('shaderOverrides'), 'Volume proxy must retain custom textures');
   assert.ok(!attributes.includes('materials'), 'iOS materials cloning loses sampler textures');
   return {
     viroVersion: JSON.parse(fs.readFileSync(packagePath, 'utf8')).version,
