@@ -381,6 +381,173 @@ test('Quest spatial controls renderer button toggles stack and raymarch and sele
   assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
 });
 
+test('showVolumeAnatomy atomically restores normal raymarch and retains modality, appearance, crop, transform', () => {
+  const { controller, sessionId, getVolumeScope } = createTestHarness({
+    defaultVolumeRenderer: 'shader',
+  });
+  controller.selectViewerMode(sessionId, 'volume');
+  assert.equal(controller.getSnapshot().volume.renderer, 'shader');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'raymarch');
+
+  for (const atlas of ['high', 'low', 'validity']) {
+    controller.finishVolumeAtlas(getVolumeScope(), atlas, true);
+  }
+  controller.finishVolumeBinding(getVolumeScope(), 'ready');
+  assert.equal(canManipulateVolume(controller.getSnapshot()), true);
+
+  // Customize appearance, quality, transform, crop
+  controller.configureVolume(getVolumeScope(), { quality: 'fast' });
+  controller.setVolumeAppearance(getVolumeScope(), 'opacity', 1.2);
+  controller.setVolumeTransform(getVolumeScope(), 'scale', 1.8);
+  controller.setVolumeTransform(getVolumeScope(), 'height', 0.9);
+  controller.setVolumeTransform(getVolumeScope(), 'yaw', 45);
+
+  const snapBefore = controller.getSnapshot();
+  const reqBefore = snapBefore.volume.requestId;
+
+  // No-op if already normal
+  controller.showVolumeAnatomy(sessionId);
+  assert.equal(controller.getSnapshot().volume.requestId, reqBefore, 'no-op when already normal');
+
+  // Switch to diagnostic mode (e.g. samplers)
+  controller.setVolumeDebugMode(getVolumeScope(), 'samplers');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'samplers');
+
+  // showVolumeAnatomy atomically restores raymarch while retaining all settings
+  controller.showVolumeAnatomy(sessionId);
+  const snapAfter = controller.getSnapshot();
+  assert.equal(snapAfter.volume.renderer, 'shader');
+  assert.equal(snapAfter.volume.debugMode, 'raymarch');
+  assert.equal(snapAfter.volume.quality, 'fast');
+  assert.equal(snapAfter.volume.appearance.mri.opacity, 1.2);
+  assert.equal(snapAfter.volume.scale, 1.8);
+  assert.equal(snapAfter.volume.height, 0.9);
+  assert.equal(snapAfter.volume.yaw, 45);
+
+  // Switch to stack renderer
+  controller.setVolumeRenderer(sessionId, 'stack');
+  assert.equal(controller.getSnapshot().volume.renderer, 'stack');
+
+  // showVolumeAnatomy atomically returns from stack to normal shader raymarch
+  controller.showVolumeAnatomy(sessionId);
+  const snapFromStack = controller.getSnapshot();
+  assert.equal(snapFromStack.volume.renderer, 'shader');
+  assert.equal(snapFromStack.volume.debugMode, 'raymarch');
+  assert.equal(snapFromStack.volume.quality, 'fast');
+  assert.equal(snapFromStack.volume.appearance.mri.opacity, 1.2);
+});
+
+test('Quest volume controls Visibility adjusts monotonically and clamps strictly between 0 and 100%', () => {
+  const { controller, sessionId, getVolumeScope } = createTestHarness({
+    defaultVolumeRenderer: 'shader',
+  });
+  controller.selectViewerMode(sessionId, 'volume');
+
+  // Default opacity is 1.6 (visibility 80%)
+  assert.equal(controller.getSnapshot().volume.appearance.mri.opacity, 1.6);
+  assert.equal(Math.round(controller.getSnapshot().volume.appearance.mri.opacity * 50), 80);
+
+  // Increment by +0.2 (+10 percentage points)
+  let cur = controller.getSnapshot().volume.appearance.mri.opacity;
+  controller.setVolumeAppearance(getVolumeScope(), 'opacity', Math.min(2.0, cur + 0.2));
+  assert.equal(controller.getSnapshot().volume.appearance.mri.opacity, 1.8);
+  assert.equal(Math.round(controller.getSnapshot().volume.appearance.mri.opacity * 50), 90);
+
+  // Increment again to 2.0 (100%)
+  cur = controller.getSnapshot().volume.appearance.mri.opacity;
+  controller.setVolumeAppearance(getVolumeScope(), 'opacity', Math.min(2.0, cur + 0.2));
+  assert.equal(controller.getSnapshot().volume.appearance.mri.opacity, 2.0);
+  assert.equal(Math.round(controller.getSnapshot().volume.appearance.mri.opacity * 50), 100);
+
+  // Increment beyond 2.0 clamps at 2.0
+  cur = controller.getSnapshot().volume.appearance.mri.opacity;
+  controller.setVolumeAppearance(getVolumeScope(), 'opacity', Math.min(2.0, cur + 0.2));
+  assert.equal(controller.getSnapshot().volume.appearance.mri.opacity, 2.0);
+
+  // Decrement down to 0.0
+  for (let i = 0; i < 15; i++) {
+    cur = controller.getSnapshot().volume.appearance.mri.opacity;
+    controller.setVolumeAppearance(getVolumeScope(), 'opacity', Math.max(0.0, cur - 0.2));
+  }
+  assert.equal(controller.getSnapshot().volume.appearance.mri.opacity, 0.0);
+  assert.equal(Math.round(controller.getSnapshot().volume.appearance.mri.opacity * 50), 0);
+});
+
+test('CT preset switches preserve current visibility/opacity', () => {
+  const { controller, sessionId, getVolumeScope } = createTestHarness({
+    defaultVolumeRenderer: 'shader',
+  });
+  controller.selectViewerMode(sessionId, 'volume');
+  controller.selectVolumeModality(sessionId, 'ct');
+
+  // Set opacity to 0.6 (30% visibility)
+  controller.setVolumeAppearance(getVolumeScope(), 'opacity', 0.6);
+  assert.equal(controller.getSnapshot().volume.appearance.ct.opacity, 0.6);
+
+  // Switch to bone preset - opacity must be retained
+  controller.setVolumePreset(getVolumeScope(), 'ct-bone');
+  assert.equal(controller.getSnapshot().volume.appearance.ct.preset, 'ct-bone');
+  assert.equal(controller.getSnapshot().volume.appearance.ct.opacity, 0.6);
+
+  // Switch to soft-tissue preset - opacity must be retained
+  controller.setVolumePreset(getVolumeScope(), 'ct-soft-tissue');
+  assert.equal(controller.getSnapshot().volume.appearance.ct.preset, 'ct-soft-tissue');
+  assert.equal(controller.getSnapshot().volume.appearance.ct.opacity, 0.6);
+
+  // Selecting same preset is a no-op
+  const reqBefore = controller.getSnapshot().volume.requestId;
+  controller.setVolumePreset(getVolumeScope(), 'ct-soft-tissue');
+  assert.equal(controller.getSnapshot().volume.requestId, reqBefore, 'same preset is no-op');
+});
+
+test('resetVolumeAppearance resets appearance without altering crop or transform', () => {
+  const { controller, sessionId, getVolumeScope } = createTestHarness({
+    defaultVolumeRenderer: 'shader',
+  });
+  controller.selectViewerMode(sessionId, 'volume');
+
+  // Modify appearance, transform, crop
+  controller.setVolumeAppearance(getVolumeScope(), 'opacity', 0.4);
+  controller.setVolumeTransform(getVolumeScope(), 'scale', 2.2);
+  controller.setVolumeCrop(getVolumeScope(), 0, 50);
+
+  const scaleBefore = controller.getSnapshot().volume.scale;
+  const crop0Before = controller.getSnapshot().volume.crop[0];
+
+  controller.resetVolumeAppearance(sessionId);
+  assert.equal(
+    controller.getSnapshot().volume.appearance.mri.opacity,
+    1.6,
+    'resets opacity to default'
+  );
+  assert.equal(controller.getSnapshot().volume.scale, scaleBefore, 'preserves transform scale');
+  assert.equal(controller.getSnapshot().volume.crop[0], crop0Before, 'preserves crop');
+});
+
+test('Quest volume diagnostic mode is retained across modality changes and retry', () => {
+  const { controller, sessionId, getVolumeScope } = createTestHarness({
+    defaultVolumeRenderer: 'shader',
+  });
+  controller.selectViewerMode(sessionId, 'volume');
+
+  // Select diagnostic mode
+  controller.setVolumeDebugMode(getVolumeScope(), 'samplers');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'samplers');
+
+  // Switch modality to CT - diagnostic mode is retained on Quest
+  controller.selectVolumeModality(sessionId, 'ct');
+  assert.equal(controller.getSnapshot().volume.modality, 'ct');
+  assert.equal(controller.getSnapshot().volume.debugMode, 'samplers');
+
+  // Trigger error and retry - diagnostic mode is retained on retry
+  controller.finishVolumeBinding(getVolumeScope(), 'error');
+  assert.equal(controller.getSnapshot().volume.loadStatus, 'error');
+
+  controller.retryVolumeLoad(sessionId);
+  assert.equal(controller.getSnapshot().volume.debugMode, 'samplers');
+  assert.equal(controller.getSnapshot().volume.loadStatus, 'loading');
+});
+
 // ---------------------------------------------------------------------------
 // 8. Quest Scene Root ViroARScene Anchor Wiring and Selector Reset
 // ---------------------------------------------------------------------------

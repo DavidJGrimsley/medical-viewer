@@ -35,6 +35,7 @@ import {
 import { type VolumePreset, type VolumeQuality } from './medical-volumes';
 import { hasMedicalLabels, type MedicalModelId } from './medical-models';
 import type { SliceModality } from './medical-slices';
+import { MEDICAL_DIAGNOSTICS_ENABLED } from './medical-diagnostics';
 
 // Viro's native VRTText rasterizes `fontSize` directly as Android Bitmap pixel
 // height and maps 1 unit of fontSize to ~0.01m (1cm) at scale = 1.
@@ -348,6 +349,16 @@ export function QuestSpatialButton({
   );
 }
 
+const DIAGNOSTIC_DESCRIPTIONS: Record<string, string> = {
+  magenta: 'Magenta · Shader material attachment probe (solid magenta)',
+  samplers: '3-Sampler · 2106x1944 atlas dimensions & samples (green = pass)',
+  uniforms: 'Uniforms · Bounds, aspect ratio & scalar range (green = pass)',
+  coordinates: 'Coords · Object coordinate space mapping (RGB = XYZ volume axes)',
+  ray: 'Ray · Ray-box intersection probe (green/cyan bounding rays)',
+  opacity: 'Opacity Diag · Alpha transfer function depth ramp diagnostic',
+  raymarch: 'Normal Volume · Continuous volumetric raymarching (standard anatomy)',
+};
+
 export interface QuestSpatialControlsProps {
   context: ARSceneContext;
   controller: MedicalController;
@@ -476,6 +487,7 @@ export function QuestSpatialControls({
 }: QuestSpatialControlsProps) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const [transformOpen, setTransformOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const sessionId = context.sessionId;
   const currentStatus = medicalStatus(state);
@@ -617,7 +629,14 @@ export function QuestSpatialControls({
       index
     );
   };
-  const volumeRows = rowYs(state.volume.renderer === 'shader' ? 5 : 4);
+  // A diagnostic or Stack state always shows its banner and Return to 3D Scan, even when the
+  // Diagnostics entry point is hidden.
+  const isVolumeAdvancedView =
+    (MEDICAL_DIAGNOSTICS_ENABLED && advancedOpen) ||
+    state.volume.renderer === 'stack' ||
+    state.volume.debugMode !== 'raymarch';
+  const normalVolumeRows = rowYs(4);
+  const advVolumeRows = rowYs(5);
 
   const moveHandleLocal: Point3 = [QUEST_GRAB_BAR_LOCAL_X, QUEST_GRAB_BAR_LOCAL_Y, 0.012];
   const rotateHandleLocal: Point3 = [0.29, QUEST_GRAB_BAR_LOCAL_Y, 0.012];
@@ -745,6 +764,7 @@ export function QuestSpatialControls({
             fontSize={0.0145}
             onPress={() => {
               setTransformOpen(false);
+              setAdvancedOpen(false);
               controller.selectViewerMode(sessionId, 'anatomy');
             }}
           />
@@ -757,6 +777,7 @@ export function QuestSpatialControls({
             fontSize={0.0145}
             onPress={() => {
               setTransformOpen(false);
+              setAdvancedOpen(false);
               controller.selectViewerMode(sessionId, 'slices');
             }}
           />
@@ -769,6 +790,7 @@ export function QuestSpatialControls({
             fontSize={0.0145}
             onPress={() => {
               setTransformOpen(false);
+              setAdvancedOpen(false);
               controller.selectViewerMode(sessionId, 'volume');
             }}
           />
@@ -1259,93 +1281,122 @@ export function QuestSpatialControls({
         ) : (
           /* 3D Scan (Volume) Mode */
           <ViroNode position={[0, -0.084, 0]}>
-            {/* Modality & Quality Row */}
-            <ViroNode position={[0, volumeRows[0], 0]}>
-              {(['mri', 'ct'] as const).map((mod, i) => (
-                <QuestSpatialButton
-                  key={mod}
-                  label={mod.toUpperCase()}
-                  selected={state.volume.modality === mod}
-                  position={[-0.3075 + i * 0.205, 0, 0.002]}
-                  width={0.185}
-                  height={0.04}
-                  fontSize={0.013}
-                  onPress={() => controller.selectVolumeModality(sessionId, mod as SliceModality)}
-                />
-              ))}
-              {(['balanced', 'fast'] as const).map((q, i) => (
-                <QuestSpatialButton
-                  key={q}
-                  label={q === 'balanced' ? 'Balanced' : 'Fast'}
-                  selected={state.volume.quality === q}
-                  position={[0.1025 + i * 0.205, 0, 0.002]}
-                  width={0.185}
-                  height={0.04}
-                  fontSize={0.0125}
-                  onPress={() =>
-                    controller.configureVolume(volumeScope, { quality: q as VolumeQuality })
-                  }
-                />
-              ))}
-            </ViroNode>
+            {isVolumeAdvancedView ? (
+              /* Advanced / Diagnostic Sub-Panel */
+              <>
+                {/* Row 0: Banner / Header + Atomic Return to 3D Scan */}
+                <ViroNode position={[0, advVolumeRows[0], 0]}>
+                  {state.volume.renderer === 'stack' ? (
+                    <>
+                      <QuestText
+                        text="Experimental Stacked Slices · Unavailable on Quest"
+                        position={[-0.14, 0, 0.004]}
+                        width={0.54}
+                        height={0.034}
+                        worldFontSize={0.0115}
+                        color="#fde68a"
+                      />
+                      <QuestSpatialButton
+                        label="Return to 3D Scan"
+                        variant="accent"
+                        position={[0.26, 0, 0.002]}
+                        width={0.25}
+                        height={0.036}
+                        fontSize={0.0125}
+                        onPress={() => {
+                          setAdvancedOpen(false);
+                          controller.showVolumeAnatomy(sessionId);
+                        }}
+                      />
+                    </>
+                  ) : state.volume.debugMode !== 'raymarch' ? (
+                    <>
+                      <QuestText
+                        text={`Diagnostic: ${state.volume.debugMode}`}
+                        position={[-0.14, 0, 0.004]}
+                        width={0.54}
+                        height={0.034}
+                        worldFontSize={0.012}
+                        color="#64d2ff"
+                      />
+                      <QuestSpatialButton
+                        label="Return to 3D Scan"
+                        variant="accent"
+                        position={[0.26, 0, 0.002]}
+                        width={0.25}
+                        height={0.036}
+                        fontSize={0.0125}
+                        onPress={() => {
+                          setAdvancedOpen(false);
+                          controller.showVolumeAnatomy(sessionId);
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <QuestText
+                        text="Developer Diagnostics"
+                        position={[-0.14, 0, 0.004]}
+                        width={0.54}
+                        height={0.034}
+                        worldFontSize={0.0125}
+                        color="#98989d"
+                      />
+                      <QuestSpatialButton
+                        label="Back to Controls"
+                        position={[0.26, 0, 0.002]}
+                        width={0.25}
+                        height={0.036}
+                        fontSize={0.0125}
+                        onPress={() => setAdvancedOpen(false)}
+                      />
+                    </>
+                  )}
+                </ViroNode>
 
-            {/* Presets & Renderer Row */}
-            <ViroNode position={[0, volumeRows[1], 0]}>
-              {state.volume.modality === 'mri' ? (
-                <QuestSpatialButton
-                  label="T1 Grayscale"
-                  selected
-                  position={[-0.165, 0, 0.002]}
-                  width={0.32}
-                  height={0.04}
-                  fontSize={0.0125}
-                  onPress={() => {}}
-                />
-              ) : (
-                <>
-                  {(['ct-soft-tissue', 'ct-bone'] as const).map((preset, i) => (
+                {/* Row 1: Dataset Modality & Explicit Renderer Selection */}
+                <ViroNode position={[0, advVolumeRows[1], 0]}>
+                  {(['mri', 'ct'] as const).map((mod, i) => (
                     <QuestSpatialButton
-                      key={preset}
-                      label={preset === 'ct-soft-tissue' ? 'Soft Tissue' : 'Bone'}
-                      selected={state.volume.appearance.ct.preset === preset}
-                      position={[-0.28 + i * 0.26, 0, 0.002]}
-                      width={0.22}
-                      height={0.04}
-                      fontSize={0.0125}
+                      key={mod}
+                      label={mod.toUpperCase()}
+                      selected={state.volume.modality === mod}
+                      position={[-0.3075 + i * 0.205, 0, 0.002]}
+                      width={0.185}
+                      height={0.036}
+                      fontSize={0.013}
                       onPress={() =>
-                        controller.setVolumePreset(volumeScope, preset as VolumePreset)
+                        controller.selectVolumeModality(sessionId, mod as SliceModality)
                       }
                     />
                   ))}
-                </>
-              )}
+                  <QuestSpatialButton
+                    label="Raymarch"
+                    selected={state.volume.renderer === 'shader'}
+                    position={[0.1025, 0, 0.002]}
+                    width={0.185}
+                    height={0.036}
+                    fontSize={0.0125}
+                    onPress={() => {
+                      if (state.volume.renderer !== 'shader') {
+                        controller.setVolumeRenderer(sessionId, 'shader');
+                      }
+                    }}
+                  />
+                  <QuestSpatialButton
+                    label="Stacked (Off)"
+                    selected={state.volume.renderer === 'stack'}
+                    disabled
+                    position={[0.3075, 0, 0.002]}
+                    width={0.185}
+                    height={0.036}
+                    fontSize={0.012}
+                    onPress={() => {}}
+                  />
+                </ViroNode>
 
-              <QuestSpatialButton
-                label={state.volume.renderer === 'shader' ? 'Raymarch' : 'Stack'}
-                selected={
-                  state.volume.renderer === 'shader' && state.volume.debugMode === 'raymarch'
-                }
-                position={[state.volume.modality === 'mri' ? 0.215 : 0.26, 0, 0.002]}
-                width={state.volume.modality === 'mri' ? 0.25 : 0.24}
-                height={0.04}
-                fontSize={0.0125}
-                onPress={() => {
-                  if (state.volume.renderer === 'shader' && state.volume.debugMode === 'raymarch') {
-                    controller.setVolumeRenderer(sessionId, 'stack');
-                  } else {
-                    controller.setVolumeRenderer(sessionId, 'shader');
-                    if (controller.getSnapshot().volume.debugMode !== 'raymarch') {
-                      controller.setVolumeDebugMode(volumeScope, 'raymarch');
-                    }
-                  }
-                }}
-              />
-            </ViroNode>
-
-            {state.volume.renderer === 'shader' ? (
-              <>
-                {/* Diagnostics Row A: Magenta, 3-Sampler, Uniforms, Coords */}
-                <ViroNode position={[0, volumeRows[2], 0]}>
+                {/* Row 2: Diagnostics Row A: Magenta, 3-Sampler, Uniforms, Coords */}
+                <ViroNode position={[0, advVolumeRows[2], 0]}>
                   {(
                     [
                       ['magenta', 'Magenta'],
@@ -1360,7 +1411,7 @@ export function QuestSpatialControls({
                       selected={state.volume.debugMode === mode}
                       position={[-0.3075 + i * 0.205, 0, 0.002]}
                       width={0.185}
-                      height={0.036}
+                      height={0.034}
                       fontSize={0.0125}
                       onPress={() => {
                         if (state.volume.debugMode !== mode) {
@@ -1371,154 +1422,217 @@ export function QuestSpatialControls({
                   ))}
                 </ViroNode>
 
-                {/* Diagnostics Row B: Ray, Opacity Diag, Raymarch */}
-                <ViroNode position={[0, volumeRows[3], 0]}>
-                  {(
-                    [
-                      ['ray', 'Ray'],
-                      ['opacity', 'Opacity Diag'],
-                      ['raymarch', 'Raymarch'],
-                    ] as const
-                  ).map(([mode, label], i) => (
-                    <QuestSpatialButton
-                      key={mode}
-                      label={label}
-                      selected={state.volume.debugMode === mode}
-                      position={[-0.27 + i * 0.27, 0, 0.002]}
-                      width={0.24}
-                      height={0.036}
-                      fontSize={0.0125}
-                      onPress={() => {
-                        if (state.volume.debugMode !== mode) {
-                          controller.setVolumeDebugMode(volumeScope, mode);
-                        }
-                      }}
-                    />
-                  ))}
+                {/* Row 3: Diagnostics Row B: Ray, Opacity Diag, Normal Volume */}
+                <ViroNode position={[0, advVolumeRows[3], 0]}>
+                  <QuestSpatialButton
+                    label="Ray"
+                    selected={state.volume.debugMode === 'ray'}
+                    position={[-0.27, 0, 0.002]}
+                    width={0.24}
+                    height={0.034}
+                    fontSize={0.0125}
+                    onPress={() => {
+                      if (state.volume.debugMode !== 'ray') {
+                        controller.setVolumeDebugMode(volumeScope, 'ray');
+                      }
+                    }}
+                  />
+                  <QuestSpatialButton
+                    label="Opacity Diag"
+                    selected={state.volume.debugMode === 'opacity'}
+                    position={[0, 0, 0.002]}
+                    width={0.24}
+                    height={0.034}
+                    fontSize={0.0125}
+                    onPress={() => {
+                      if (state.volume.debugMode !== 'opacity') {
+                        controller.setVolumeDebugMode(volumeScope, 'opacity');
+                      }
+                    }}
+                  />
+                  <QuestSpatialButton
+                    label="Normal Volume"
+                    selected={
+                      state.volume.renderer === 'shader' && state.volume.debugMode === 'raymarch'
+                    }
+                    position={[0.27, 0, 0.002]}
+                    width={0.24}
+                    height={0.034}
+                    fontSize={0.0125}
+                    onPress={() => {
+                      setAdvancedOpen(false);
+                      controller.showVolumeAnatomy(sessionId);
+                    }}
+                  />
                 </ViroNode>
 
-                {/* Opacity Row / Error Retry */}
-                {state.volume.loadStatus === 'error' ? (
-                  <ViroNode position={[0, volumeRows[4], 0]}>
-                    <QuestSpatialButton
-                      label="Retry Loading Volume"
-                      variant="danger"
-                      position={[0, 0, 0.002]}
-                      width={0.34}
-                      height={0.036}
-                      fontSize={0.0125}
-                      onPress={() => controller.retryVolumeLoad(sessionId)}
-                    />
-                  </ViroNode>
-                ) : (
-                  <ViroNode position={[0, volumeRows[4], 0]}>
-                    <QuestSpatialButton
-                      label="Opacity -"
-                      position={[-0.24, 0, 0.002]}
-                      width={0.2}
-                      height={0.036}
-                      fontSize={0.0125}
-                      onPress={() => {
-                        const current = state.volume.appearance[state.volume.modality].opacity;
-                        controller.setVolumeAppearance(
-                          volumeScope,
-                          'opacity',
-                          Math.max(0.05, current - 0.1)
-                        );
-                      }}
-                    />
+                {/* Row 4: Plain explanation & expected-output caption */}
+                <ViroNode position={[0, advVolumeRows[4], 0]}>
+                  {state.volume.renderer === 'stack' ? (
                     <QuestText
-                      text={`Opacity: ${Math.round(state.volume.appearance[state.volume.modality].opacity * 100)}%`}
+                      text="Stacked Slices unavailable on Quest · native material registration race"
                       position={[0, 0, 0.004]}
-                      width={0.26}
-                      height={0.036}
-                      worldFontSize={0.0125}
-                      color="#f8fafc"
+                      width={0.78}
+                      height={0.03}
+                      worldFontSize={0.0115}
+                      color="#f87171"
                     />
-                    <QuestSpatialButton
-                      label="Opacity +"
-                      position={[0.24, 0, 0.002]}
-                      width={0.2}
-                      height={0.036}
-                      fontSize={0.0125}
-                      onPress={() => {
-                        const current = state.volume.appearance[state.volume.modality].opacity;
-                        controller.setVolumeAppearance(
-                          volumeScope,
-                          'opacity',
-                          Math.min(1.0, current + 0.1)
-                        );
-                      }}
+                  ) : (
+                    <QuestText
+                      text={
+                        DIAGNOSTIC_DESCRIPTIONS[state.volume.debugMode] ??
+                        'Diagnostic pattern active'
+                      }
+                      position={[0, 0, 0.004]}
+                      width={0.82}
+                      height={0.03}
+                      worldFontSize={0.011}
+                      color="#94a3b8"
                     />
-                  </ViroNode>
-                )}
+                  )}
+                </ViroNode>
               </>
             ) : (
+              /* Normal 3D Scan View */
               <>
-                {/* Opacity Row for Stack */}
-                <ViroNode position={[0, volumeRows[2], 0]}>
+                {/* Row 0: Modality & Detail (Quality) */}
+                <ViroNode position={[0, normalVolumeRows[0], 0]}>
+                  {(['mri', 'ct'] as const).map((mod, i) => (
+                    <QuestSpatialButton
+                      key={mod}
+                      label={mod.toUpperCase()}
+                      selected={state.volume.modality === mod}
+                      position={[-0.3075 + i * 0.205, 0, 0.002]}
+                      width={0.185}
+                      height={0.04}
+                      fontSize={0.013}
+                      onPress={() =>
+                        controller.selectVolumeModality(sessionId, mod as SliceModality)
+                      }
+                    />
+                  ))}
+                  {(['balanced', 'fast'] as const).map((q, i) => (
+                    <QuestSpatialButton
+                      key={q}
+                      label={q === 'balanced' ? 'Balanced' : 'Fast'}
+                      selected={state.volume.quality === q}
+                      position={[0.1025 + i * 0.205, 0, 0.002]}
+                      width={0.185}
+                      height={0.04}
+                      fontSize={0.0125}
+                      onPress={() =>
+                        controller.configureVolume(volumeScope, { quality: q as VolumeQuality })
+                      }
+                    />
+                  ))}
+                </ViroNode>
+
+                {/* Row 1: Appearance Preset (MRI: static T1 caption; CT: Soft Tissue / Bone) */}
+                <ViroNode position={[0, normalVolumeRows[1], 0]}>
+                  {state.volume.modality === 'mri' ? (
+                    <QuestText
+                      text="T1 Grayscale"
+                      position={[0, 0, 0.004]}
+                      width={0.4}
+                      height={0.036}
+                      worldFontSize={0.0135}
+                      color="#98989d"
+                    />
+                  ) : (
+                    <>
+                      {(['ct-soft-tissue', 'ct-bone'] as const).map((preset, i) => (
+                        <QuestSpatialButton
+                          key={preset}
+                          label={preset === 'ct-soft-tissue' ? 'Soft Tissue' : 'Bone'}
+                          selected={state.volume.appearance.ct.preset === preset}
+                          position={[-0.15 + i * 0.3, 0, 0.002]}
+                          width={0.26}
+                          height={0.04}
+                          fontSize={0.0125}
+                          onPress={() =>
+                            controller.setVolumePreset(volumeScope, preset as VolumePreset)
+                          }
+                        />
+                      ))}
+                    </>
+                  )}
+                </ViroNode>
+
+                {/* Row 2: Visibility Control (0-100%, monotonic) */}
+                <ViroNode position={[0, normalVolumeRows[2], 0]}>
                   <QuestSpatialButton
-                    label="Opacity -"
-                    position={[-0.24, 0, 0.002]}
+                    label="Visibility -"
+                    position={[-0.26, 0, 0.002]}
                     width={0.2}
-                    height={0.04}
+                    height={0.038}
                     fontSize={0.0125}
                     onPress={() => {
                       const current = state.volume.appearance[state.volume.modality].opacity;
                       controller.setVolumeAppearance(
                         volumeScope,
                         'opacity',
-                        Math.max(0.05, current - 0.1)
+                        Math.max(0.0, current - 0.2)
                       );
                     }}
                   />
                   <QuestText
-                    text={`Opacity: ${Math.round(state.volume.appearance[state.volume.modality].opacity * 100)}%`}
+                    text={`Visibility: ${Math.round(state.volume.appearance[state.volume.modality].opacity * 50)}%`}
                     position={[0, 0, 0.004]}
-                    width={0.26}
+                    width={0.24}
                     height={0.036}
-                    worldFontSize={0.0125}
+                    worldFontSize={0.0135}
                     color="#f8fafc"
                   />
                   <QuestSpatialButton
-                    label="Opacity +"
-                    position={[0.24, 0, 0.002]}
+                    label="Visibility +"
+                    position={[0.26, 0, 0.002]}
                     width={0.2}
-                    height={0.04}
+                    height={0.038}
                     fontSize={0.0125}
                     onPress={() => {
                       const current = state.volume.appearance[state.volume.modality].opacity;
                       controller.setVolumeAppearance(
                         volumeScope,
                         'opacity',
-                        Math.min(1.0, current + 0.1)
+                        Math.min(2.0, current + 0.2)
                       );
                     }}
                   />
                 </ViroNode>
 
-                {state.volume.loadStatus === 'error' ? (
-                  <ViroNode position={[0, volumeRows[3], 0]}>
+                {/* Row 3: Action Row (Reset Appearance or Retry; Diagnostics in developer builds) */}
+                <ViroNode position={[0, normalVolumeRows[3], 0]}>
+                  {state.volume.loadStatus === 'error' ? (
                     <QuestSpatialButton
                       label="Retry Loading Volume"
                       variant="danger"
-                      position={[0, 0, 0.002]}
-                      width={0.34}
+                      position={[MEDICAL_DIAGNOSTICS_ENABLED ? -0.15 : 0, 0, 0.002]}
+                      width={0.42}
                       height={0.038}
                       fontSize={0.0125}
                       onPress={() => controller.retryVolumeLoad(sessionId)}
                     />
-                  </ViroNode>
-                ) : (
-                  <QuestText
-                    text="Experimental 3D Scan Volume · Raymarch / Stack"
-                    position={[0, volumeRows[3], 0.004]}
-                    width={0.78}
-                    height={0.028}
-                    worldFontSize={0.0115}
-                    color="#64748b"
-                  />
-                )}
+                  ) : (
+                    <QuestSpatialButton
+                      label="Reset Appearance"
+                      position={[MEDICAL_DIAGNOSTICS_ENABLED ? -0.15 : 0, 0, 0.002]}
+                      width={0.32}
+                      height={0.038}
+                      fontSize={0.0125}
+                      onPress={() => controller.resetVolumeAppearance(sessionId)}
+                    />
+                  )}
+                  {MEDICAL_DIAGNOSTICS_ENABLED ? (
+                    <QuestSpatialButton
+                      label="Diagnostics"
+                      position={[0.26, 0, 0.002]}
+                      width={0.22}
+                      height={0.038}
+                      fontSize={0.0125}
+                      onPress={() => setAdvancedOpen(true)}
+                    />
+                  ) : null}
+                </ViroNode>
               </>
             )}
           </ViroNode>

@@ -3,16 +3,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const {
-  MedicalController,
-} = require('../src/features/medical-viewer/medical-controller.ts');
+const { MedicalController } = require('../src/features/medical-viewer/medical-controller.ts');
 const {
   parseMedicalVolumeDataset,
   VOLUME_ATLASES,
 } = require('../src/features/medical-viewer/medical-volumes.ts');
-const {
-  volumeExtent,
-} = require('../src/features/medical-viewer/medical-volume-uniforms.ts');
+const { volumeExtent } = require('../src/features/medical-viewer/medical-volume-uniforms.ts');
 const {
   volumeDiagnosticShader,
 } = require('../src/features/medical-viewer/medical-volume-diagnostics.ts');
@@ -230,7 +226,9 @@ test('isViroImageLoadSuccess respects explicit boolean, tolerates Android null p
 // 3. Late current-request errors are authoritative while stale errors are ignored
 test('controller accepts late current-request atlas errors after binding/ready while ignoring stale events', () => {
   const dataset = parseMedicalVolumeDataset(volumeMetadata);
-  const c = new MedicalController(undefined, undefined, dataset, { defaultVolumeRenderer: 'shader' });
+  const c = new MedicalController(undefined, undefined, dataset, {
+    defaultVolumeRenderer: 'shader',
+  });
   const sessionId = 1;
   c.attach(sessionId);
   c.setTracking(sessionId, true);
@@ -258,7 +256,11 @@ test('controller accepts late current-request atlas errors after binding/ready w
 
   // Late failure on CURRENT request after ready is authoritative and transitions to error
   c.finishVolumeAtlas(getScope(), 'high', false);
-  assert.equal(c.getSnapshot().volume.loadStatus, 'error', 'Late current-request error must transition to error');
+  assert.equal(
+    c.getSnapshot().volume.loadStatus,
+    'error',
+    'Late current-request error must transition to error'
+  );
 
   // Retry is recoverable
   c.retryVolumeLoad(sessionId);
@@ -276,7 +278,10 @@ test('volumeDiagnosticShader samplers mode binds high, low, and validity in one 
   assert.match(shader.uniforms, /u_low/);
   assert.match(shader.uniforms, /u_validity/);
 
-  // Verifies fixed probe, reference, empty UV sampling, asymmetric orientation marker and passAll comparison
+  // Verifies fixed probe, reference, empty UV sampling, asymmetric orientation marker, textureSize check and passAll comparison
+  assert.match(shader.body, /expectedSize = ivec2\(2106, 1944\)/);
+  assert.match(shader.body, /textureSize\(u_high, 0\)/);
+  assert.match(shader.body, /passSize/);
   assert.match(shader.body, /probeUV/);
   assert.match(shader.body, /emptyUV/);
   assert.match(shader.body, /actualHigh/);
@@ -292,7 +297,9 @@ test('volumeDiagnosticShader samplers mode binds high, low, and validity in one 
 // 5. Quest diagnostic mode selection in controller
 test('Quest controller validates and allows switching between all diagnostic modes', () => {
   const dataset = parseMedicalVolumeDataset(volumeMetadata);
-  const c = new MedicalController(undefined, undefined, dataset, { defaultVolumeRenderer: 'shader' });
+  const c = new MedicalController(undefined, undefined, dataset, {
+    defaultVolumeRenderer: 'shader',
+  });
   const sessionId = 1;
   c.attach(sessionId);
   c.setTracking(sessionId, true);
@@ -305,18 +312,14 @@ test('Quest controller validates and allows switching between all diagnostic mod
     requestId: c.getSnapshot().volume.requestId,
   });
 
-  const modes = [
-    'magenta',
-    'samplers',
-    'uniforms',
-    'coordinates',
-    'ray',
-    'opacity',
-    'raymarch',
-  ];
+  const modes = ['magenta', 'samplers', 'uniforms', 'coordinates', 'ray', 'opacity', 'raymarch'];
 
   for (const mode of modes) {
     c.setVolumeDebugMode(getScope(), mode);
-    assert.equal(c.getSnapshot().volume.debugMode, mode, `Debug mode ${mode} should be selected on Quest`);
+    assert.equal(
+      c.getSnapshot().volume.debugMode,
+      mode,
+      `Debug mode ${mode} should be selected on Quest`
+    );
   }
 });

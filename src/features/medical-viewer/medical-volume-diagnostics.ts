@@ -41,10 +41,15 @@ highp float expHigh = ${expHigh};
 highp float expLow = ${expLow};
 highp float expVal = ${expVal};
 highp float tol = 1.5 / 255.0;
+ivec2 expectedSize = ivec2(2106, 1944);
+ivec2 szHigh = textureSize(u_high, 0);
+ivec2 szLow = textureSize(u_low, 0);
+ivec2 szVal = textureSize(u_validity, 0);
+bool passSize = (szHigh == expectedSize && szLow == expectedSize && szVal == expectedSize);
 bool passHigh = abs(actualHigh - expHigh) <= tol && emptyHigh <= tol;
 bool passLow = abs(actualLow - expLow) <= tol && emptyLow <= tol;
 bool passVal = abs(actualVal - expVal) <= tol && emptyVal <= tol;
-bool passAll = passHigh && passLow && passVal;
+bool passAll = passHigh && passLow && passVal && passSize;
 
 highp vec2 tc = _surface.diffuse_texcoord;
 if (tc.x < 0.08) {

@@ -401,7 +401,12 @@ export class MedicalController {
       loadStatus: mode === 'anatomy' && this.snapshot.anchorId ? 'loading' : 'idle',
       assetLoads: mode === 'anatomy' && this.snapshot.anchorId ? this.loadingAssets() : {},
       slices: this.sliceLoad(mode === 'slices' && !!this.snapshot.anchorId),
-      volume: this.volumeLoad(mode === 'volume' && !!this.snapshot.anchorId, mode === 'volume'),
+      volume: {
+        ...this.volumeLoad(mode === 'volume' && !!this.snapshot.anchorId, mode === 'volume', false),
+        ...(mode === 'volume' && this.isQuest
+          ? { renderer: 'shader' as const, debugMode: 'raymarch' as const }
+          : {}),
+      },
       pinching: false,
       rotating: false,
     });
@@ -578,7 +583,11 @@ export class MedicalController {
   private volumeUpdate(change: Partial<MedicalVolumeSnapshot>) {
     return { ...this.snapshot.volume, ...change };
   }
-  private volumeLoad(placed = !!this.snapshot.anchorId, active = this.snapshot.mode === 'volume') {
+  private volumeLoad(
+    placed = !!this.snapshot.anchorId,
+    active = this.snapshot.mode === 'volume',
+    retainDebugMode = false
+  ) {
     return this.volumeUpdate({
       requestId: this.snapshot.volume.requestId + 1,
       loadStatus: !active
@@ -591,8 +600,9 @@ export class MedicalController {
       atlasLoads: {},
       stackLoads: {},
       magentaConfirmed: this.isQuest ? true : false,
-      debugMode:
-        this.snapshot.volume.renderer === 'shader'
+      debugMode: retainDebugMode
+        ? this.snapshot.volume.debugMode
+        : this.snapshot.volume.renderer === 'shader'
           ? this.isQuest
             ? 'raymarch'
             : 'magenta'
@@ -611,8 +621,35 @@ export class MedicalController {
       scope.requestId === this.snapshot.volume.requestId
     );
   }
+  showVolumeAnatomy(sessionId: number) {
+    if (!this.live(sessionId) || this.snapshot.mode !== 'volume') return;
+    if (
+      this.snapshot.volume.renderer === 'shader' &&
+      this.snapshot.volume.debugMode === 'raymarch'
+    ) {
+      return;
+    }
+    this.clearGestures();
+    const current = this.snapshot.volume;
+    const needsReload = current.renderer !== 'shader';
+    this.publish({
+      volume: {
+        ...(needsReload ? this.volumeLoad(undefined, true, false) : this.volumeUpdate({})),
+        renderer: 'shader',
+        debugMode: 'raymarch',
+        magentaConfirmed: true,
+        controlsOpen: false,
+        scale: current.scale,
+        yaw: current.yaw,
+        height: current.height,
+        x: current.x,
+        z: current.z,
+      },
+    });
+  }
   setVolumeRenderer(sessionId: number, renderer: VolumeRenderer) {
     if (!this.live(sessionId) || !['stack', 'shader'].includes(renderer)) return;
+    if (renderer === this.snapshot.volume.renderer) return;
     this.clearGestures();
     const isQuest = this.isQuest;
     this.publish({
@@ -656,12 +693,13 @@ export class MedicalController {
         'opacity',
         'raymarch',
       ].includes(debugMode) ||
+      debugMode === this.snapshot.volume.debugMode ||
       (debugMode !== 'magenta' && !this.snapshot.volume.magentaConfirmed)
     )
       return;
     this.publish({
       volume: {
-        ...this.volumeLoad(),
+        ...this.volumeLoad(undefined, true, true),
         debugMode,
         magentaConfirmed: this.snapshot.volume.magentaConfirmed,
         controlsOpen: !this.isQuest,
@@ -730,7 +768,7 @@ export class MedicalController {
     this.clearGestures();
     this.publish({
       volume: {
-        ...this.volumeLoad(),
+        ...this.volumeLoad(undefined, true, this.isQuest),
         modality,
         loadStatus: this.snapshot.anchorId ? 'loading' : 'idle',
       },
@@ -795,7 +833,7 @@ export class MedicalController {
       this.snapshot.volume.loadStatus !== 'error'
     )
       return;
-    this.publish({ volume: this.volumeLoad() });
+    this.publish({ volume: this.volumeLoad(undefined, true, this.isQuest) });
   }
   openVolumeControls(sessionId: number, controlsOpen: boolean) {
     if (!this.live(sessionId) || this.snapshot.mode !== 'volume') return;
@@ -808,6 +846,8 @@ export class MedicalController {
       VOLUME_PRESETS[preset]?.modality !== this.snapshot.volume.modality
     )
       return;
+    const currentAppearance = this.snapshot.volume.appearance[this.snapshot.volume.modality];
+    if (currentAppearance.preset === preset) return;
     const { window, level } = VOLUME_PRESETS[preset];
     this.publish({
       volume: this.volumeUpdate({
@@ -820,7 +860,12 @@ export class MedicalController {
           : {}),
         appearance: {
           ...this.snapshot.volume.appearance,
-          [this.snapshot.volume.modality]: { preset, window, level, opacity: 1 },
+          [this.snapshot.volume.modality]: {
+            preset,
+            window,
+            level,
+            opacity: currentAppearance.opacity,
+          },
         },
       }),
     });
@@ -881,6 +926,17 @@ export class MedicalController {
     if (!this.live(sessionId) || this.snapshot.mode !== 'volume') return;
     this.publish({
       volume: this.volumeUpdate({ crop: [...this.volumeDataset.boundsRasMm] as VolumeBounds }),
+    });
+  }
+  resetVolumeAppearance(sessionId: number) {
+    if (!this.live(sessionId) || this.snapshot.mode !== 'volume') return;
+    this.publish({
+      volume: this.volumeUpdate({
+        appearance: {
+          ...this.snapshot.volume.appearance,
+          [this.snapshot.volume.modality]: defaultVolumeAppearance(this.snapshot.volume.modality),
+        },
+      }),
     });
   }
   resetVolumeScan(sessionId: number) {
