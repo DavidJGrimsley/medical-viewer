@@ -35,20 +35,27 @@ function DragTarget({
   position,
   rotation,
   onDrag,
+  onDragEnd,
+  freezeDuringDrag = false,
   width = 0.06,
   height = 56 * QUEST_PANEL_UNIT_M,
 }: {
   position: Point3;
   rotation: Point3;
   onDrag: (world: Point3) => void;
+  onDragEnd?: () => void;
+  freezeDuringDrag?: boolean;
   width?: number;
   height?: number;
 }) {
   const [resetKey, setResetKey] = useState(0);
+  const [dragOrigin, setDragOrigin] = useState<Point3 | null>(null);
   const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reset = () => {
     if (idle.current) clearTimeout(idle.current);
     idle.current = null;
+    setDragOrigin(null);
+    onDragEnd?.();
     setResetKey((key) => key + 1);
   };
   useEffect(
@@ -58,7 +65,7 @@ function DragTarget({
     []
   );
   return (
-    <ViroNode key={resetKey} position={position} rotation={rotation}>
+    <ViroNode key={resetKey} position={dragOrigin ?? position} rotation={rotation}>
       <ViroQuad
         width={width}
         height={height}
@@ -66,6 +73,7 @@ function DragTarget({
         dragType="FixedDistance"
         onDrag={(world) => {
           if (!world.every(Number.isFinite)) return;
+          if (freezeDuringDrag && !dragOrigin) setDragOrigin(position);
           onDrag(world);
           if (idle.current) clearTimeout(idle.current);
           idle.current = setTimeout(reset, 600);
@@ -123,6 +131,9 @@ export function QuestCompositorControls({
     setActivity((previous) => (previous[id] === value ? previous : { ...previous, [id]: value }));
   }, []);
   const [page, setPage] = useState<QuestPanelPage>('main');
+  const [slicePreview, setSlicePreview] = useState<number | null>(null);
+  const lastSliceUpdate = useRef(0);
+  const pendingSlice = useRef<{ value: number; apply: (value: number) => void } | null>(null);
   const sessionId = context.sessionId;
   const { items, sliders, grabBar, height, heightM, bodyHeight, bodyHeightM, bodyCenterY } =
     buildQuestCompositorPanel({
@@ -132,6 +143,7 @@ export function QuestCompositorControls({
       page,
       setPage,
       diagnosticsEnabled: MEDICAL_DIAGNOSTICS_ENABLED,
+      slicePreview,
       onRecenter,
       onPlaceInFront,
       onExit,
@@ -204,9 +216,29 @@ export function QuestCompositorControls({
           return (
             <DragTarget
               key={slider.id}
+              freezeDuringDrag
               position={rigLocalToWorld(panelPose, panelItemLocal(thumb, height, 0.014))}
               rotation={panelPose.rotation}
-              onDrag={(world) => slider.onChange(sliderValueAtX(slider, logicalX(world)))}
+              onDrag={(world) => {
+                const value = sliderValueAtX(slider, logicalX(world));
+                if (slider.id !== 'slice') {
+                  slider.onChange(value);
+                  return;
+                }
+                setSlicePreview(value);
+                pendingSlice.current = { value, apply: slider.onChange };
+                const now = Date.now();
+                if (now - lastSliceUpdate.current >= 100) {
+                  slider.onChange(value);
+                  lastSliceUpdate.current = now;
+                }
+              }}
+              onDragEnd={() => {
+                if (slider.id !== 'slice' || !pendingSlice.current) return;
+                pendingSlice.current.apply(pendingSlice.current.value);
+                pendingSlice.current = null;
+                setSlicePreview(null);
+              }}
             />
           );
         })}

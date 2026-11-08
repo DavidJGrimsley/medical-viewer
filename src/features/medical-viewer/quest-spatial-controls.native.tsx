@@ -480,7 +480,6 @@ export function QuestSpatialControls({
   context,
   controller,
   panelPose,
-  onRecenter,
   onPlaceInFront,
   onExit,
   onMoveRig,
@@ -725,14 +724,6 @@ export function QuestSpatialControls({
           onPress={() => setTransformOpen((open) => !open)}
         />
         <QuestSpatialButton
-          label="Recenter"
-          position={[0, 0.208, 0.002]}
-          width={0.25}
-          height={0.044}
-          fontSize={0.0145}
-          onPress={onRecenter}
-        />
-        <QuestSpatialButton
           label="Exit VR"
           variant="danger"
           position={[0.285, 0.208, 0.002]}
@@ -938,64 +929,53 @@ export function QuestSpatialControls({
             </ViroNode>
 
             {/* Yaw Row (local y = -0.010 -> panel y = -0.094) */}
-            <ViroNode position={[0, -0.01, 0]}>
-              <QuestSpatialButton
-                label="Turn Left"
-                position={[-0.26, 0, 0.002]}
-                width={0.17}
-                height={0.04}
-                fontSize={0.013}
-                disabled={!canTransformPose}
-                onPress={() => {
-                  if (state.mode === 'anatomy') {
-                    controller.setYaw(scope, state.yaw - 15);
-                  } else if (state.mode === 'slices') {
-                    controller.setPanelTransform(sliceScope, 'yaw', state.slices.yaw - 15);
-                  } else {
-                    controller.setVolumeTransform(volumeScope, 'yaw', state.volume.yaw - 15);
-                  }
-                }}
-              />
-              <QuestText
-                text={`Yaw: ${Math.round(state.mode === 'anatomy' ? state.yaw : state.mode === 'slices' ? state.slices.yaw : state.volume.yaw)}°`}
-                position={[0, 0, 0.004]}
-                width={0.3}
-                height={0.038}
-                worldFontSize={0.0135}
-                color="#f8fafc"
-              />
-              <QuestSpatialButton
-                label="Turn Right"
-                position={[0.26, 0, 0.002]}
-                width={0.17}
-                height={0.04}
-                fontSize={0.013}
-                disabled={!canTransformPose}
-                onPress={() => {
-                  if (state.mode === 'anatomy') {
-                    controller.setYaw(scope, state.yaw + 15);
-                  } else if (state.mode === 'slices') {
-                    controller.setPanelTransform(sliceScope, 'yaw', state.slices.yaw + 15);
-                  } else {
-                    controller.setVolumeTransform(volumeScope, 'yaw', state.volume.yaw + 15);
-                  }
-                }}
-              />
-            </ViroNode>
+            {state.mode !== 'slices' && (
+              <ViroNode position={[0, -0.01, 0]}>
+                <QuestSpatialButton
+                  label="Turn Left"
+                  position={[-0.26, 0, 0.002]}
+                  width={0.17}
+                  height={0.04}
+                  fontSize={0.013}
+                  disabled={!canTransformPose}
+                  onPress={() => {
+                    if (state.mode === 'anatomy') {
+                      controller.setYaw(scope, state.yaw - 15);
+                    } else {
+                      controller.setVolumeTransform(volumeScope, 'yaw', state.volume.yaw - 15);
+                    }
+                  }}
+                />
+                <QuestText
+                  text={`Yaw: ${Math.round(state.mode === 'anatomy' ? state.yaw : state.volume.yaw)}°`}
+                  position={[0, 0, 0.004]}
+                  width={0.3}
+                  height={0.038}
+                  worldFontSize={0.0135}
+                  color="#f8fafc"
+                />
+                <QuestSpatialButton
+                  label="Turn Right"
+                  position={[0.26, 0, 0.002]}
+                  width={0.17}
+                  height={0.04}
+                  fontSize={0.013}
+                  disabled={!canTransformPose}
+                  onPress={() => {
+                    if (state.mode === 'anatomy') {
+                      controller.setYaw(scope, state.yaw + 15);
+                    } else {
+                      controller.setVolumeTransform(volumeScope, 'yaw', state.volume.yaw + 15);
+                    }
+                  }}
+                />
+              </ViroNode>
+            )}
 
             {/* Actions Row (local y = -0.072 -> panel y = -0.156) */}
             <ViroNode position={[0, -0.072, 0]}>
               {onPlaceInFront ? (
                 <>
-                  <QuestSpatialButton
-                    label="Move Here"
-                    disabled={state.tracking !== 'normal'}
-                    position={[-0.3075, 0, 0.002]}
-                    width={0.185}
-                    height={0.042}
-                    fontSize={0.0125}
-                    onPress={onPlaceInFront}
-                  />
                   <QuestSpatialButton
                     label="Reposition"
                     disabled={!state.anchorId}

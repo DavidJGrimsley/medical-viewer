@@ -50,6 +50,7 @@ interface PanelOptions {
   setPage: (page: QuestPanelPage) => void;
   diagnosticsEnabled: boolean;
   onRecenter: () => void;
+  slicePreview?: number | null;
   onPlaceInFront?: () => void;
   onExit?: () => void;
 }
@@ -267,16 +268,17 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
         'Lower',
         'Raise'
       );
-      slider(
-        'rotation',
-        `Rotation ${Math.round(transform.yaw)}°`,
-        490,
-        -180,
-        180,
-        transform.yaw,
-        (value) => changeTransform('yaw', rotationSliderValue(value)),
-        !canTransform
-      );
+      if (state.mode !== 'slices')
+        slider(
+          'rotation',
+          `Rotation ${Math.round(transform.yaw)}°`,
+          490,
+          -180,
+          180,
+          transform.yaw,
+          (value) => changeTransform('yaw', rotationSliderValue(value)),
+          !canTransform
+        );
       if (state.mode === 'anatomy') {
         button(
           'labels',
@@ -304,11 +306,11 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
         const count = controller.getSliceSeries()?.imageCount ?? 0;
         slider(
           'slice',
-          `Slice ${state.slices.index + 1} of ${count}`,
-          590,
+          `Slice ${Math.round(options.slicePreview ?? state.slices.index) + 1} of ${count}`,
+          490,
           0,
           Math.max(0, count - 1),
-          state.slices.index,
+          options.slicePreview ?? state.slices.index,
           (value) => {
             const current = controller.getSnapshot();
             controller.selectSlice(
@@ -336,7 +338,6 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
           )
         );
       } else {
-        text('quality', `Detail: ${state.volume.quality === 'fast' ? 'Fast' : 'Balanced'}`, 570);
         if (state.volume.renderer !== 'shader' || state.volume.debugMode !== 'raymarch')
           button(
             'normal-volume',
@@ -365,15 +366,6 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
       const actions: [string, string, () => void, boolean][] = [
         ['reset-transform', 'Reset view', resetTransform, !canTransform],
         [
-          'move-here',
-          'Move here',
-          () => {
-            setPage('main');
-            onPlaceInFront?.();
-          },
-          !onPlaceInFront || state.tracking !== 'normal',
-        ],
-        [
           'reposition',
           'Reposition',
           () => {
@@ -393,9 +385,9 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
         button(
           id,
           label,
-          actions.length === 4 ? 137 + index * 242 : 175 + index * 325,
+          actions.length === 3 ? 175 + index * 325 : 255 + index * 490,
           705,
-          actions.length === 4 ? 220 : 300,
+          actions.length === 3 ? 300 : 440,
           action,
           false,
           disabled,
@@ -498,24 +490,13 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
   }
   const footerY = state.anchorId ? 765 : 510;
   const hasNavigation = !!state.anchorId && state.mode === 'volume';
-  button(
-    'recenter',
-    'Recenter',
-    hasNavigation ? 175 : 255,
-    footerY,
-    hasNavigation ? 290 : 440,
-    options.onRecenter,
-    false,
-    false,
-    50
-  );
   if (hasNavigation)
     button(
       'navigation',
       page === 'main' ? 'More controls' : 'Back',
-      500,
+      255,
       footerY,
-      300,
+      440,
       () =>
         setPage(page === 'main' ? 'appearance' : page === 'diagnostics' ? 'appearance' : 'main'),
       false,
@@ -525,9 +506,9 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
   button(
     'exit',
     'Exit VR',
-    hasNavigation ? 825 : 745,
+    hasNavigation ? 745 : 500,
     footerY,
-    hasNavigation ? 290 : 440,
+    hasNavigation ? 440 : 900,
     () => options.onExit?.(),
     false,
     false,

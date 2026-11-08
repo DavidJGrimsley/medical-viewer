@@ -56,7 +56,7 @@ function harness() {
       controller.finishVolumeBinding(scope(), 'ready');
     }
   };
-  const panel = () =>
+  const panel = (slicePreview = null) =>
     buildQuestCompositorPanel({
       controller,
       sessionId,
@@ -65,6 +65,7 @@ function harness() {
         page = next;
       },
       diagnosticsEnabled,
+      slicePreview,
       onRecenter() {},
       onPlaceInFront() {},
     });
@@ -90,7 +91,7 @@ function harness() {
   };
 }
 
-test('all three main panels contain size, height and rotation without a transform submenu', () => {
+test('main panels contain size and height, with rotation only for anatomy and 3D scan', () => {
   const h = harness();
   for (const mode of ['anatomy', 'slices', 'volume']) {
     h.click(mode);
@@ -98,7 +99,14 @@ test('all three main panels contain size, height and rotation without a transfor
     const p = h.panel();
     assert.ok(p.items.some((i) => i.id === 'scale-plus'));
     assert.ok(p.items.some((i) => i.id === 'height-plus'));
-    assert.ok(p.sliders.some((i) => i.id === 'rotation' && !i.disabled));
+    assert.equal(
+      p.sliders.some((i) => i.id === 'rotation' && !i.disabled),
+      mode !== 'slices'
+    );
+    assert.equal(
+      p.items.some((i) => ['recenter', 'move-here', 'quality'].includes(i.id)),
+      false
+    );
     assert.equal(
       p.items.some((i) =>
         /rotation-(minus|plus)|rotate-left|rotate-right|open-transform/.test(i.id)
@@ -122,12 +130,13 @@ test('size and height change the active model, slices or volume and reset on the
     const before = value();
     h.click('scale-plus');
     h.click('height-plus');
-    h.panel()
-      .sliders.find((s) => s.id === 'rotation')
-      .onChange(46);
+    if (mode !== 'slices')
+      h.panel()
+        .sliders.find((s) => s.id === 'rotation')
+        .onChange(46);
     assert.ok(value().scale > before.scale);
     assert.ok(value().height > before.height);
-    assert.equal(value().yaw, 46);
+    assert.equal(value().yaw, mode === 'slices' ? before.yaw : 46);
     h.click('reset-transform');
     assert.equal(value().scale, before.scale);
     assert.equal(value().height, before.height);
@@ -167,7 +176,11 @@ test('slice slider and browsing actions live below transforms on the main panel'
   h.ready();
   const p = h.panel();
   const slider = p.sliders.find((s) => s.id === 'slice');
-  assert.ok(slider.y > p.sliders.find((s) => s.id === 'rotation').y);
+  assert.ok(slider.y > p.items.find((i) => i.id === 'height-value').y);
+  assert.equal(
+    p.sliders.some((s) => s.id === 'rotation'),
+    false
+  );
   slider.onChange(sliderValueAtX(slider, slider.x));
   assert.equal(h.controller.getSnapshot().slices.index, 0);
   h.click('slice-step-5');
@@ -180,6 +193,17 @@ test('slice slider and browsing actions live below transforms on the main panel'
   );
   h.click('reset-slice');
   assert.equal(h.page(), 'main');
+});
+
+test('slice preview moves continuously without changing the selected scan until applied', () => {
+  const h = harness();
+  h.click('slices');
+  h.ready();
+  const before = h.controller.getSnapshot().slices.index;
+  const preview = h.panel(2.5);
+  assert.equal(preview.sliders.find((slider) => slider.id === 'slice').value, 2.5);
+  assert.equal(h.controller.getSnapshot().slices.index, before);
+  assert.match(preview.items.find((item) => item.id === 'slice-value').label, /^Slice 4 of /);
 });
 
 test('3D Scan More controls opens appearance directly and Back returns to main', () => {

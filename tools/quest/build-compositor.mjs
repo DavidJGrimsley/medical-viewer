@@ -50,12 +50,38 @@ const actual = spawnSync('git', ['rev-parse', 'HEAD'], {
 if (actual !== revision) throw new Error(`Expected ViroCore ${revision}, got ${actual}`);
 function patch(file, before, after) {
   const target = path.join(source, file);
-  const text = readFileSync(target, 'utf8');
+  const text = readFileSync(target, 'utf8').replaceAll('\r\n', '\n');
   if (text.includes(after)) return;
   if (!text.includes(before)) throw new Error(`Patch context missing: ${file}`);
   writeFileSync(target, text.replace(before, after));
 }
 const cpp = 'android/sharedCode/src/main/cpp/';
+// OpenXR clears each eye outside Viro's GL state cache. Restore the actual masks
+// afterward so the next material sees the state Viro believes is active.
+patch(
+  cpp + 'VRODisplayOpenGLOpenXR.h',
+  `        // Force the colour write mask fully on (incl. alpha) — Viro's cached state
+        // can leave the alpha channel masked off, which would skip the alpha clear.
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glClearColor(0.0f, 0.0f, 0.0f, _clearAlpha);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);`,
+  `        // Clear all channels without desynchronizing Viro's cached write masks.
+        GLboolean colorMask[4], depthMask;
+        GLint stencilFrontMask, stencilBackMask;
+        glGetBooleanv(GL_COLOR_WRITEMASK, colorMask);
+        glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMask);
+        glGetIntegerv(GL_STENCIL_WRITEMASK, &stencilFrontMask);
+        glGetIntegerv(GL_STENCIL_BACK_WRITEMASK, &stencilBackMask);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glDepthMask(GL_TRUE);
+        glStencilMask(~0u);
+        glClearColor(0.0f, 0.0f, 0.0f, _clearAlpha);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glColorMask(colorMask[0], colorMask[1], colorMask[2], colorMask[3]);
+        glDepthMask(depthMask);
+        glStencilMaskSeparate(GL_FRONT, (GLuint) stencilFrontMask);
+        glStencilMaskSeparate(GL_BACK, (GLuint) stencilBackMask);`
+);
 copyFileSync(
   path.join(root, 'native/quest-compositor/MedicalQuestPanel.h'),
   path.join(source, cpp, 'MedicalQuestPanel.h')

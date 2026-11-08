@@ -1083,12 +1083,12 @@ test('QuestSpatialControls renders supersampled crisp text, non-occluding quads,
   const readyInfo = inspectPanelTree(renderControls(), 'anatomy-ready');
   hoveredState = false;
 
-  // Header buttons: Recenter and Exit VR are wired
+  // Exit VR is wired and Recenter has been removed
   for (const q of readyInfo.interactiveQuads) {
     if (Math.abs(q.x - 0) < 1e-3 && Math.abs(q.y - 0.208) < 1e-3) q.node.props.onClick();
     if (Math.abs(q.x - 0.285) < 1e-3 && Math.abs(q.y - 0.208) < 1e-3) q.node.props.onClick();
   }
-  assert.equal(recenterCount, 1);
+  assert.equal(recenterCount, 0);
   assert.equal(exitedVR, 1);
 
   // Placed state renders a move handle and a rotate handle beside the panel
@@ -1162,7 +1162,7 @@ test('QuestSpatialControls renders supersampled crisp text, non-occluding quads,
   // 4. Transform sub-panel
   transformOpenState = true;
   const transformInfo = inspectPanelTree(renderControls(), 'transform');
-  assert.ok(transformInfo.textEntries.some((t) => t.text === 'Move Here'));
+  assert.ok(!transformInfo.textEntries.some((t) => t.text === 'Move Here'));
   assert.ok(transformInfo.textEntries.some((t) => t.text === 'Reposition'));
   assert.ok(transformInfo.textEntries.some((t) => t.text === 'Reset Pose'));
   assert.ok(transformInfo.textEntries.some((t) => t.text === 'Done'));
