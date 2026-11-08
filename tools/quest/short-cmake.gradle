@@ -1,0 +1,22 @@
+// Windows Ninja cannot create React Native codegen paths beyond MAX_PATH.
+// Keep just this build's generated CMake files in a shorter temporary directory.
+gradle.beforeProject { project ->
+    if (project.path == ':app') {
+        project.plugins.withId('com.facebook.react') {
+            project.extensions.getByName('react').extraPackagerArgs.addAll(['--max-workers', '2'])
+        }
+        project.plugins.withId('com.android.application') {
+            project.android.externalNativeBuild.cmake.buildStagingDirectory =
+                new File(project.rootDir.toPath().getRoot().toString(),
+                    'mvq-' + Integer.toHexString(project.rootDir.absolutePath.hashCode()))
+            project.android.defaultConfig.externalNativeBuild.cmake.arguments.addAll([
+                '-DCMAKE_JOB_POOLS=compile=1;link=1',
+                '-DCMAKE_CXX_FLAGS_DEBUG=-g0 -O0',
+                '-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=-O2 -g0 -DNDEBUG',
+                '-DCMAKE_OBJECT_PATH_MAX=128',
+                '-DCMAKE_JOB_POOL_COMPILE=compile',
+                '-DCMAKE_JOB_POOL_LINK=link'
+            ])
+        }
+    }
+}

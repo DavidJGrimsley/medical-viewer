@@ -24,6 +24,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   let plugins = config.plugins ?? [];
 
   if (isQuest) {
+    if (process.env.QUEST_COMPOSITOR_UI === '1') plugins.push('./plugins/with-quest-compositor');
     const questAppId = validateQuestAppId(process.env.META_QUEST_APP_ID);
     let foundViro = false;
 

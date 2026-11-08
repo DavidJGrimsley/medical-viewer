@@ -18,6 +18,7 @@ import {
 } from '@/features/ar/quest-spatial-math';
 import { MedicalSceneContent, QUEST_WORLD_ANCHOR_ID } from './medical-scene-content.native';
 import { QuestSpatialControls } from './quest-spatial-controls.native';
+import { QuestCompositorControls } from './quest-compositor-controls.native';
 
 const ORIGIN: Point3 = [0, 0, 0];
 // Gives React a frame to unmount the scene (hover state, text bitmaps, volume shader)
@@ -44,6 +45,8 @@ export default function QuestMedicalScene() {
   // grab handle moves them together.
   const [rigPose, setRigPose] = useState<RigPose | null>(null);
   const [exiting, setExiting] = useState(false);
+  const [useOriginalControls, setUseOriginalControls] = useState(false);
+  const showOriginalControls = useCallback(() => setUseOriginalControls(true), []);
   const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestCameraRef = useRef<CameraPose | null>(null);
   const selectorRef = useRef<ViroARPlaneSelector>(null);
@@ -87,10 +90,12 @@ export default function QuestMedicalScene() {
     setRigPose(computeQuestPanelTransform(pose));
   }, []);
 
-  const handleMoveRig = useCallback((handleWorld: Point3) => {
+  const handleMoveRig = useCallback((handleWorld: Point3, handleLocal?: Point3) => {
     // Moving the rig also turns it to keep facing the wearer so it stays readable.
     const camera = latestCameraRef.current?.position ?? null;
-    setRigPose((prev) => (prev ? rigForGrabBarFacing(prev, handleWorld, camera) : prev));
+    setRigPose((prev) =>
+      prev ? rigForGrabBarFacing(prev, handleWorld, camera, handleLocal) : prev
+    );
   }, []);
 
   const handleExit = useCallback(() => {
@@ -207,7 +212,18 @@ export default function QuestMedicalScene() {
           )}
 
           {/* In-Scene Stationary Spatial Controls */}
-          {exiting ? null : (
+          {exiting ? null : session.uiLayer === 'compositor' && !useOriginalControls ? (
+            <QuestCompositorControls
+              context={context}
+              controller={controller}
+              panelPose={rigPose}
+              onRecenter={handleRecenter}
+              onPlaceInFront={handlePlaceInFront}
+              onExit={handleExit}
+              onMoveRig={handleMoveRig}
+              onRenderFailure={showOriginalControls}
+            />
+          ) : (
             <QuestSpatialControls
               context={context}
               controller={controller}

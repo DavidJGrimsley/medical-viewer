@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
+    "quest:build-ui": "node tools/quest/build-compositor.mjs",
     "postinstall": "node tools/compat/prepare-uri-decoder.cjs",
     "android": "expo start --android",
     "ios": "expo start --ios",

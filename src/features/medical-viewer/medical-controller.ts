@@ -296,6 +296,7 @@ export class MedicalController {
     this.volumeDataset = volumeDataset;
     this.isQuest = Boolean(opts.isQuest ?? opts.defaultVolumeRenderer === 'shader');
     if (this.isQuest) {
+      this.snapshot.volume.quality = 'fast';
       this.snapshot.volume.renderer = opts.defaultVolumeRenderer ?? 'shader';
       this.snapshot.volume.debugMode = opts.defaultVolumeDebugMode ?? 'raymarch';
       this.snapshot.volume.magentaConfirmed = true;

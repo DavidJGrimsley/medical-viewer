@@ -6,6 +6,7 @@ export interface QuestMedicalSession {
   sessionId: number;
   context: ARSceneContext;
   controller: MedicalController;
+  uiLayer?: 'viro' | 'compositor';
 }
 
 let activeSession: QuestMedicalSession | null = null;

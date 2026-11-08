@@ -153,12 +153,12 @@ export function computeSpecimenFromRig(
 }
 
 /** New rig position so that the grab bar ends up at `barWorld` (rig yaw is preserved). */
-export function rigPositionForGrabBar(rig: RigPose, barWorld: Point3): Point3 {
-  const offset = rigLocalToWorld({ position: [0, 0, 0], rotation: rig.rotation }, [
-    QUEST_GRAB_BAR_LOCAL_X,
-    QUEST_GRAB_BAR_LOCAL_Y,
-    0,
-  ]);
+export function rigPositionForGrabBar(
+  rig: RigPose,
+  barWorld: Point3,
+  handleLocal: Point3 = [QUEST_GRAB_BAR_LOCAL_X, QUEST_GRAB_BAR_LOCAL_Y, 0]
+): Point3 {
+  const offset = rigLocalToWorld({ position: [0, 0, 0], rotation: rig.rotation }, handleLocal);
   return [barWorld[0] - offset[0], barWorld[1] - offset[1], barWorld[2] - offset[2]];
 }
 
@@ -179,11 +179,12 @@ export function yawFacing(from: Point3, target: Point3): number | null {
 export function rigForGrabBarFacing(
   rig: RigPose,
   handleWorld: Point3,
-  cameraPosition: Point3 | null
+  cameraPosition: Point3 | null,
+  handleLocal?: Point3
 ): RigPose {
   let current = rig;
   for (let i = 0; i < 3; i++) {
-    const position = rigPositionForGrabBar(current, handleWorld);
+    const position = rigPositionForGrabBar(current, handleWorld, handleLocal);
     const yaw = cameraPosition ? yawFacing(position, cameraPosition) : null;
     current = { position, rotation: [0, yaw ?? current.rotation[1], 0] };
   }

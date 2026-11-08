@@ -7,6 +7,7 @@ import { GameButton as Button } from '@/ui/game-button';
 import { useAppTheme } from '@/theme/provider';
 import type { MedicalController } from './medical-controller';
 import QuestMedicalScene, { hasActiveQuestSceneMount } from './quest-medical-scene.native';
+import { hasQuestCompositor } from './quest-compositor-bridge';
 
 export interface QuestMedicalNavigatorProps {
   context: ARSceneContext;
@@ -21,6 +22,9 @@ export default function QuestMedicalNavigator({
 }: QuestMedicalNavigatorProps) {
   const { activeColors: colors } = useAppTheme();
   const [showSetupGuidance, setShowSetupGuidance] = useState(false);
+  const [uiLayer, setUiLayer] = useState<'viro' | 'compositor'>(() =>
+    hasQuestCompositor() ? 'compositor' : 'viro'
+  );
 
   // Register session with the bridge so QuestMedicalScene inside VRActivity can access it
   useEffect(() => {
@@ -28,12 +32,13 @@ export default function QuestMedicalNavigator({
       sessionId: context.sessionId,
       context,
       controller,
+      uiLayer,
     });
 
     return () => {
       questSessionBridge.clearSession(context.sessionId);
     };
-  }, [context, controller]);
+  }, [context, controller, uiLayer]);
 
   return (
     <ViroXRSceneNavigator
@@ -86,6 +91,17 @@ export default function QuestMedicalNavigator({
             ) : null}
 
             <View style={styles.actionRow}>
+              {hasQuestCompositor() ? (
+                <Button
+                  variant="outlined"
+                  color={colors.primary}
+                  textColor={colors.primary}
+                  label={uiLayer === 'compositor' ? 'UI: Headset layer' : 'UI: Original controls'}
+                  onPress={() =>
+                    setUiLayer((current) => (current === 'compositor' ? 'viro' : 'compositor'))
+                  }
+                />
+              ) : null}
               <Button
                 variant="filled"
                 color={colors.primary}

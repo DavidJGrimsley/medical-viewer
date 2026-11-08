@@ -16,6 +16,12 @@ expo-env.d.ts
 
 ios
 android
+!modules/**/android/
+!modules/**/android/**
+modules/**/android/build/
+modules/**/android/.gradle/
+.cache/
+native/quest-compositor/*.aar
 
 # macOS
 .DS_Store

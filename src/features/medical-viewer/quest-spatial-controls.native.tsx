@@ -368,7 +368,7 @@ export interface QuestSpatialControlsProps {
   /** Called when the user chooses Exit VR; the scene owns the safe teardown sequence. */
   onExit?: () => void;
   /** Called with the new world position of the move handle while it is dragged. */
-  onMoveRig?: (handleWorld: Point3) => void;
+  onMoveRig?: (handleWorld: Point3, handleLocal?: Point3) => void;
 }
 
 const HANDLE_RESET_IDLE_MS = 600;
