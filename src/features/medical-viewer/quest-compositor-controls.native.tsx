@@ -55,27 +55,18 @@ function DragTarget({
   rotation: Point3;
   onDrag: (world: Point3) => void;
   onDragStart?: (world: Point3) => void;
-  onDragEnd?: () => void;
+  onDragEnd?: (world?: Point3) => void;
   freezeDuringDrag?: boolean;
   width?: number;
   height?: number;
 }) {
   const [resetKey, setResetKey] = useState(0);
   const [dragOrigin, setDragOrigin] = useState<Point3 | null>(null);
-  const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reset = () => {
-    if (idle.current) clearTimeout(idle.current);
-    idle.current = null;
+  const reset = (world?: Point3) => {
     setDragOrigin(null);
-    onDragEnd?.();
+    onDragEnd?.(world);
     setResetKey((key) => key + 1);
   };
-  useEffect(
-    () => () => {
-      if (idle.current) clearTimeout(idle.current);
-    },
-    []
-  );
   return (
     <ViroNode key={resetKey} position={dragOrigin ?? position} rotation={rotation}>
       <ViroQuad
@@ -87,13 +78,12 @@ function DragTarget({
           if (!world.every(Number.isFinite)) return;
           if (freezeDuringDrag && !dragOrigin) setDragOrigin(position);
           onDrag(world);
-          if (idle.current) clearTimeout(idle.current);
-          idle.current = setTimeout(reset, 600);
         }}
         onClickState={(clickState, world) => {
           if (clickState === 1 && world?.length === 3 && world.every(Number.isFinite))
             onDragStart?.(world);
-          if (clickState >= 2) reset();
+          if (clickState === 2)
+            reset(world?.length === 3 && world.every(Number.isFinite) ? world : undefined);
         }}
       />
     </ViroNode>
@@ -131,7 +121,10 @@ function SliderTarget({
       onDrag={(world) =>
         onSlide(sliderValueWhileDragging(slider, logicalX(world), initialHitX.current))
       }
-      onDragEnd={onEnd}
+      onDragEnd={(world) => {
+        if (world) onSlide(sliderValueAtX(slider, logicalX(world)));
+        onEnd();
+      }}
     />
   );
 }
