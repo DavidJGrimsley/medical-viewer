@@ -6,20 +6,30 @@ import {
   useAnySourceHover,
   useAnySourcePressed,
 } from '@reactvision/react-viro';
-import { rigLocalToWorld, rigWorldToLocalX, type Point3 } from '@/features/ar/quest-spatial-math';
+import {
+  rigLocalToWorld,
+  rigWorldToLocalX,
+  type Point3,
+  type RigPose,
+} from '@/features/ar/quest-spatial-math';
 import { MEDICAL_DIAGNOSTICS_ENABLED } from './medical-diagnostics';
 import {
   buildQuestCompositorPanel,
   type QuestPanelItem,
   type QuestPanelPage,
+  type QuestPanelSlider,
 } from './quest-compositor-panel';
 import type { QuestSpatialControlsProps } from './quest-spatial-controls.native';
 import {
   panelItemLocal,
   panelImagePosition,
   sliderValueAtX,
+  sliderValueWhileDragging,
   QUEST_PANEL_WIDTH_M,
   QUEST_PANEL_UNIT_M,
+  QUEST_PANEL_SIDEBAR_X,
+  QUEST_PANEL_SIDEBAR_WIDTH,
+  QUEST_PANEL_SIDEBAR_HEIGHT,
 } from './quest-compositor-layout';
 import { questCompositor } from './quest-compositor-bridge';
 import { questCompositorMaterials } from './quest-compositor-materials';
@@ -35,6 +45,7 @@ function DragTarget({
   position,
   rotation,
   onDrag,
+  onDragStart,
   onDragEnd,
   freezeDuringDrag = false,
   width = 0.06,
@@ -43,6 +54,7 @@ function DragTarget({
   position: Point3;
   rotation: Point3;
   onDrag: (world: Point3) => void;
+  onDragStart?: (world: Point3) => void;
   onDragEnd?: () => void;
   freezeDuringDrag?: boolean;
   width?: number;
@@ -78,11 +90,49 @@ function DragTarget({
           if (idle.current) clearTimeout(idle.current);
           idle.current = setTimeout(reset, 600);
         }}
-        onClickState={(clickState) => {
+        onClickState={(clickState, world) => {
+          if (clickState === 1 && world?.length === 3 && world.every(Number.isFinite))
+            onDragStart?.(world);
           if (clickState >= 2) reset();
         }}
       />
     </ViroNode>
+  );
+}
+
+// The full track is draggable. Viro reports movement of the target's centre,
+// so retain where the ray first touched the track as an offset.
+function SliderTarget({
+  slider,
+  panelPose,
+  height,
+  onSlide,
+  onEnd,
+}: {
+  slider: QuestPanelSlider;
+  panelPose: RigPose;
+  height: number;
+  onSlide: (value: number) => void;
+  onEnd: () => void;
+}) {
+  const initialHitX = useRef(slider.x + slider.width / 2);
+  const logicalX = (world: Point3) => (rigWorldToLocalX(panelPose, world) / WIDTH + 0.5) * 1000;
+  const center = { x: slider.x + slider.width / 2, y: slider.y };
+  return (
+    <DragTarget
+      freezeDuringDrag
+      position={rigLocalToWorld(panelPose, panelItemLocal(center, height, 0.014))}
+      rotation={panelPose.rotation}
+      width={(slider.width / 1000) * WIDTH}
+      onDragStart={(world) => {
+        initialHitX.current = logicalX(world);
+        onSlide(sliderValueAtX(slider, logicalX(world)));
+      }}
+      onDrag={(world) =>
+        onSlide(sliderValueWhileDragging(slider, logicalX(world), initialHitX.current))
+      }
+      onDragEnd={onEnd}
+    />
   );
 }
 
@@ -134,6 +184,39 @@ export function QuestCompositorControls({
   const [slicePreview, setSlicePreview] = useState<number | null>(null);
   const lastSliceUpdate = useRef(0);
   const pendingSlice = useRef<{ value: number; apply: (value: number) => void } | null>(null);
+  const sliceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sliceDragging = useRef(false);
+  const scheduleSlice = useCallback(() => {
+    if (sliceTimer.current || !pendingSlice.current) return;
+    const flush = () => {
+      sliceTimer.current = null;
+      const pending = pendingSlice.current;
+      if (!pending) return;
+      const current = controller.getSnapshot();
+      if (current.mode !== 'slices') {
+        pendingSlice.current = null;
+        setSlicePreview(null);
+        return;
+      }
+      // Finish the current image before loading the newest requested slice.
+      const delay = Math.max(0, 100 - (Date.now() - lastSliceUpdate.current));
+      if (current.slices.loadStatus === 'loading' || delay > 0) {
+        sliceTimer.current = setTimeout(flush, Math.max(30, delay));
+        return;
+      }
+      pendingSlice.current = null;
+      pending.apply(pending.value);
+      lastSliceUpdate.current = Date.now();
+      if (!sliceDragging.current) setSlicePreview(null);
+    };
+    sliceTimer.current = setTimeout(flush, 0);
+  }, [controller]);
+  useEffect(
+    () => () => {
+      if (sliceTimer.current) clearTimeout(sliceTimer.current);
+    },
+    []
+  );
   const sessionId = context.sessionId;
   const { items, sliders, grabBar, height, heightM, bodyHeight, bodyHeightM, bodyCenterY } =
     buildQuestCompositorPanel({
@@ -198,7 +281,6 @@ export function QuestCompositorControls({
     }, 1000);
     return () => clearInterval(timer);
   }, [onRenderFailure]);
-  const logicalX = (world: Point3) => (rigWorldToLocalX(panelPose!, world) / WIDTH + 0.5) * 1000;
   if (!panelPose) return null;
   const grabLocal = panelItemLocal(grabBar, height, 0.012);
   return (
@@ -212,32 +294,27 @@ export function QuestCompositorControls({
       {sliders
         .filter((slider) => !slider.disabled)
         .map((slider) => {
-          const thumb = items.find((item) => item.id === slider.id + '-thumb')!;
           return (
-            <DragTarget
+            <SliderTarget
               key={slider.id}
-              freezeDuringDrag
-              position={rigLocalToWorld(panelPose, panelItemLocal(thumb, height, 0.014))}
-              rotation={panelPose.rotation}
-              onDrag={(world) => {
-                const value = sliderValueAtX(slider, logicalX(world));
+              slider={slider}
+              panelPose={panelPose}
+              height={height}
+              onSlide={(value) => {
                 if (slider.id !== 'slice') {
                   slider.onChange(value);
                   return;
                 }
+                sliceDragging.current = true;
                 setSlicePreview(value);
                 pendingSlice.current = { value, apply: slider.onChange };
-                const now = Date.now();
-                if (now - lastSliceUpdate.current >= 100) {
-                  slider.onChange(value);
-                  lastSliceUpdate.current = now;
-                }
+                scheduleSlice();
               }}
-              onDragEnd={() => {
-                if (slider.id !== 'slice' || !pendingSlice.current) return;
-                pendingSlice.current.apply(pendingSlice.current.value);
-                pendingSlice.current = null;
-                setSlicePreview(null);
+              onEnd={() => {
+                if (slider.id !== 'slice') return;
+                sliceDragging.current = false;
+                if (pendingSlice.current) scheduleSlice();
+                else setSlicePreview(null);
               }}
             />
           );
@@ -251,23 +328,21 @@ export function QuestCompositorControls({
           renderingOrder={-100}
           ignoreEventHandling
         />
-        {sliders
-          .filter((slider) => !slider.disabled)
-          .map((slider) => (
-            <ViroQuad
-              key={slider.id + '-track-hit'}
-              position={panelItemLocal(
-                { x: slider.x + slider.width / 2, y: slider.y },
-                height,
-                0.006
-              )}
-              width={(slider.width / 1000) * WIDTH}
-              height={56 * QUEST_PANEL_UNIT_M}
-              materials="questCompositorHit"
-              renderingOrder={-99}
-              onClick={(world) => slider.onChange(sliderValueAtX(slider, logicalX(world)))}
-            />
-          ))}
+        <ViroQuad
+          position={panelItemLocal(
+            {
+              x: QUEST_PANEL_SIDEBAR_X + QUEST_PANEL_SIDEBAR_WIDTH / 2,
+              y: QUEST_PANEL_SIDEBAR_HEIGHT / 2,
+            },
+            height,
+            0
+          )}
+          width={(QUEST_PANEL_SIDEBAR_WIDTH / 1000) * WIDTH}
+          height={QUEST_PANEL_SIDEBAR_HEIGHT * QUEST_PANEL_UNIT_M}
+          materials="questCompositorMask"
+          renderingOrder={-100}
+          ignoreEventHandling
+        />
         {items
           .filter((item) => item.action && !item.disabled)
           .map((item) => (

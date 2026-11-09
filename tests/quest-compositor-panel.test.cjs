@@ -15,6 +15,7 @@ const {
   panelItemLocal,
   panelImagePosition,
   sliderValueAtX,
+  sliderValueWhileDragging,
   rotationSliderValue,
   QUEST_PANEL_BASE_Y,
 } = require('../src/features/medical-viewer/quest-compositor-layout.ts');
@@ -157,6 +158,33 @@ test('rotation sliders cover the full turn, clamp pointer travel and do not wrap
   assert.equal(rotationSliderValue(-1000), -180);
 });
 
+test('dragging from anywhere on a slider follows the original contact point', () => {
+  const slider = { x: 80, width: 840, min: 0, max: 100 };
+  assert.equal(sliderValueWhileDragging(slider, 500, 80), 0);
+  assert.equal(sliderValueWhileDragging(slider, 710, 80), 25);
+  assert.equal(sliderValueWhileDragging(slider, 290, 920), 75);
+  assert.equal(sliderValueWhileDragging(slider, 2000, 500), 100);
+});
+
+test('the compact main panel keeps its bottom position and the secondary controls sit to its right', () => {
+  const h = harness();
+  for (const mode of ['anatomy', 'slices', 'volume']) {
+    h.click(mode);
+    h.ready();
+    const panel = h.panel();
+    assert.ok(panel.height <= 680);
+    assert.equal(
+      panelItemLocal(panel.grabBar, panel.height)[1],
+      panelItemLocal({ x: 500, y: 656 }, 680)[1]
+    );
+    for (const id of ['reset-transform', 'reposition', 'exit']) {
+      const button = panel.items.find((item) => item.id === id);
+      assert.ok(button.x - button.width / 2 >= 1040, id);
+      assert.ok(button.y + button.height / 2 <= 340, id);
+    }
+  }
+});
+
 test('anatomy labels are on the main panel below transforms', () => {
   const h = harness();
   h.click('skull');
@@ -295,9 +323,9 @@ test('main and appearance controls fit their backgrounds without overlapping but
   const check = () => {
     const p = h.panel();
     for (const i of p.items) {
-      assert.ok(i.x - i.width / 2 >= 0 && i.x + i.width / 2 <= 1000, i.id);
+      assert.ok(i.x - i.width / 2 >= 0 && i.x + i.width / 2 <= 1450, i.id);
       assert.ok(i.y - i.height / 2 >= 0 && i.y + i.height / 2 <= p.height, i.id);
-      if (i.action) assert.ok(i.y + i.height / 2 <= p.bodyHeight, i.id);
+      if (i.action) assert.ok(i.y + i.height / 2 <= (i.x > 1000 ? 340 : p.bodyHeight), i.id);
     }
     const controls = p.items
       .filter((i) => i.action)
@@ -325,6 +353,8 @@ test('main and appearance controls fit their backgrounds without overlapping but
   for (const mode of ['anatomy', 'slices', 'volume']) {
     h.click(mode);
     h.ready();
+    assert.ok(h.panel().items.find((item) => item.id === 'exit').x > 1000);
+    assert.ok(h.panel().items.find((item) => item.id === 'reposition').x > 1000);
     check();
     if (mode === 'volume') {
       h.click('navigation');

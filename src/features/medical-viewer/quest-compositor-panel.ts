@@ -14,7 +14,12 @@ import {
   MIN_AR_HEIGHT,
   MAX_AR_HEIGHT,
 } from '../ar/ar-transform.ts';
-import { panelGeometry, rotationSliderValue } from './quest-compositor-layout.ts';
+import {
+  panelGeometry,
+  rotationSliderValue,
+  QUEST_PANEL_SIDEBAR_X,
+  QUEST_PANEL_SIDEBAR_WIDTH,
+} from './quest-compositor-layout.ts';
 
 export type QuestPanelPage = 'main' | 'appearance' | 'diagnostics';
 export interface QuestPanelItem {
@@ -59,7 +64,19 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
   const { controller, sessionId, setPage, onPlaceInFront } = options;
   const state = options.snapshot ?? controller.getSnapshot();
   const page = !state.anchorId || state.mode !== 'volume' ? 'main' : options.page;
-  const height = state.anchorId ? 880 : 625;
+  const height = !state.anchorId
+    ? 625
+    : page !== 'main'
+      ? 800
+      : (state.mode === 'anatomy' && state.loadStatus === 'error') ||
+          (state.mode === 'volume' &&
+            (state.volume.loadStatus === 'error' ||
+              state.volume.renderer !== 'shader' ||
+              state.volume.debugMode !== 'raymarch'))
+        ? 700
+        : state.mode === 'volume'
+          ? 600
+          : 680;
   const geometry = panelGeometry(height);
   const items: QuestPanelItem[] = [];
   const sliders: QuestPanelSlider[] = [];
@@ -295,7 +312,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
             'retry-anatomy',
             'Retry loading anatomy',
             500,
-            650,
+            605,
             900,
             () => controller.retryLoad(sessionId),
             false,
@@ -329,7 +346,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
             `slice-step-${step}`,
             ['−5', 'Previous', 'Next', '+5'][index],
             137 + index * 242,
-            650,
+            570,
             220,
             () => controller.selectSlice(sliceScope, state.slices.index + step),
             false,
@@ -343,7 +360,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
             'normal-volume',
             'Return to 3D scan',
             500,
-            650,
+            605,
             900,
             () => controller.showVolumeAnatomy(sessionId),
             false,
@@ -355,7 +372,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
             'retry-volume',
             'Retry loading volume',
             500,
-            650,
+            605,
             900,
             () => controller.retryVolumeLoad(sessionId),
             false,
@@ -363,37 +380,6 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
             50
           );
       }
-      const actions: [string, string, () => void, boolean][] = [
-        ['reset-transform', 'Reset view', resetTransform, !canTransform],
-        [
-          'reposition',
-          'Reposition',
-          () => {
-            setPage('main');
-            controller.reposition(sessionId);
-          },
-          false,
-        ],
-      ];
-      if (state.mode === 'slices')
-        actions.push(
-          state.slices.loadStatus === 'error'
-            ? ['retry-slice', 'Retry slice', () => controller.retrySliceLoad(sessionId), false]
-            : ['reset-slice', 'Reset slice', () => controller.resetSlice(sessionId), false]
-        );
-      actions.forEach(([id, label, action, disabled], index) =>
-        button(
-          id,
-          label,
-          actions.length === 3 ? 175 + index * 325 : 255 + index * 490,
-          705,
-          actions.length === 3 ? 300 : 440,
-          action,
-          false,
-          disabled,
-          46
-        )
-      );
     } else if (page === 'appearance') {
       (['balanced', 'fast'] as const).forEach((quality, index) =>
         button(
@@ -488,31 +474,40 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
       });
     }
   }
-  const footerY = state.anchorId ? 765 : 510;
-  const hasNavigation = !!state.anchorId && state.mode === 'volume';
-  if (hasNavigation)
-    button(
-      'navigation',
-      page === 'main' ? 'More controls' : 'Back',
-      255,
-      footerY,
-      440,
-      () =>
-        setPage(page === 'main' ? 'appearance' : page === 'diagnostics' ? 'appearance' : 'main'),
+  // The secondary panel shares the compositor texture, with a transparent gap
+  // between it and the primary controls. Its top stays aligned with the main panel.
+  const sidebarX = QUEST_PANEL_SIDEBAR_X + QUEST_PANEL_SIDEBAR_WIDTH / 2;
+  const sidebarWidth = QUEST_PANEL_SIDEBAR_WIDTH - 40;
+  const actions: [string, string, () => void, boolean][] = [];
+  if (state.anchorId) {
+    actions.push(['reset-transform', 'Reset view', resetTransform, !canTransform]);
+    actions.push([
+      'reposition',
+      'Reposition',
+      () => {
+        setPage('main');
+        controller.reposition(sessionId);
+      },
       false,
-      false,
-      50
-    );
-  button(
-    'exit',
-    'Exit VR',
-    hasNavigation ? 745 : 500,
-    footerY,
-    hasNavigation ? 440 : 900,
-    () => options.onExit?.(),
-    false,
-    false,
-    50
+    ]);
+    if (state.mode === 'slices')
+      actions.push(
+        state.slices.loadStatus === 'error'
+          ? ['retry-slice', 'Retry slice', () => controller.retrySliceLoad(sessionId), false]
+          : ['reset-slice', 'Reset slice', () => controller.resetSlice(sessionId), false]
+      );
+    if (state.mode === 'volume')
+      actions.push([
+        'navigation',
+        page === 'main' ? 'More controls' : 'Back',
+        () =>
+          setPage(page === 'main' ? 'appearance' : page === 'diagnostics' ? 'appearance' : 'main'),
+        false,
+      ]);
+  }
+  actions.push(['exit', 'Exit VR', () => options.onExit?.(), false]);
+  actions.forEach(([id, label, action, disabled], index) =>
+    button(id, label, sidebarX, 45 + index * 76, sidebarWidth, action, false, disabled, 58)
   );
   const grabBar: QuestPanelItem = {
     id: 'grab-bar',

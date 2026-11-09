@@ -81,8 +81,7 @@ export default function QuestMedicalNavigator({
                   actions.
                 </Text>
                 <Text style={styles.detailText}>
-                  • Use Place In Front or tap a highlighted surface to place models; drag the white
-                  bar to move the console.
+                  • Use Place In Front to place models; drag the white bar to move the console.
                 </Text>
                 <Text style={styles.detailText}>
                   • The control panel stays stationary in your room once opened.

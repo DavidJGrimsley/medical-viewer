@@ -48,14 +48,15 @@ Java_expo_modules_questpanel_QuestPanelModule_nativePose(JNIEnv *env, jobject, j
 
 extern "C" JNIEXPORT void JNICALL
 Java_expo_modules_questpanel_QuestPanelModule_nativeDraw(
-        JNIEnv *env, jobject, jbyteArray rgba, jint width, jint height, jfloat heightM) {
+        JNIEnv *env, jobject, jbyteArray rgba, jint width, jint height, jfloat widthM, jfloat heightM) {
     if (width < 1 || height < 1 || width > 4096 || height > 4096 ||
         env->GetArrayLength(rgba) != width * height * 4 ||
+        !std::isfinite(widthM) || widthM <= 0 || widthM > 2 ||
         !std::isfinite(heightM) || heightM <= 0 || heightM > 2) return;
     std::lock_guard<std::mutex> lock(medical_panel::state.mutex);
     auto &s = medical_panel::state;
     s.width = width; s.height = height;
-    s.heightM = heightM;
+    s.widthM = widthM; s.heightM = heightM;
     s.pixels.resize(width * height * 4);
     // Canvas has a top-left origin; OpenGL textures have a bottom-left origin.
     for (int y = 0; y < height; ++y) {

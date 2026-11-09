@@ -21,6 +21,7 @@ import { volumeDiagnosticShader, medicalNativeError } from './medical-volume-dia
 import { isViroImageLoadSuccess } from './medical-image-events.native';
 import stackMetadata from '../../../assets/medical/stack/metadata.json';
 import MedicalVolumeStack from './medical-volume-stack.native';
+import { QUEST_VOLUME_SCALE } from './quest-display-scale';
 
 const MATERIAL = 'medicalVolume';
 function uniforms(values: Record<string, number | number[]>): ViroShaderUniform[] {
@@ -198,7 +199,11 @@ function useVolumeRendering({ context, controller }: MedicalSceneProps, state: M
   ]);
   return { scope, series, magenta, materialKey, materialReady, proxyVisible, showProxy };
 }
-export default function MedicalVolume({ context, controller }: MedicalSceneProps) {
+export default function MedicalVolume({
+  context,
+  controller,
+  isQuest = false,
+}: MedicalSceneProps & { isQuest?: boolean }) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const { volume } = state;
   const dataset = controller.volumeDataset;
@@ -224,7 +229,9 @@ export default function MedicalVolume({ context, controller }: MedicalSceneProps
     <ViroNode
       position={[volume.x, volume.height, volume.z]}
       rotation={[0, volume.yaw, 0]}
-      scale={[volume.scale, volume.scale, volume.scale]}
+      scale={
+        Array(3).fill(volume.scale * (isQuest ? QUEST_VOLUME_SCALE : 1)) as [number, number, number]
+      }
       onPinch={
         interactive
           ? (gesture, value) => controller.volumeGesture(scope, 'pinch', gesture, value)

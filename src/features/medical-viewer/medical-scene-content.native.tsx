@@ -27,6 +27,7 @@ import { MEDICAL_ASSET_SOURCES } from './medical-asset-sources.native';
 import calibration from '../../../assets/medical/skull-labels.json';
 import MedicalVolume from './medical-volume.native';
 import { isViroImageLoadSuccess } from './medical-image-events.native';
+import { QUEST_ANATOMY_SCALE, QUEST_SLICE_SCALE } from './quest-display-scale';
 
 export const QUEST_WORLD_ANCHOR_ID = 'quest-world-anchor';
 
@@ -45,7 +46,7 @@ export interface MedicalSceneContentProps {
   worldAnchorPose?: { position: Point3; rotation: [number, number, number] } | null;
 }
 
-function MedicalModels({ context, controller }: MedicalSceneContentProps) {
+function MedicalModels({ context, controller, isQuest = false }: MedicalSceneContentProps) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const scope: MedicalScope = {
     sessionId: context.sessionId,
@@ -79,13 +80,14 @@ function MedicalModels({ context, controller }: MedicalSceneContentProps) {
   ]);
 
   const interactive = canManipulateMedical(state);
+  const displayScale = state.scale * (isQuest ? QUEST_ANATOMY_SCALE : 1);
   if (!state.anchorId || state.loadStatus === 'error') return null;
 
   return (
     <ViroNode
       position={[state.x, state.height, state.z]}
       rotation={[0, state.yaw, 0]}
-      scale={[state.scale, state.scale, state.scale]}
+      scale={[displayScale, displayScale, displayScale]}
       onPinch={
         interactive ? (gesture, factor) => controller.pinch(scope, gesture, factor) : undefined
       }
@@ -112,20 +114,20 @@ function MedicalModels({ context, controller }: MedicalSceneContentProps) {
         ? calibration.labels.map((label) => {
             const position: Point3 = [
               Math.sign(label.position[0]) *
-                (Math.abs(label.position[0]) + 0.07 * (1 / state.scale - 1)),
+                (Math.abs(label.position[0]) + 0.07 * (1 / displayScale - 1)),
               label.position[1],
               label.position[2],
             ];
             return (
               <ViroNode key={label.name} ignoreEventHandling>
                 <ViroSphere
-                  radius={0.0015 / state.scale}
+                  radius={0.0015 / displayScale}
                   position={label.anchor as Point3}
                   materials={['medicalLeader']}
                 />
                 <ViroPolyline
                   points={[label.anchor as Point3, position]}
-                  thickness={0.0007 / state.scale}
+                  thickness={0.0007 / displayScale}
                   materials={['medicalLeader']}
                 />
                 <ViroText
@@ -133,7 +135,7 @@ function MedicalModels({ context, controller }: MedicalSceneContentProps) {
                   position={position}
                   width={5}
                   height={1}
-                  scale={[0.028 / state.scale, 0.028 / state.scale, 0.028 / state.scale]}
+                  scale={[0.028 / displayScale, 0.028 / displayScale, 0.028 / displayScale]}
                   transformBehaviors={['billboard']}
                   extrusionDepth={0.004}
                   materials={['medicalLabel', 'medicalLabel', 'medicalLabel']}
@@ -157,6 +159,7 @@ function MedicalModels({ context, controller }: MedicalSceneContentProps) {
 function MedicalSlicePanel({ context, controller, isQuest = false }: MedicalSceneContentProps) {
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const { slices } = state;
+  const displayScale = slices.scale * (isQuest ? QUEST_SLICE_SCALE : 1);
   const series = controller.getSliceSeries();
   const source = medicalSliceSource(slices.modality, slices.orientation, slices.index);
   // Last slice that finished loading. It stays visible while the next one loads, and the
@@ -199,7 +202,7 @@ function MedicalSlicePanel({ context, controller, isQuest = false }: MedicalScen
     <ViroNode
       position={[slices.x, slices.height, slices.z]}
       rotation={[0, slices.yaw, 0]}
-      scale={[slices.scale, slices.scale, slices.scale]}
+      scale={[displayScale, displayScale, displayScale]}
       onPinch={
         interactive
           ? (gesture, factor) => controller.panelGesture(scope, 'pinch', gesture, factor)
@@ -298,7 +301,7 @@ export function MedicalSceneContent({
     ) : state.mode === 'slices' ? (
       <MedicalSlicePanel context={context} controller={controller} isQuest={isQuest} />
     ) : (
-      <MedicalVolume context={context} controller={controller} />
+      <MedicalVolume context={context} controller={controller} isQuest={isQuest} />
     );
 
   const isWorldAnchored = Boolean(

@@ -156,6 +156,7 @@ function loadMedicalVolume(viro) {
     './medical-image-events.native': require('../src/features/medical-viewer/medical-image-events-core.ts'),
     '../../../assets/medical/stack/metadata.json': require('../assets/medical/stack/metadata.json'),
     './medical-volume-stack.native': { default: 'MedicalVolumeStack' },
+    './quest-display-scale': require('../src/features/medical-viewer/quest-display-scale.ts'),
   };
   const module = { exports: {} };
   const file = path.resolve(__dirname, '../src/features/medical-viewer/medical-volume.native.tsx');
@@ -248,6 +249,16 @@ function finishAtlases(h, viro, volume) {
 }
 
 const whiteFrames = (viro) => viro.frames.filter((frame) => frame.material !== 'shader');
+
+test('Quest volume uses the smaller baseline while retaining a 1.0 controller scale', () => {
+  const viro = viroAndroid();
+  const h = loadMedicalVolume(viro);
+  const volume = questVolume();
+  const tree = h.render({ ...volume.props, isQuest: true });
+  const node = find(tree, 'ViroNode').find((item) => item.props.scale);
+  assert.equal(volume.controller.getSnapshot().volume.scale, 1);
+  assert.deepEqual(Array.from(node.props.scale), [0.75, 0.75, 0.75]);
+});
 
 test('without the material-queue barrier the override misses and the box stays white', () => {
   const viro = viroAndroid({ appState: false });

@@ -2,6 +2,10 @@ import { rigLocalToWorld, type Point3, type RigPose } from '../ar/quest-spatial-
 
 export const QUEST_PANEL_WIDTH_M = 0.92;
 export const QUEST_PANEL_LOGICAL_WIDTH = 1000;
+export const QUEST_PANEL_TOTAL_WIDTH = 1450;
+export const QUEST_PANEL_SIDEBAR_X = 1040;
+export const QUEST_PANEL_SIDEBAR_WIDTH = 410;
+export const QUEST_PANEL_SIDEBAR_HEIGHT = 340;
 export const QUEST_PANEL_UNIT_M = 0.52 / 565;
 export const QUEST_PANEL_BASE_Y = -0.26;
 export const QUEST_PANEL_GRAB_SPACE = 60;
@@ -26,7 +30,11 @@ export function panelItemLocal(item: { x: number; y: number }, height: number, z
 }
 
 export function panelImagePosition(rig: RigPose, height: number): Point3 {
-  return rigLocalToWorld(rig, [0, panelGeometry(height).imageCenterY, 0]);
+  return rigLocalToWorld(rig, [
+    ((QUEST_PANEL_TOTAL_WIDTH - QUEST_PANEL_LOGICAL_WIDTH) / 2000) * QUEST_PANEL_WIDTH_M,
+    panelGeometry(height).imageCenterY,
+    0,
+  ]);
 }
 
 export function sliderValueAtX(
@@ -35,6 +43,14 @@ export function sliderValueAtX(
 ) {
   const t = Math.max(0, Math.min(1, (x - slider.x) / slider.width));
   return slider.min + t * (slider.max - slider.min);
+}
+
+export function sliderValueWhileDragging(
+  slider: { x: number; width: number; min: number; max: number },
+  targetX: number,
+  initialHitX: number
+) {
+  return sliderValueAtX(slider, targetX + initialHitX - (slider.x + slider.width / 2));
 }
 
 // Positive 180° and negative 180° have the same orientation. Stay just below
