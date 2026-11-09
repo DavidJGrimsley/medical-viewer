@@ -127,7 +127,7 @@ test('Quest defaults and reset view use the requested heights in every mode', ()
   for (const [mode, height] of [
     ['anatomy', 0.41],
     ['slices', 0.56],
-    ['volume', 0.41],
+    ['volume', 0.51],
   ]) {
     h.click(mode);
     h.ready();
