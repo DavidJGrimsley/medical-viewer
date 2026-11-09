@@ -1,0 +1,1 @@
+-keep class expo.modules.questpanel.QuestPanelModule { *; }

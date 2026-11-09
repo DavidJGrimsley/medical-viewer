@@ -38,7 +38,8 @@
           },
           "provider": "none"
         }
-      ]
+      ],
+      "./plugins/with-full-resolution-fresco"
     ],
     "experiments": {
       "typedRoutes": true,

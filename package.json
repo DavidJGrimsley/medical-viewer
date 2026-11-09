@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
+    "quest:build-ui": "node tools/quest/build-compositor.mjs",
     "postinstall": "node tools/compat/prepare-uri-decoder.cjs",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -13,7 +14,8 @@
     "expo-install-fix": "npx expo install --fix",
     "expo-doctor": "npx expo-doctor",
     "post-create-check": "npx expo install --fix && npx expo-doctor",
-    "test": "npm run lint && npm run typecheck && npm run test:ar && npm run test:app && npm run test:ui && npm run test:dependencies",
+    "test": "npm run lint && npm run typecheck && npm run test:ar && npm run test:app && npm run test:quest && npm run test:ui && npm run test:dependencies",
+    "test:quest": "node --experimental-strip-types --test tests/quest-*.test.cjs",
     "test:dependencies": "node --test tests/dependency-compat.test.cjs",
     "test:ui": "node --experimental-strip-types --test tests/game-ui.test.cjs",
     "test:ar": "node --experimental-strip-types --test tests/ar-session.test.cjs",

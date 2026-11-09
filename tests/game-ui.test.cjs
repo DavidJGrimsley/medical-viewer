@@ -136,7 +136,7 @@ test('home actions retain the standalone app route and follow the measured viewp
   let measuredWidth = null;
   const catalog = load('features/experiences/experience-catalog.ts').experiences;
   assert.equal(catalog.length, 1);
-  assert.equal(catalog[0].route, "medical-viewer");
+  assert.equal(catalog[0].route, 'medical-viewer');
   const Home = load('features/home/home-screen.tsx', {
     react: { useState: () => [measuredWidth, (value) => (measuredWidth = value)] },
     'expo-router': { router: { navigate: (route) => routes.push(route) } },
@@ -468,6 +468,8 @@ test('game AR customization is opt-in and preserves the default medical status p
       AppState: { currentState: 'active' },
     },
     './ar-runtime.native': {},
+    './quest-device': { isQuestDevice: () => false, hasOpenXRSupport: () => false },
+    './quest-runtime': { questARRuntime: {} },
     './ar-activation': { shouldActivateAR: () => true },
     './ar-session-controller': {
       ARSessionController: class {
