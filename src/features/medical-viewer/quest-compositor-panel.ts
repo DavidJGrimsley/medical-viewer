@@ -7,6 +7,7 @@ import {
   type MedicalSnapshot,
 } from './medical-controller.ts';
 import { MEDICAL_MODELS, hasMedicalLabels } from './medical-models.ts';
+import { QUEST_ANATOMY_HEIGHT } from './quest-default-heights.ts';
 import {
   DEFAULT_AR_HEIGHT,
   MIN_AR_SCALE,
@@ -64,19 +65,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
   const { controller, sessionId, setPage, onPlaceInFront } = options;
   const state = options.snapshot ?? controller.getSnapshot();
   const page = !state.anchorId || state.mode !== 'volume' ? 'main' : options.page;
-  const height = !state.anchorId
-    ? 625
-    : page !== 'main'
-      ? 800
-      : (state.mode === 'anatomy' && state.loadStatus === 'error') ||
-          (state.mode === 'volume' &&
-            (state.volume.loadStatus === 'error' ||
-              state.volume.renderer !== 'shader' ||
-              state.volume.debugMode !== 'raymarch'))
-        ? 700
-        : state.mode === 'volume'
-          ? 600
-          : 680;
+  const height = state.anchorId ? 680 : 625;
   const geometry = panelGeometry(height);
   const items: QuestPanelItem[] = [];
   const sliders: QuestPanelSlider[] = [];
@@ -128,7 +117,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
   const resetTransform = () => {
     if (state.mode === 'anatomy') {
       controller.setScale(scope, 1);
-      controller.setHeight(scope, DEFAULT_AR_HEIGHT);
+      controller.setHeight(scope, controller.isQuest ? QUEST_ANATOMY_HEIGHT : DEFAULT_AR_HEIGHT);
       controller.setYaw(scope, 0);
     } else if (state.mode === 'slices') controller.resetPanel(sessionId);
     else controller.resetVolumeTransform(sessionId);
@@ -202,7 +191,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
   );
   text(
     'status',
-    medicalStatus(state) || (state.anchorId ? 'Ready' : 'Place the scan to begin'),
+    state.anchorId ? medicalStatus(state) || 'Ready' : 'Place in front to begin',
     88,
     23
   );
@@ -268,7 +257,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
       stepper(
         'scale',
         `Size ${transform.scale.toFixed(2)}×`,
-        305,
+        state.mode === 'volume' ? 320 : 305,
         () => changeTransform('scale', transform.scale - 0.1),
         () => changeTransform('scale', transform.scale + 0.1),
         !canTransform || transform.scale <= MIN_AR_SCALE,
@@ -277,7 +266,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
       stepper(
         'height',
         `Height ${Math.round(transform.height * 100)} cm`,
-        380,
+        state.mode === 'volume' ? 410 : 380,
         () => changeTransform('height', transform.height - 0.05),
         () => changeTransform('height', transform.height + 0.05),
         !canTransform || transform.height <= MIN_AR_HEIGHT,
@@ -289,7 +278,13 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
         slider(
           'rotation',
           `Rotation ${Math.round(transform.yaw)}°`,
-          490,
+          state.mode === 'volume'
+            ? state.volume.loadStatus === 'error' ||
+              state.volume.renderer !== 'shader' ||
+              state.volume.debugMode !== 'raymarch'
+              ? 525
+              : 545
+            : 490,
           -180,
           180,
           transform.yaw,
@@ -297,22 +292,23 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
           !canTransform
         );
       if (state.mode === 'anatomy') {
-        button(
-          'labels',
-          `Labels: ${state.labelsVisible ? 'on' : 'off'}`,
-          500,
-          570,
-          900,
-          () => controller.toggleLabels(sessionId),
-          state.labelsVisible,
-          !canManipulateMedical(state) || !hasMedicalLabels(state.modelId)
-        );
+        if (state.loadStatus !== 'error')
+          button(
+            'labels',
+            `Labels: ${state.labelsVisible ? 'on' : 'off'}`,
+            500,
+            570,
+            900,
+            () => controller.toggleLabels(sessionId),
+            state.labelsVisible,
+            !canManipulateMedical(state) || !hasMedicalLabels(state.modelId)
+          );
         if (state.loadStatus === 'error')
           button(
             'retry-anatomy',
             'Retry loading anatomy',
             500,
-            605,
+            570,
             900,
             () => controller.retryLoad(sessionId),
             false,
@@ -360,7 +356,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
             'normal-volume',
             'Return to 3D scan',
             500,
-            605,
+            590,
             900,
             () => controller.showVolumeAnatomy(sessionId),
             false,
@@ -372,7 +368,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
             'retry-volume',
             'Retry loading volume',
             500,
-            605,
+            590,
             900,
             () => controller.retryVolumeLoad(sessionId),
             false,
@@ -415,7 +411,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
         opacity <= 0,
         opacity >= 2
       );
-      button('reset-appearance', 'Reset appearance', 500, 540, 900, () =>
+      button('reset-appearance', 'Reset appearance', 500, 510, 900, () =>
         controller.resetVolumeAppearance(sessionId)
       );
       if (state.volume.loadStatus === 'error')
@@ -423,7 +419,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
           'retry-volume',
           'Retry loading volume',
           options.diagnosticsEnabled ? 255 : 500,
-          650,
+          585,
           options.diagnosticsEnabled ? 440 : 900,
           () => controller.retryVolumeLoad(sessionId)
         );
@@ -432,7 +428,7 @@ export function buildQuestCompositorPanel(options: PanelOptions) {
           'open-diagnostics',
           'Diagnostics',
           state.volume.loadStatus === 'error' ? 745 : 500,
-          650,
+          585,
           state.volume.loadStatus === 'error' ? 440 : 900,
           () => setPage('diagnostics')
         );

@@ -32,6 +32,7 @@ import {
   MIN_MODEL_HEIGHT,
   MIN_MODEL_SCALE,
 } from './medical-controller';
+import { QUEST_ANATOMY_HEIGHT } from './quest-default-heights';
 import { type VolumePreset, type VolumeQuality } from './medical-volumes';
 import { hasMedicalLabels, type MedicalModelId } from './medical-models';
 import type { SliceModality } from './medical-slices';
@@ -1000,7 +1001,10 @@ export function QuestSpatialControls({
                     onPress={() => {
                       if (state.mode === 'anatomy') {
                         controller.setScale(scope, 1.0);
-                        controller.setHeight(scope, DEFAULT_MODEL_HEIGHT);
+                        controller.setHeight(
+                          scope,
+                          controller.isQuest ? QUEST_ANATOMY_HEIGHT : DEFAULT_MODEL_HEIGHT
+                        );
                         controller.setYaw(scope, 0);
                       } else if (state.mode === 'slices') {
                         controller.resetPanel(sessionId);
@@ -1045,7 +1049,10 @@ export function QuestSpatialControls({
                     onPress={() => {
                       if (state.mode === 'anatomy') {
                         controller.setScale(scope, 1.0);
-                        controller.setHeight(scope, DEFAULT_MODEL_HEIGHT);
+                        controller.setHeight(
+                          scope,
+                          controller.isQuest ? QUEST_ANATOMY_HEIGHT : DEFAULT_MODEL_HEIGHT
+                        );
                         controller.setYaw(scope, 0);
                       } else if (state.mode === 'slices') {
                         controller.resetPanel(sessionId);

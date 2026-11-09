@@ -1,4 +1,5 @@
 import { rigLocalToWorld, type Point3, type RigPose } from '../ar/quest-spatial-math.ts';
+import type { MedicalSnapshot } from './medical-controller.ts';
 
 export const QUEST_PANEL_WIDTH_M = 0.92;
 export const QUEST_PANEL_LOGICAL_WIDTH = 1000;
@@ -51,6 +52,26 @@ export function sliderValueWhileDragging(
   initialHitX: number
 ) {
   return sliderValueAtX(slider, targetX + initialHitX - (slider.x + slider.width / 2));
+}
+
+export function isCurrentSliceDrag(
+  pending: {
+    sessionId: number | null;
+    placementRevision: number;
+    requestId: number;
+    modality: string;
+    orientation: string;
+  },
+  current: MedicalSnapshot
+) {
+  return (
+    current.mode === 'slices' &&
+    current.sessionId === pending.sessionId &&
+    current.placementRevision === pending.placementRevision &&
+    current.slices.requestId === pending.requestId &&
+    current.slices.modality === pending.modality &&
+    current.slices.orientation === pending.orientation
+  );
 }
 
 // Positive 180° and negative 180° have the same orientation. Stay just below

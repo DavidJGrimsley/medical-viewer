@@ -39,7 +39,7 @@ class QuestPanelModule : Module() {
 
   private fun available(): Boolean = try {
     System.loadLibrary("viro_renderer")
-    nativeVersion() == 2
+    nativeVersion() == 3
   } catch (_: LinkageError) { false }
 
   private fun renderPanel(id: Int, json: String) = synchronized(drawLock) {
@@ -110,9 +110,11 @@ class QuestPanelModule : Module() {
             value
           } ?: break
           try { renderPanel(next.first, next.second) }
-          catch (error: Exception) {
+          catch (error: Throwable) {
             if (next.first == owner) drawFailed = true
             Log.e("QuestPanel", "Panel draw failed", error)
+            synchronized(queueLock) { pendingDraw = null; drawRunning = false }
+            break
           }
         }
       }

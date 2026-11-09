@@ -16,6 +16,7 @@ const {
   panelImagePosition,
   sliderValueAtX,
   sliderValueWhileDragging,
+  isCurrentSliceDrag,
   rotationSliderValue,
   QUEST_PANEL_BASE_Y,
 } = require('../src/features/medical-viewer/quest-compositor-layout.ts');
@@ -121,6 +122,26 @@ test('main panels contain size and height, with rotation only for anatomy and 3D
   }
 });
 
+test('Quest defaults and reset view use the requested heights in every mode', () => {
+  const h = harness();
+  for (const [mode, height] of [
+    ['anatomy', 0.41],
+    ['slices', 0.56],
+    ['volume', 0.41],
+  ]) {
+    h.click(mode);
+    h.ready();
+    const current = () =>
+      mode === 'anatomy' ? h.controller.getSnapshot() : h.controller.getSnapshot()[mode];
+    assert.equal(current().height, height);
+    h.click('height-plus');
+    assert.ok(current().height > height);
+    h.click('reset-transform');
+    assert.equal(current().height, height);
+    assert.equal(h.panel().height, 680);
+  }
+});
+
 test('size and height change the active model, slices or volume and reset on the main page', () => {
   for (const mode of ['anatomy', 'slices', 'volume']) {
     const h = harness();
@@ -166,13 +187,32 @@ test('dragging from anywhere on a slider follows the original contact point', ()
   assert.equal(sliderValueWhileDragging(slider, 2000, 500), 100);
 });
 
+test('a queued slice drag cannot overwrite a newer slice selection or modality', () => {
+  const h = harness();
+  h.click('slices');
+  h.ready();
+  const current = h.controller.getSnapshot();
+  const pending = {
+    sessionId: current.sessionId,
+    placementRevision: current.placementRevision,
+    requestId: current.slices.requestId,
+    modality: current.slices.modality,
+    orientation: current.slices.orientation,
+  };
+  assert.equal(isCurrentSliceDrag(pending, current), true);
+  h.click('slice-step-1');
+  assert.equal(isCurrentSliceDrag(pending, h.controller.getSnapshot()), false);
+  h.click('ct');
+  assert.equal(isCurrentSliceDrag(pending, h.controller.getSnapshot()), false);
+});
+
 test('the compact main panel keeps its bottom position and the secondary controls sit to its right', () => {
   const h = harness();
   for (const mode of ['anatomy', 'slices', 'volume']) {
     h.click(mode);
     h.ready();
     const panel = h.panel();
-    assert.ok(panel.height <= 680);
+    assert.equal(panel.height, 680);
     assert.equal(
       panelItemLocal(panel.grabBar, panel.height)[1],
       panelItemLocal({ x: 500, y: 656 }, 680)[1]

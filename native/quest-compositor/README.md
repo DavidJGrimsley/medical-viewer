@@ -1,16 +1,16 @@
 # Quest UI compositor prototype
 
 React supplies a panel description. The local `quest-panel` Expo module rasterizes it
-with Android Canvas at 2048 pixels wide and a matching height. The patched Viro 3.0.3 OpenXR renderer submits the
+with Android Canvas at 2970 pixels wide and a matching height. The patched Viro 3.0.3 OpenXR renderer submits the
 result as an independent `XrCompositionLayerQuad`, between passthrough and the scene.
 A Viro depth-only rectangle leaves a transparent hole for the panel, and Viro hit
 targets use the same dimensions and pose. Content in front remains in the scene.
 
-Size, height and a rotation slider are on every main panel. Anatomy labels and the
-scan-slice slider sit directly below those transforms. Only 3D Scan has **More controls**,
+Size and height are on every main panel; anatomy and 3D Scan also have a rotation
+slider. Anatomy labels and the scan-slice slider sit below those transforms. Only 3D Scan has **More controls**,
 which opens appearance/detail directly (quality, presets and visibility). Quest starts
 at Fast quality; an explicit Balanced selection is retained. Reset, retry and placement
-actions remain on the main panels. Developer diagnostics stay behind the existing flag.
+actions sit in a separate panel to the right. Developer diagnostics stay behind the existing flag.
 **Back** returns through the same panel. The launcher also switches between
 **Headset layer** and **Original controls**.
 The new panel is selected automatically when the patched renderer is present.
@@ -19,7 +19,8 @@ The grab handle is a text-free white bar drawn by Canvas, centered under the con
 at 30% of their width. Only its invisible drag target uses Viro geometry. The controls'
 bottom edge is anchored at the original rig height; the panel grows upward without
 moving the specimen. Logical coordinates, native layer size and hit targets share
-the same geometry helpers. Native bridge version 2 carries the physical panel height.
+the same geometry helpers. Native bridge version 3 carries the physical panel width and height.
+Panel rasterization runs on a worker and coalesces pending redraws to the newest state.
 
 Build the native renderer once (JDK 17, Android SDK and NDK 27.1.12297006):
 

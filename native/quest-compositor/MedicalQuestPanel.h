@@ -23,7 +23,7 @@ static State state;
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_expo_modules_questpanel_QuestPanelModule_nativeVersion(JNIEnv *, jobject) { return 2; }
+Java_expo_modules_questpanel_QuestPanelModule_nativeVersion(JNIEnv *, jobject) { return 3; }
 
 extern "C" JNIEXPORT jint JNICALL
 Java_expo_modules_questpanel_QuestPanelModule_nativeStatus(JNIEnv *, jobject) {

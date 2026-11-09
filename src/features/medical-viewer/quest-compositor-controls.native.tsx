@@ -25,6 +25,7 @@ import {
   panelImagePosition,
   sliderValueAtX,
   sliderValueWhileDragging,
+  isCurrentSliceDrag,
   QUEST_PANEL_WIDTH_M,
   QUEST_PANEL_UNIT_M,
   QUEST_PANEL_SIDEBAR_X,
@@ -106,6 +107,11 @@ function SliderTarget({
   onEnd: () => void;
 }) {
   const initialHitX = useRef(slider.x + slider.width / 2);
+  const onEndRef = useRef(onEnd);
+  useEffect(() => {
+    onEndRef.current = onEnd;
+  }, [onEnd]);
+  useEffect(() => () => onEndRef.current(), []);
   const logicalX = (world: Point3) => (rigWorldToLocalX(panelPose, world) / WIDTH + 0.5) * 1000;
   const center = { x: slider.x + slider.width / 2, y: slider.y };
   return (
@@ -176,7 +182,15 @@ export function QuestCompositorControls({
   const [page, setPage] = useState<QuestPanelPage>('main');
   const [slicePreview, setSlicePreview] = useState<number | null>(null);
   const lastSliceUpdate = useRef(0);
-  const pendingSlice = useRef<{ value: number; apply: (value: number) => void } | null>(null);
+  const pendingSlice = useRef<{
+    value: number;
+    apply: (value: number) => void;
+    sessionId: number | null;
+    placementRevision: number;
+    requestId: number;
+    modality: string;
+    orientation: string;
+  } | null>(null);
   const sliceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sliceDragging = useRef(false);
   const scheduleSlice = useCallback(() => {
@@ -186,8 +200,9 @@ export function QuestCompositorControls({
       const pending = pendingSlice.current;
       if (!pending) return;
       const current = controller.getSnapshot();
-      if (current.mode !== 'slices') {
+      if (!isCurrentSliceDrag(pending, current)) {
         pendingSlice.current = null;
+        sliceDragging.current = false;
         setSlicePreview(null);
         return;
       }
@@ -300,7 +315,16 @@ export function QuestCompositorControls({
                 }
                 sliceDragging.current = true;
                 setSlicePreview(value);
-                pendingSlice.current = { value, apply: slider.onChange };
+                const current = controller.getSnapshot();
+                pendingSlice.current = {
+                  value,
+                  apply: slider.onChange,
+                  sessionId: current.sessionId,
+                  placementRevision: current.placementRevision,
+                  requestId: current.slices.requestId,
+                  modality: current.slices.modality,
+                  orientation: current.slices.orientation,
+                };
                 scheduleSlice();
               }}
               onEnd={() => {

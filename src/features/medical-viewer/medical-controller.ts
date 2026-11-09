@@ -1,4 +1,9 @@
 import {
+  QUEST_ANATOMY_HEIGHT,
+  QUEST_SLICE_HEIGHT,
+  QUEST_VOLUME_HEIGHT,
+} from './quest-default-heights.ts';
+import {
   DEFAULT_MEDICAL_MODEL_ID,
   hasMedicalLabels,
   isMedicalModelAvailable,
@@ -296,6 +301,9 @@ export class MedicalController {
     this.volumeDataset = volumeDataset;
     this.isQuest = Boolean(opts.isQuest ?? opts.defaultVolumeRenderer === 'shader');
     if (this.isQuest) {
+      this.snapshot.height = QUEST_ANATOMY_HEIGHT;
+      this.snapshot.slices.height = QUEST_SLICE_HEIGHT;
+      this.snapshot.volume.height = QUEST_VOLUME_HEIGHT;
       this.snapshot.volume.quality = 'fast';
       this.snapshot.volume.renderer = opts.defaultVolumeRenderer ?? 'shader';
       this.snapshot.volume.debugMode = opts.defaultVolumeDebugMode ?? 'raymarch';
@@ -498,7 +506,7 @@ export class MedicalController {
       slices: this.sliceUpdate({
         scale: 1,
         yaw: 0,
-        height: DEFAULT_AR_HEIGHT,
+        height: this.isQuest ? QUEST_SLICE_HEIGHT : DEFAULT_AR_HEIGHT,
         x: 0,
         z: 0,
         pinching: false,
@@ -967,7 +975,7 @@ export class MedicalController {
       volume: this.volumeUpdate({
         scale: 1,
         yaw: DEFAULT_VOLUME_YAW,
-        height: DEFAULT_AR_HEIGHT,
+        height: this.isQuest ? QUEST_VOLUME_HEIGHT : DEFAULT_AR_HEIGHT,
         x: 0,
         z: 0,
         pinching: false,
@@ -1083,14 +1091,20 @@ export class MedicalController {
     this.publish({
       scale: 1,
       yaw: 0,
-      height: DEFAULT_AR_HEIGHT,
+      height: this.isQuest ? QUEST_ANATOMY_HEIGHT : DEFAULT_AR_HEIGHT,
       x: 0,
       z: 0,
-      slices: this.sliceUpdate({ scale: 1, yaw: 0, height: DEFAULT_AR_HEIGHT, x: 0, z: 0 }),
+      slices: this.sliceUpdate({
+        scale: 1,
+        yaw: 0,
+        height: this.isQuest ? QUEST_SLICE_HEIGHT : DEFAULT_AR_HEIGHT,
+        x: 0,
+        z: 0,
+      }),
       volume: this.volumeUpdate({
         scale: 1,
         yaw: DEFAULT_VOLUME_YAW,
-        height: DEFAULT_AR_HEIGHT,
+        height: this.isQuest ? QUEST_VOLUME_HEIGHT : DEFAULT_AR_HEIGHT,
         x: 0,
         z: 0,
       }),
